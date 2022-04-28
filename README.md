@@ -1,6 +1,6 @@
-
 # 面试复习笔记
-这个repo主要就是记录一些个人复习总结的文档。
+
+> 这个repo主要就是记录一些个人复习总结的文档。
 
 ## 语言
 
@@ -43,7 +43,7 @@
 + 继承修饰符
 
 + 虚函数实现多态（父类指针指向子类对象）
-
+  
   - 虚表
   - 纯虚函数
   - 重写
@@ -53,10 +53,11 @@
 + new和malloc
 
 + 智能指针
-
+  
   - shared_ptr & unique_ptr
+    
     - shared_ptr自实现
-
+  
   - RAII思想
 
 + allocator类
@@ -81,7 +82,14 @@
   - 信号量
   - 管程
   - 条件变量
-+ C++ 标准库提供的函数
++ C++ 标准库
+  - thread
+  
+  - atomic
+  
+  - mutex
+  
+  - future
 + 多线程最佳实践
   - 计数器
   - 线程池
@@ -101,13 +109,11 @@
 
 + 基本形式
 
-``` c++
+```c++
 [capture list](parameter list) -> return type { function body }
 ```
 
 ### Java
-
-
 
 ## 基础——四大、八股文
 
