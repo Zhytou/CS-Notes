@@ -2,7 +2,7 @@
 
 ## Basical Concepts
 
-###
+![git workflow](../img/git_workflow.jpg)
 
 ## Usage
 
@@ -11,23 +11,38 @@
 This example presents how initialize a local git repo and bind it with several remote repo.
 
 ``` bash
+# create an empty git repo
 git init
-git remote
+
+# add a remote repo and get the existed files from the remote repo
+git remote add public https://github.com/xxx/project.git
+git fecth public
+git merge public/master
+
+# first commit
+git add .
+git push -m "first commit"
+
+# add your personal remote repo and set the upstream 
 git remote add origin https://github.com/Zhytou/project.git
 git push -u origin master
 
 ```
 
-Patterns which are specific to a particular repository but which do not need to be shared with other related repositories (e.g., auxiliary files that live inside the repository but are specific to one user's workflow) should go into the $GIT_DIR/info/exclude file.
+### Use .gitignore
 
-## change .git/info/exclude to make .gitignore work
+change .git/info/exclude to make .gitignore work
 
 ``` bash
 cat .gitignore > .git/info/exclude
 ```
 
-### other useful commands
+### Other useful commands
 
-git status
+git status: check the files state(untracked or unstaged)
 
-git checkout
+git checkout: change the branch
+
+git branch -a: show all the branches you created including remote
+
+git diff xxx: show differences between two files
