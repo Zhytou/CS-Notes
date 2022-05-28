@@ -1,0 +1,1 @@
+use ctrl+shift+v to preview a md file in vscode

@@ -10,28 +10,28 @@
 
 + 类型转换
 + 指针和引用
-  - 函数指针
-  - 左右引用
+  + 函数指针
+  + 左右引用
 + 结构体内存计算
 + 关键字`const`、`constexptr`、`decltype`、`auto`、`final`、`override`和`explicit`
 
 #### 容器
 
 + 顺序容器
-  - 数组底层
-  - 栈、（有限队列）堆和队列
+  + 数组底层
+  + 栈、（有限队列）堆和队列
 + 关联容器
-  - 分类
-  - 基本操作
-  - 底层
-  - 冲突解决
+  + 分类
+  + 基本操作
+  + 底层
+  + 冲突解决
 + 模板算法
 
 #### 类 （封装性）
 
 + 构造函数和析构函数
-  - 构造函数不能写成虚函数
-  - 对有继承的情况，析构函数一般写为虚函数
+  + 构造函数不能写成虚函数
+  + 对有继承的情况，析构函数一般写为虚函数
 + `this`指针
 + 重载
 + 访问修饰符
@@ -44,9 +44,9 @@
 
 + 虚函数实现多态（父类指针指向子类对象）
   
-  - 虚表
-  - 纯虚函数
-  - 重写
+  + 虚表
+  + 纯虚函数
+  + 重写
 
 #### 内存管理
 
@@ -54,11 +54,9 @@
 
 + 智能指针
   
-  - shared_ptr & unique_ptr
-    
-    - shared_ptr自实现
-  
-  - RAII思想
+  + shared_ptr & unique_ptr
+    + shared_ptr自实现
+  + RAII思想
 
 + allocator类
 
@@ -66,7 +64,7 @@
 
 + 拷贝构造函数 & 拷贝构造运算符
 + 移动构造函数 & 移动构造运算符
-  - 右值引用
+  + 右值引用
 + 析构函数
 
 #### 模板
@@ -77,22 +75,28 @@
 #### 多线程
 
 + 线程与进程
+
 + 同步原语
-  - 互斥量
-  - 信号量
-  - 管程
-  - 条件变量
+  
+  + 互斥量
+  + 信号量
+  + 管程
+  + 条件变量
+
 + C++ 标准库
-  - thread
   
-  - atomic
+  + thread
   
-  - mutex
+  + atomic
   
-  - future
+  + mutex
+  
+  + future
+
 + 多线程最佳实践
-  - 计数器
-  - 线程池
+  
+  + 计数器
+  + 线程池
 
 #### 编译、链接
 
@@ -110,7 +114,7 @@
 + 基本形式
 
 ```c++
-[capture list](parameter list) -> return type { function body }
+[capture list](parameter list) +> return type { function body }
 ```
 
 ### Java
@@ -121,57 +125,57 @@
 
 ### 算法
 
-**回溯**
+#### 回溯
 
 + 子集
 + 组合
 + 排序
 + 搜索（一般会剪枝，比如leetcode 79题非常经典）
 
-**二分查找**
+#### 二分查找
 
 + 模板 + 变化
 
-**树**
+#### 树
 
 + 遍历
-  - 深度优先 DFS
-    - 前序
-    - 中序
-    - 后序
-  - 广度优先 BFS
-    - 层序遍历
+  + 深度优先 DFS
+    + 前序
+    + 中序
+    + 后序
+  + 广度优先 BFS
+    + 层序遍历
 + 递归
 
-**贪心**
+#### 贪心
 
 + 只能靠多练多想多记，经典题包括弓箭射气球、花园浇水
 
-**双指针**
+#### 双指针
 
-**排序**
+#### 排序
 
 + 快速排序 quick sort
 + 合并排序 merge sort
 + 堆排序 heap sort
 + 其他
 
-**数据结构**
+#### 数据结构
 
 + 高频 & 初级
-  - 栈
-  - 堆（优先队列）
-  - 队列
+  + 栈
+  + 堆（优先队列）
+  + 队列
 + 低频 & 高级
-  - 字典树
-  - 对顶堆
-  - 并查集
+  + 字典树
+  + 对顶堆
+  + 并查集
 
-**图**
+#### 图
 
 + 遍历
-  - 深度优先 DFS
-  - 广度优先 BFS
+  + 深度优先 DFS
+  + 广度优先 BFS
 + 拓扑排序
 + 最短路径——迪杰斯特拉 Dijkstra
 
@@ -184,10 +188,10 @@
 ### 计算机网络
 
 + 应用层：
-  - HTTP：HTTP方法、GET和POST的区别、HTTP状态码、cookie和session、HTTP1.x/2.0
-  - HTTPS：加密方法
+  + HTTP：HTTP方法、GET和POST的区别、HTTP状态码、cookie和session、HTTP1.x/2.0
+  + HTTPS：加密方法
 + 传输层：
-  - TCP/UDP：区别、三次握手、四次挥手、优化（滑动窗口等等）
+  + TCP/UDP：区别、三次握手、四次挥手、优化（滑动窗口等等）
 
 ### 数据库
 
@@ -246,14 +250,14 @@
 ### 缓存 Cache
 
 + 模式
-  - cache aside
-  - write through
-  - write back
-  - flush
+  + cache aside
+  + write through
+  + write back
+  + flush
 + 问题
-  - 缓存击穿
-  - 缓存穿透
-  - 缓存雪崩
+  + 缓存击穿
+  + 缓存穿透
+  + 缓存雪崩
 
 ### 异步 Asynchronism
 
@@ -277,7 +281,7 @@
 
 **综合**
 
-[github - CS-NOTES](https://github.com/Zhytou/CS-Notes)
+[github + CS+NOTES](https://github.com/Zhytou/CS+Notes)
 
 **Java**
 
@@ -285,20 +289,20 @@
 
 **C++**
 
-[youtube - boqian](https://www.youtube.com/user/BoQianTheProgrammer)
+[youtube + boqian](https://www.youtube.com/user/BoQianTheProgrammer)
 
-[知乎 - C++](https://zhuanlan.zhihu.com/p/417640759)
+[知乎 + C++](https://zhuanlan.zhihu.com/p/417640759)
 
-[知乎 - 当面试官问C++ 11新特性时，应该怎么样回答？](https://zhuanlan.zhihu.com/p/420710578)
+[知乎 + 当面试官问C++ 11新特性时，应该怎么样回答？](https://zhuanlan.zhihu.com/p/420710578)
 
-[帅地 - C++面试题指南](https://www.iamshuaidi.com/2309.html)
+[帅地 + C++面试题指南](https://www.iamshuaidi.com/2309.html)
 
 **JavaScript**
 
-[MDN](https://developer.mozilla.org/zh-CN/docs/Learn)
+[MDN](https://developer.mozilla.org/zh+CN/docs/Learn)
 
 **刷题**
 
 [CodeTop](https://codetop.cc/home)
 
-[Leetcode](https://leetcode-cn.com/)
+[Leetcode](https://leetcode+cn.com/)
