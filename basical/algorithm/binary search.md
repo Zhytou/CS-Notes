@@ -183,6 +183,3 @@ int binarySearch(const vector<int>& nums, int target) {
       }
   };
   ```
-
-
-

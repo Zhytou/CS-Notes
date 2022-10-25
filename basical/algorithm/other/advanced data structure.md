@@ -74,6 +74,8 @@ public:
 
 #### [字典序的第K小数字](https://leetcode-cn.com/problems/k-th-smallest-in-lexicographical-order/submissions/)
 
+#### [实现一个魔法字典](https://leetcode.cn/problems/implement-magic-dictionary/)
+
 **描述**
 
 + 给定整数 `n` 和 `k`，返回 `[1, n]` 中字典序第 `k` 小的数字。

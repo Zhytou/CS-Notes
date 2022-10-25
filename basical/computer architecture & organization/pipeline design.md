@@ -14,7 +14,7 @@ Write Back WB
 
 ## 问题 Hazard
 
-Data Hazard 
+Data Hazard
 
 Control Hazard
 
@@ -23,4 +23,3 @@ Control Hazard
 ## 参考
 
 + [wiki - classic risc pipeline](https://en.wikipedia.org/wiki/Classic_RISC_pipeline)
-

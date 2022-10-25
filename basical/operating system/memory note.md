@@ -8,7 +8,7 @@
 
 ### 层级
 
-![](../img/operating_system_memory_level.png)
+![memory level](../img/operating_system_memory_level.png)
 
 ## 逻辑地址和物理地址
 
@@ -105,8 +105,6 @@
 一般来说，`frame`和`page`大小相同。
 
 **概述**
-
-
 
 **地址**
 

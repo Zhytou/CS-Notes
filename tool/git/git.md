@@ -21,7 +21,7 @@ git merge public/master
 
 # first commit
 git add .
-git push -m "first commit"
+git commit -m "first commit"
 
 # add your personal remote repo and set the upstream 
 git remote add origin https://github.com/Zhytou/project.git
