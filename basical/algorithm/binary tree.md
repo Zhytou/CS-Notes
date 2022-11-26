@@ -1,18 +1,31 @@
 # 二叉树
 
+- [二叉树](#二叉树)
+  - [基础概念](#基础概念)
+    - [分类](#分类)
+      - [平衡二叉树（AVL树）](#平衡二叉树avl树)
+      - [二叉搜索树（BST树）](#二叉搜索树bst树)
+    - [遍历](#遍历)
+      - [深度优先](#深度优先)
+      - [广度优先](#广度优先)
+  - [经典题目](#经典题目)
+    - [基础题](#基础题)
+    - [中等题](#中等题)
+    - [难题](#难题)
+
 ## 基础概念
 
 ### 分类
 
 #### 平衡二叉树（AVL树）
 
-+ 定义：左右子树高度差不超过1，且左右子树也是平衡二叉树
-+ 意义：解决了二叉查找树退化成链表的问题，把插入，查找，删除的时间复杂度最好情况和最坏情况都维持在O(logN)，但是引入了旋转问题（为了维持平衡）
+- 定义：左右子树高度差不超过1，且左右子树也是平衡二叉树
+- 意义：解决了二叉查找树退化成链表的问题，把插入，查找，删除的时间复杂度最好情况和最坏情况都维持在O(logN)，但是引入了旋转问题（为了维持平衡）
 
 #### 二叉搜索树（BST树）
 
-+ 定义：左子树上所有节点值 < 根节点值  < 右子树所有节点值，且左右子树也分别为二叉搜索树
-+ 性质：二叉搜索树的中序遍历为一递增序列
+- 定义：左子树上所有节点值 < 根节点值  < 右子树所有节点值，且左右子树也分别为二叉搜索树
+- 性质：二叉搜索树的中序遍历为一递增序列
 
 ### 遍历
 
@@ -20,26 +33,23 @@
 
 > 当然树的深度优先遍历也可以用stack加set的传统方式实现，不过一般都按照先序、中序和后序划分和实现
 
-+ 分类
-
-  -  先序遍历
-    * 先根节点，后左右子树
+- 分类
+  - 先序遍历
+    - 先根节点，后左右子树
   - 中序遍历
-    * 先左子树，接着根节点，最后右子树
+    - 先左子树，接着根节点，最后右子树
   - 后序遍历
-    * 先左右子树，后根节点
+    - 先左右子树，后根节点
 
-+ 实现
-
+- 实现
   - 递归型
-
-    * 代码：
+    - 代码：
   
     ``` c++
     // 以中序遍历为例
     void inorder(TreeNode* root, vector<int> seq){
         if (root == nullptr)
-        	return ;
+          return ;
         
         inorder(root->left);
         seq.push_back(seq);
@@ -49,29 +59,23 @@
     ```
   
   - 非递归型（Mirrors遍历：既不用递归调用，也不用栈——传统dfs遍历方法，极大的优化了空间复杂度）
+    - 简介：
+      - Mirros遍历是一种节省空间复杂度的方法。
+      - 它将叶子节点上的空指针利用起来，指向父节点，当再次遍历到这个节点的时候再修改回来，这样最后二叉树的结构也没有发生改变
+    - 变量：
+      - curr：当前遍历指针；
+      - rightMost：curr节点左子树的最右边节点
   
-    * 简介：
+    - 流程：
+      - 如果curr左子树为空，curr向右移
+      - 如果curr左子树不为空，找到rightMost
+        - 如果rightMost.right为空，那么令rightMost为curr，curr左移
+        - 否则，rightMost.right不为空说明rightMost曾被修改过，我们是第二次来到这个节点，那么令curr为rightMost.right，令rightMost.right为空
   
-      * Mirros遍历是一种节省空间复杂度的方法。
-      * 它将叶子节点上的空指针利用起来，指向父节点，当再次遍历到这个节点的时候再修改回来，这样最后二叉树的结构也没有发生改变
+    - 图示：
+      ![非递归遍历](../img/code_binary_tree_mirrors_traversal.jpg)
   
-    * 变量：
-  
-      * curr：当前遍历指针；
-      * rightMost：curr节点左子树的最右边节点
-  
-    * 流程：
-  
-      * 如果curr左子树为空，curr向右移
-      * 如果curr左子树不为空，找到rightMost
-        *  如果rightMost.right为空，那么令rightMost为curr，curr左移
-        * 否则，rightMost.right不为空说明rightMost曾被修改过，我们是第二次来到这个节点，那么令curr为rightMost.right，令rightMost.right为空
-  
-    * 图示：
-  
-      ![](../img/code_binary_tree_mirrors_traversal.jpg)
-  
-    * 代码：
+    - 代码：
   
     ``` c++
     //以中序遍历为例
@@ -86,15 +90,15 @@
             else {
                 rightMost = curr->left;
                 while (rightMost->right != nullptr && rightMost->right != curr) {
-    				rightMost = rightMost->right;
+                  rightMost = rightMost->right;
                 }
                 
                 if (rightMost->right == nullptr) {
-    				rightMost->right = curr;
-                    curr = curr->left;
+                  rightMost->right = curr;
+                  curr = curr->left;
                 }
                 else {
-                    rightMost->left = nullptr;
+                  rightMost->left = nullptr;
                 }
             }
         }
@@ -103,79 +107,127 @@
 
 #### 广度优先
 
-+ 层序遍历
-
+- 层序遍历
   - 按层遍历
-
   - 模板代码
 
     ``` c++
     vector<vector<int>> levelTraversal (TreeNode* root) {
-    	vector<vector<int>> levels;
-    	queue<TreeNode*> trace;
-    	
-    	trace.push(root);
-    	while(!trace.empty()) {
-    		vector<int> level; 
-    		for (int i = trace.size(); i > 0; i--) {
-    			auto p = trace.front();
-    			trace.pop();
-    			if (p == nullptr)
-    				continue;
-    			level.push_back(p->val);
-    			trace.push(p->left);
-    			trace.push(p->right);
-    		}
-    		level.push_back(level);
-    	}
-    	return levels;
+      vector<vector<int>> levels;
+      queue<TreeNode*> trace;
+
+      trace.push(root);
+      while(!trace.empty()) {
+        vector<int> level; 
+        for (int i = trace.size(); i > 0; i--) {
+          auto p = trace.front();
+          trace.pop();
+          if (p == nullptr)
+          continue;
+          level.push_back(p->val);
+          trace.push(p->left);
+          trace.push(p->right);
+        }
+        level.push_back(level);
+      }
+      return levels;
     }
     
     ```
-
 
 ## 经典题目
 
 ### 基础题
 
-#### [94 二叉树的中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
+[94 二叉树的中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
 
-#### [102 二叉树的层序遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
+[102 二叉树的层序遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
 
-#### [108 将有序数组转化为二叉搜索树](https://leetcode-cn.com/problems/convert-sorted-array-to-binary-search-tree/)
+[108 将有序数组转化为二叉搜索树](https://leetcode-cn.com/problems/convert-sorted-array-to-binary-search-tree/)
 
-+ 分治法思想
+- 分治法思想
   - 先去序列中点，作为二叉树根节点
   - 接着把中点左边序列作为左子树，把右边序列作为右子树
 
 ### 中等题
 
-#### [99 恢复二叉搜索树](https://leetcode-cn.com/problems/recover-binary-search-tree/)
+[99 恢复二叉搜索树](https://leetcode-cn.com/problems/recover-binary-search-tree/)
 
-+ 显式中序遍历
+- 显式中序遍历
   - 二叉搜索树的序列为一递增序列，因此可以通过中序遍历找出问题节点，进而恢复二叉搜索树
 
-+ 隐式中序遍历
+- 隐式中序遍历
   - 思想同上，只不过减小了空间复杂度，即：在遍历的同时找出问题节点并修复，而不用分三步——先用vector储存中序遍历结果；找出问题节点；最后修复问题节点。
 
-#### [129 求根节点到叶节点数字之和](https://leetcode-cn.com/problems/sum-root-to-leaf-numbers/)
+[109 有序链表转换为二叉搜索树](https://leetcode.cn/problems/convert-sorted-list-to-binary-search-tree/description/)
 
+- 思路：先用快慢指针找到链表中点，再利用分而治之的思想分别构造左右子树。
+- 实现：
 
+``` c++
+class Solution {
+public:
+    ListNode* getMedian(ListNode* left, ListNode* right) {
+        ListNode* fast = left;
+        ListNode* slow = left;
+        while (fast != right && fast->next != right) {
+            fast = fast->next;
+            fast = fast->next;
+            slow = slow->next;
+        }
+        return slow;
+    }
 
-#### [236  二叉树的最近公共祖先](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/)
+    TreeNode* buildTree(ListNode* left, ListNode* right) {
+        if (left == right) {
+            return nullptr;
+        }
+        ListNode* mid = getMedian(left, right);
+        TreeNode* root = new TreeNode(mid->val);
+        root->left = buildTree(left, mid);
+        root->right = buildTree(mid->next, right);
+        return root;
+    }
 
+    TreeNode* sortedListToBST(ListNode* head) {
+        return buildTree(head, nullptr);
+    }
+};
+```
 
+[129 求根节点到叶节点数字之和](https://leetcode-cn.com/problems/sum-root-to-leaf-numbers/)
 
-#### [662 二叉树的最大宽度](https://leetcode-cn.com/problems/maximum-width-of-binary-tree/)
+[236  二叉树的最近公共祖先](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/)
 
-+ 原理：修改原节点的值，使其用来储存树的结构信息
+实现：
 
+``` c++
+class Solution {
+public:
+    TreeNode* ans;
+    bool dfs(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (root == nullptr) return false;
+        bool lson = dfs(root->left, p, q);
+        bool rson = dfs(root->right, p, q);
+        if ((lson && rson) || ((root->val == p->val || root->val == q->val) && (lson || rson))) {
+            ans = root;
+        } 
+        return lson || rson || (root->val == p->val || root->val == q->val);
+    }
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        dfs(root, p, q);
+        return ans;
+    }
+};
+```
+
+[662 二叉树的最大宽度](https://leetcode-cn.com/problems/maximum-width-of-binary-tree/)
+
+- 原理：修改原节点的值，使其用来储存树的结构信息
   - 左子节点的值为父节点值的二倍，右节点为值父节点值的二倍加一
   - 当前高度的宽度等于：最右边节点值 - 最左边的节点值 + 1（即：队列首尾值相减再加一）
-
-+ 注意：c++实现节点值可能会超出int类型表示范围，需要添加防止溢出的逻辑
-
-+ 实现：
+- 注意：c++实现节点值可能会超出int类型表示范围，需要添加防止溢出的逻辑
+- 实现：
 
   ``` c++
   class Solution {
@@ -219,7 +271,4 @@
 
 ### 难题
 
-#### [297 序列化与反序列化二叉树](https://leetcode-cn.com/problems/serialize-and-deserialize-binary-tree/)
-
-
-
+[297 序列化与反序列化二叉树](https://leetcode-cn.com/problems/serialize-and-deserialize-binary-tree/)
