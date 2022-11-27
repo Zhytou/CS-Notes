@@ -1,20 +1,37 @@
 # 双指针&滑动窗口
 
+- [双指针\&滑动窗口](#双指针滑动窗口)
+  - [基础概念](#基础概念)
+  - [经典例题](#经典例题)
+    - [简单题](#简单题)
+    - [中等题](#中等题)
+    - [难题](#难题)
+
 ## 基础概念
 
+基础技巧
 
+|          使用技巧        |      经典题目      |
+|-------------------------|-------------------|
+|          快慢指针        | [19 删除链表倒数第N个节点](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/)、[142 环形链表](https://leetcode.cn/problems/linked-list-cycle-ii/)、[876 链表的中间节点](https://leetcode-cn.com/problems/middle-of-the-linked-list/) |
+|          左右指针        | [11 盛水最多的容器](https://leetcode.cn/problems/container-with-most-water/)、[15 三数之和](https://leetcode-cn.com/problems/3sum/)、[16 最接近的三数之和](https://leetcode.cn/problems/3sum-closest/)、[18 四数之和](https://leetcode.cn/problems/4sum/)|
+|          滑动窗口        | [76 最小覆盖子串](https://leetcode-cn.com/problems/minimum-window-substring/) |
+
+用于维护滑动窗口中某特点而设计的新数据结构
+
+|          使用技巧        |      经典题目      |
+|-------------------------|-------------------|
+|           单调栈        | [42 接雨水](https://leetcode.cn/problems/trapping-rain-water/)、[239 滑动窗口最大值](https://leetcode.cn/problems/sliding-window-maximum/description/) |
+|           对顶堆        | [480 滑动窗口中位数](https://leetcode.cn/problems/sliding-window-median/) |
 
 ## 经典例题
 
 ### 简单题
 
-#### [876 链表的中间节点](https://leetcode-cn.com/problems/middle-of-the-linked-list/)
+[876 链表的中间节点](https://leetcode-cn.com/problems/middle-of-the-linked-list/)
 
-+ 简介
-
-+ 思路：使用快慢双指针，避免遍历两次
-
-+ 代码：
+- 思路：使用快慢双指针，避免遍历两次
+- 代码：
 
   ``` c++
   class Solution {
@@ -33,18 +50,14 @@
 
 ### 中等题
 
-#### [15 三数之和](https://leetcode-cn.com/problems/3sum/)
+[15 三数之和](https://leetcode-cn.com/problems/3sum/)
 
-+ 简介：
-
+- 简介：
   - 这道题很经典，我当时用暴力，回溯都没有做出来，做了很多遍，最后还是看的答案
-
-+ 思路：排序 + 双指针
-
-  - ==排序 + 每次选数与上次不同 保证不重复==
+- 思路：排序 + 双指针
+  - 排序 + 每次选数与上次不同 保证不重复
   - 在三重循环大框架不变的前提下，在确定第一个数之后，将后两个数的确定转化为双指针确定
-
-+ 代码：
+- 代码：
 
   ``` c++
   class Solution {
@@ -88,17 +101,12 @@
   
   ```
 
-  
-
 ### 难题
 
-#### [76 最小覆盖子串](https://leetcode-cn.com/problems/minimum-window-substring/)
+[76 最小覆盖子串](https://leetcode-cn.com/problems/minimum-window-substring/)
 
-+ 简介
-
-+ 思路：滑动窗口
-
-+ 代码：
+- 思路：滑动窗口
+- 代码：
 
   ``` c++
   class Solution {
@@ -158,5 +166,3 @@
       }
   };
   ```
-
-  
