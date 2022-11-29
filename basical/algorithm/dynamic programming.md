@@ -2,17 +2,13 @@
 
 ## 基础概念
 
-
-
 ## 经典例题
 
 ### 中等题
 
-#### [64 最小路径和](https://leetcode-cn.com/problems/minimum-path-sum/)
+[64 最小路径和](https://leetcode-cn.com/problems/minimum-path-sum/)
 
-+ 思路
-
-+ 代码
+代码
 
   ``` c++
   class Solution {
@@ -40,21 +36,50 @@
   };
   ```
 
+[96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
+
+代码：
+
+``` c++
+class Solution {
+  vector<int> dp;
+
+ public:
+  int numTrees(int n) {
+    if (n >= dp.size()) {
+      for (int i = dp.size(); i <= n; i++) {
+        if (i == 0 || i == 1) {
+          dp.push_back(i);
+          continue;
+        }
+        int dpi = 0;
+        for (int root = 1; root <= i; root++) {
+          int left = root - 1 == 0 ? 1 : dp[root - 1];
+          int right = i - root == 0 ? 1 : dp[i - root];
+          dpi += left * right;
+        }
+        dp.push_back(dpi);
+      }
+    }
+
+    return dp[n];
+  }
+};
+```
 
 ### 难题
 
-#### [688 骑士在棋盘上的概率](https://leetcode-cn.com/problems/knight-probability-in-chessboard/)
+[688 骑士在棋盘上的概率](https://leetcode-cn.com/problems/knight-probability-in-chessboard/)
 
-+ 思路：
-
+- 思路：
   - 一个骑士有 8 种可能的走法，骑士会从中以等概率随机选择一种。部分走法可能会让骑士离开棋盘，另外的走法则会让骑士移动到棋盘的其他位置，并且剩余的移动次数会减少 1。
-  - 因此，定义dp\[step]\[i][j]表示骑士从棋盘上的点(i, j)出发，走了step步时的概率
-    * 特别地，当点(i, j)不在棋盘上时，dp\[step]\[i][j] = 0；
-    * 当step = 0时， dp\[step]\[i][j] = 1；
-    * 对于其他情况，dp\[step]\[i][j] 为 dp\[step - 1]\[i][j] 之和除以 8 。
+  - 因此，定义`dp\[step]\[i][j]`表示骑士从棋盘上的点(i, j)出发，走了step步时的概率
+    - 特别地，当点(i, j)不在棋盘上时，`dp\[step]\[i][j]`= 0；
+    - 当step = 0时， `dp\[step]\[i][j] = 1`；
+    - 对于其他情况，`dp\[step]\[i][j]`为`dp\[step - 1]\[i][j]`之和除以 8 。
   - 其中， dp\[step - 1]有八种坐标偏移量，具体见题
 
-+ 代码：
+- 代码：
 
   ``` c++
   // 递归，超时
@@ -113,5 +138,3 @@
   };
   
   ```
-
-  

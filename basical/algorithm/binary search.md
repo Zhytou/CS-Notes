@@ -69,11 +69,11 @@ int binarySearch(const vector<int>& nums, int target) {
 ### 注意
 
 - 取中值有两种避免溢出的写法：
-  - `mid = left + (right - left)/2`，取值范围是`[left,right)`
-  - `mid = right - (right - left)/2`，取值范围是`(left,right]`
+  - `mid = left + (right - left)/2`，取值范围是`[left,right)`，查找左边界
+  - `mid = right - (right - left)/2`，取值范围是`(left,right]`，查找右边界
 - 跳出循环的条件同样也有两种：
-  - `while (left < right)`，将区间分成两部分
-  - `while (left <= right)`，将区间分成三部分
+  - `while (left < right)`，`right`初始化为`nums.size()`
+  - `while (left <= right)`，`right`初始化为`nums.size()-1`
 
 时间复杂度为`O(logn)`
 
@@ -190,13 +190,11 @@ int binarySearch(const vector<int>& nums, int target) {
 [33 搜索选择排序数组](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
 
 - 思路：
-
 - 代码：
 
 [162 寻找峰值](https://leetcode-cn.com/problems/find-peak-element/)
 
 - 思路：
-
 - 代码：
 
   ``` c++
@@ -236,3 +234,5 @@ int binarySearch(const vector<int>& nums, int target) {
 ## 参考
 
 [二分查找有几种写法](https://www.zhihu.com/question/36132386)
+
+[二分查找的细节](https://cloud.tencent.com/developer/article/1934759)

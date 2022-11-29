@@ -212,4 +212,6 @@ public:
 
 **例题**：
 
-[数据流的中位数](https://leetcode-cn.com/problems/find-median-from-data-stream/)
+[259 数据流的中位数](https://leetcode-cn.com/problems/find-median-from-data-stream/)
+
+[480 滑动窗口中位数](https://leetcode.cn/problems/sliding-window-median/)

@@ -1,76 +1,64 @@
 # 图
 
+- [图](#图)
+  - [基础概念](#基础概念)
+  - [重要算法](#重要算法)
+    - [遍历](#遍历)
+    - [拓扑排序](#拓扑排序)
+    - [最短路径](#最短路径)
+    - [其他](#其他)
+  - [经典题目](#经典题目)
+    - [分类](#分类)
+    - [基础题](#基础题)
+    - [中等题](#中等题)
+    - [难题](#难题)
+
 ## 基础概念
 
-### 图
+**图**:
 
-+ 图在数据结构中是中一对多的关系，一般分为无向图与无向图
+- 图在数据结构中是中一对多的关系，一般分为无向图与无向图
+  - 在图中，若用箭头标明了边是有方向性的，则称这样的图为有向图
+  - 在图中，若没用箭头标明了边是有方向性的，则称这样的图为无向图
+- 常用 **邻接矩阵** 或者 **邻接链表** 来表示图中结点的关系
 
-+ 常用 **邻接矩阵** 或者 **邻接链表** 来表示图中结点的关系
+**度**:
 
-#### 有向图
+- 在无向图中，一个顶点依附的边或弧的数目，称为该顶点的度
+  - 在有向图中，一个顶点依附的弧头数目，称为该顶点的入度
+  - 在有向图中，一个顶点依附的弧尾数目，称为该顶点的出度
+- 在有向图中，某个顶点的入度和出度之和称为该顶点的度
 
-+ 在图中，若用箭头标明了边是有方向性的，则称这样的图为有向图
+**权**:
 
-#### 无向图
-
-+ 在图中，若没用箭头标明了边是有方向性的，则称这样的图为无向图
-
-### 度
-
-+ 在无向图中，一个顶点依附的边或弧的数目，称为该顶点的度
-+ 在有向图中，某个顶点的入度和出度之和称为该顶点的度
-
-#### 入度
-
-+ 在有向图中，一个顶点依附的弧头数目，称为该顶点的入度
-
-#### 出度
-
-+ 在有向图中，一个顶点依附的弧尾数目，称为该顶点的出度
-
-### 权
-
-+ 在图的边或弧中给出相关的数，称为权
-+ 权可以代表一个顶点到另一个顶点的距离，耗费等
-
-### 邻接矩阵
-
-
+- 在图的边或弧中给出相关的数，称为权
+- 权可以代表一个顶点到另一个顶点的距离，耗费等
 
 ## 重要算法
 
 ### 遍历
 
-#### 深度优先 Depth First Search
-
-
-
-#### 广度优先 Breadth First Search
-
-
+- 深度优先 Depth First Search
+- 广度优先 Breadth First Search
 
 ### 拓扑排序
 
 > 对一个有向无环图G进行拓扑排序，是将G中所有顶点排成一个线性序列，使得图中任意一对顶点u和v，若边<u,v>∈E(G)，则u在线性序列中出现在v之前。
 
-#### 卡恩 Kahn
+**卡恩 Kahn**:
 
-+ 简介：一种基于==**广度优先搜索**==的拓扑排序算法
+- 简介：一种基于==**广度优先搜索**==的拓扑排序算法
 
   - 简单来说，就是在有向无环图中，找出入度为 0 的节点，并把这些从图中删除；
   - 接着，找出删除之后，入度为 0 的节点，并删除这些节点；
   - 重复这个步骤直至遍历完图中所有节点
 
-+ 算法：拓扑排序最经典的算法是**Kahn算法**
+- 算法：拓扑排序最经典的算法是**Kahn算法**
 
   - 输入：图的邻接矩阵
   - 输出：拓扑排序结果
-  - 流程：
 
-+ 图示：
-
-+ 实现：
+- 实现：
 
   ``` c++
   //Kahn算法
@@ -81,21 +69,21 @@
       
       for (int i = 0; i < n; i++) {
           for (int j = 0; j < n; j++) {
-  			if (adj[i][j])
+            if (adj[i][j])
                   indegrees[j] += 1;
           }
       }
       
       for (int i = 0; i < n; i++) {
-  		if (degrees[i] == 0)
+        if (degrees[i] == 0)
               q.push(i);
       }
       
       while(!q.empty()) {
-  		int idx = q.front();
+        int idx = q.front();
           q.pop();
           for (int i = 0; i < n; i++) {
-  			if (adj[idx][i]) {
+            if (adj[idx][i]) {
                   indegrees[i] -= 1;
                   if (indegrees[i] == 0)
                       q.push(i);
@@ -105,100 +93,77 @@
       }
       return res;
   }
-  
-  //DFS实现拓扑排序
   ```
 
+**基于深度优先搜索的拓扑排序算法**:
 
-#### 基于深度优先搜索的拓扑排序算法
-
-+ 简介：将深度优先搜索的流程与拓扑排序的求解联系起来，用一个栈来存储所有**已经搜索完成的节点**
+- 简介：将深度优先搜索的流程与拓扑排序的求解联系起来，用一个栈来存储所有**已经搜索完成的节点**
 
   - 对于图中的任意一个节点，它在搜索的过程中有三种状态：
-    * 「未搜索」：我们还没有搜索到这个节点
-    * 「搜索中」：我们搜索过这个节点，但还没有回溯到该节点，即该节点还没有入栈，还有相邻的节点没有搜索完成）
-    * 「已完成」：我们搜索过并且回溯过这个节点，即该节点已经入栈，并且所有该节点的相邻节点都出现在栈的更底部的位置，满足拓扑排序的要求
+    - 「未搜索」：我们还没有搜索到这个节点
+    - 「搜索中」：我们搜索过这个节点，但还没有回溯到该节点，即该节点还没有入栈，还有相邻的节点没有搜索完成）
+    - 「已完成」：我们搜索过并且回溯过这个节点，即该节点已经入栈，并且所有该节点的相邻节点都出现在栈的更底部的位置，满足拓扑排序的要求
 
-+ 算法：这个算法实际上是**Kahn算法的逆过程**
-
+- 算法：这个算法实际上是**Kahn算法的逆过程**
   - 输入：图的邻接矩阵
   - 输出：拓扑排序结果（从栈顶到栈底的顺序即为一种拓扑排序）
 
-+ 图示：
-
-+ 实现：
-
+- 实现：
+  
   ``` c++
   void dfs(vector<int>& res, const vector<vector<int>>& adj, vector<int>& visited, int idx, bool& valid) {
-      //将当前点标记未搜索中
-      visited[idx] = 1;
-      for (int i = 0; i < adj[idx].size(); i++) {
-  		// 递归搜索
-          if (adj[idx][i] && visited[i] == 0) {
-              dfs(res, adj, visited, i, valid);
-              if (!valid)
-                 return ;
-          }
-          // 再次遇到搜索中节点，图中成环
-          else if (adj[idx][i] && visited[i] == 1) {
-              valid = false;
-              return ;
-          }
-      }
-      visited[idx] = 2;
-      res.push_back(idx);
-  } 
-  vector<int> toposort_dfs(const vector<vector<int>>& adj) {
-      bool valid = true;
-  	int n = adj.size();
-      vector<int> visited(n, false);
-      vector<int> res;
-      
-      for (int i = 0; i < n; i++) {
-          // 不断的找未搜索的点进行dfs
-  		if (visited[i] == 0) {
-  			dfs (res, adj, visited, i, valid);
-              // valid == false 代表图中成环，无拓扑排序
-              if (!valid)
-                  return {};
-          }
-      }
-      return res;
-  }
-  ```
-
+    //将当前点标记未搜索中
+    visited[idx] = 1;
+    for (int i = 0; i < adj[idx].size(); i++) {
+        // 递归搜索
+        if (adj[idx][i] && visited[i] == 0) {
+            dfs(res, adj, visited, i, valid);
+            if (!valid)
+                return ;
+        }
+        // 再次遇到搜索中节点，图中成环
+        else if (adj[idx][i] && visited[i] == 1) {
+            valid = false;
+            return ;
+        }
+    }
+    visited[idx] = 2;
+    res.push_back(idx);
+    } 
+    vector<int> toposort_dfs(const vector<vector<int>>& adj) {
+    bool valid = true;
+    int n = adj.size();
+    vector<int> visited(n, false);
+    vector<int> res;
   
+    for (int i = 0; i < n; i++) {
+        // 不断的找未搜索的点进行dfs
+        if (visited[i] == 0) {
+            dfs (res, adj, visited, i, valid);
+            // valid == false 代表图中成环，无拓扑排序
+            if (!valid)
+                return {};
+        }
+    }
+    return res;
+    }
+  ```  
 
 ### 最短路径
 
-#### A星 A*
+**迪杰斯特拉 Dijkstra**:
 
-+ 简介：
+- 简介：**迪杰斯特拉算法** 是从一个顶点到其余各顶点的最短路径算法，解决的是有权图中最短路径问题。迪
 
-+ 算法：
-
-+ 图示：
-
-+ 实现：
-
-  ``` c++
-  ```
-
-  
-
-#### 迪杰斯特拉 Dijkstra
-
-+ 简介：**迪杰斯特拉算法** 是从一个顶点到其余各顶点的最短路径算法，解决的是有权图中最短路径问题。迪
-
-+ 算法：杰斯特拉算法主要特点是从起始点开始，采用[贪心算法](https://baike.baidu.com/item/贪心算法/5411800)的[策略](https://baike.baidu.com/item/策略/4006)，每次遍历到始点距离最近且未访问过的顶点的邻接节点，直到扩展到终点为止。
+- 算法：杰斯特拉算法主要特点是从起始点开始，采用[贪心算法](https://baike.baidu.com/item/贪心算法/5411800)的[策略](https://baike.baidu.com/item/策略/4006)，每次遍历到始点距离最近且未访问过的顶点的邻接节点，直到扩展到终点为止。
 
   - 输入：待求点序号 和 该图的邻接矩阵
   - 输出：某点到图中其余点距离数组
   - 流程：
 
-+ 图示：
+- 图示：
 
-+ 实现：
+- 实现：
 
   ``` c++
   #include<stdio.h>
@@ -269,26 +234,14 @@
       return dist;
   }
   ```
-  
-  
 
-#### 弗洛依达 Floyd
-
-
+**弗洛依达 Floyd**：
 
 ### 其他
 
-#### 普利姆 Prim
+**普利姆 Prim**：
 
-
-
-#### 并查集 Unionset
-
-+ 简介：
-
-+ 算法：
-
-+ 实现：
+**并查集 Unionset**：
 
   ``` c++
   #include<vector>
@@ -350,8 +303,6 @@
   }
   ```
 
-  
-
 ## 经典题目
 
 ### 分类
@@ -364,22 +315,15 @@
 | 无向图连通性、成环个数 | Unionset                                     |      |
 | 有向图连通性、成环个数 | Toposort                                     |      |
 
-
-
 ### 基础题
 
-#### [210 课程表Ⅱ](https://leetcode-cn.com/problems/course-schedule-ii/)
+[210 课程表Ⅱ](https://leetcode-cn.com/problems/course-schedule-ii/)
 
-+ 简介：本题是一道经典的「拓扑排序」问题。
+- 简介：本题是一道经典的「拓扑排序」问题。
   - 我们将每一门课看成一个节点；
   - 如果想要学习课程 A 之前必须完成课程 B，那么我们从 B 到 A 连接一条有向边。这样以来，在拓扑排序中，B 一定出现在 A 的前面。
 
-
-##### 法一 卡恩算法 Kahn
-
-+ 思路：略
-
-+ 代码：
+- 法一 卡恩算法 Kahn：
 
   ``` c++
   class Solution {
@@ -418,13 +362,8 @@
       }
   };
   ```
-  
 
-##### 法二 基于深度优先搜索的拓扑排序
-
-+ 思路：略
-
-+ 代码：
+- 法二 基于深度优先搜索的拓扑排序：
 
   ``` c++
   class Solution {
@@ -487,29 +426,18 @@
   };
   ```
 
-  
+[606 根据二叉树创建字符串](https://leetcode-cn.com/problems/construct-string-from-binary-tree/)
 
-#### [606 根据二叉树创建字符串](https://leetcode-cn.com/problems/construct-string-from-binary-tree/)
-
-+ 简介:
+- 简介:
 
   - 虽然本题是关于二叉树这种数据结构的题目，即：可以采用树特有的递归深度优先遍历方法，但考虑到空间问题，想要刻意的使用**传统的深度优先遍历**实现先根节点、后左右子树的遍历
 
-+ 思路:
+- 要点：
+  - 题目要求用括号表示子树，且要达成一对一映射关系
+  - 例如：输入二叉树 [1,2,3,4] 输出 "1(2(4))(3)"，输入二叉树 [1,2,3,null,4] 输出 "1(2()(4))(3)"
+  - 要满足一对一映射关系，即必须保证 左子树为空且右子树不为空的情况需要用 空括号标记
 
-  - 要点：
-
-    * 题目要求用括号表示子树，且要达成一对一映射关系
-
-      * 例如：输入二叉树 [1,2,3,4] 输出 "1(2(4))(3)"
-
-        ​			输入二叉树 [1,2,3,null,4] 输出 "1(2()(4))(3)"
-
-    * 要满足一对一映射关系，即必须保证 左子树为空且右子树不为空的情况需要用 空括号标记
-
-  - 流程：略
-
-+ 代码：
+- 代码：
 
   ``` c++
   class Solution {
@@ -555,29 +483,62 @@
   };
   ```
 
-
-
-
 ### 中等题
 
-#### [133 克隆图](https://leetcode-cn.com/problems/clone-graph/)
+[133 克隆图](https://leetcode-cn.com/problems/clone-graph/)
 
+- 思路：经典遍历题目，只不过需要在遍历的同时复制节点信息。
+- 代码：
 
+``` c++
+class Solution {
+public:
+    Node* cloneGraph(Node* node) {
+        if (node == nullptr) {
+            return node;
+        }
+
+        unordered_map<Node*, Node*> visited;
+
+        // 将题目给定的节点添加到队列
+        queue<Node*> Q;
+        Q.push(node);
+        // 克隆第一个节点并存储到哈希表中
+        visited[node] = new Node(node->val);
+
+        // 广度优先搜索
+        while (!Q.empty()) {
+            // 取出队列的头节点
+            auto n = Q.front();
+            Q.pop();
+            // 遍历该节点的邻居
+            for (auto& neighbor: n->neighbors) {
+                if (visited.find(neighbor) == visited.end()) {
+                    // 如果没有被访问过，就克隆并存储在哈希表中
+                    visited[neighbor] = new Node(neighbor->val);
+                    // 将邻居节点加入队列中
+                    Q.push(neighbor);
+                }
+                // 更新当前节点的邻居列表
+                visited[n]->neighbors.emplace_back(visited[neighbor]);
+            }
+        }
+
+        return visited[node];
+    }
+};
+```
 
 ### 难题
 
-#### [127 单词接龙](https://leetcode-cn.com/problems/word-ladder/)
+[127 单词接龙](https://leetcode-cn.com/problems/word-ladder/)
 
-+ 简介：
+- 简介：
   - 我们可以把每个单词都抽象为一个点，如果两个单词可以只改变一个字母进行转换，那么说明他们之间有一条双向边。因此我们只需要把满足转换条件的点相连，就形成了一张**图**。
   - 基于该图，寻找 `beginWord` 到 `endWord` 的最短路径。
 
-##### 法一 广度优先搜索 BFS
-
-+ 思路：
-
-+ 代码：
-
+- 法一 广度优先搜索 BFS：
+  
   ``` C++
   class Solution {
   public:
@@ -638,11 +599,7 @@
   };
   ```
 
-##### 法二 迪杰斯科拉 Dijkstra
-
-+ 思路：
-
-+ 代码：
+- 法二 迪杰斯科拉 Dijkstra：
 
   ``` c++
   class Solution {
@@ -716,6 +673,3 @@
       }
   };
   ```
-
-  
-

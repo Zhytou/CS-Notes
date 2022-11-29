@@ -141,6 +141,39 @@
 
 [94 二叉树的中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
 
+[101 对称二叉树](https://leetcode.cn/problems/symmetric-tree/description/)
+
+- 思路：
+  - 递归：见代码实现
+  - 迭代：层序遍历，判断每层是否对称。
+
+- 代码
+
+``` c++
+class Solution {
+ private:
+  bool isSymmetric(TreeNode *p, TreeNode *q) {
+    if (p == nullptr || q == nullptr) {
+      return q == p;
+    }
+
+    if (p->val != q->val) {
+      return false;
+    }
+
+    return isSymmetric(p->right, q->left) && isSymmetric(p->left, q->right);
+  }
+
+ public:
+  bool isSymmetric(TreeNode *root) {
+    if (root == nullptr) {
+      return true;
+    }
+    return isSymmetric(root->left, root->right);
+  }
+};
+```
+
 [102 二叉树的层序遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
 
 [108 将有序数组转化为二叉搜索树](https://leetcode-cn.com/problems/convert-sorted-array-to-binary-search-tree/)
