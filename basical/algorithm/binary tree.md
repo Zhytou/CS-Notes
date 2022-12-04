@@ -230,6 +230,40 @@ public:
 
 [129 求根节点到叶节点数字之和](https://leetcode-cn.com/problems/sum-root-to-leaf-numbers/)
 
+[173 二叉树迭代器](https://leetcode.cn/problems/binary-search-tree-iterator/description/)
+
+思路：深度优先遍历
+
+代码：
+
+``` c++
+class BSTIterator {
+  stack<TreeNode *> inorder;
+
+ public:
+  BSTIterator(TreeNode *root) {
+    while (root) {
+      inorder.push(root);
+      root = root->left;
+    }
+  }
+
+  int next() {
+    auto root = inorder.top();
+    inorder.pop();
+    int ret = root->val;
+    root = root->right;
+    while (root) {
+      inorder.push(root);
+      root = root->left;
+    }
+    return ret;
+  }
+
+  bool hasNext() { return !inorder.empty(); }
+};
+```
+
 [236  二叉树的最近公共祖先](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/)
 
 实现：

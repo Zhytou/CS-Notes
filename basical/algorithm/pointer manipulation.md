@@ -103,6 +103,31 @@
 
 ### 难题
 
+[31 下一个排列](https://leetcode.cn/problems/next-permutation/description/)
+
+- 思路:![下一个排列思路](../img/code_pointer_manipulation.png)
+- 代码：
+
+``` c++
+class Solution {
+ public:
+  void nextPermutation(vector<int> &nums) {
+    int i = nums.size() - 2;
+    while (i >= 0 && nums[i] >= nums[i + 1]) {
+      i--;
+    }
+    if (i >= 0) {
+      int j = nums.size() - 1;
+      while (j >= 0 && nums[i] >= nums[j]) {
+        j--;
+      }
+      swap(nums[i], nums[j]);
+    }
+    reverse(nums.begin() + i + 1, nums.end());
+  }
+};
+```
+
 [76 最小覆盖子串](https://leetcode-cn.com/problems/minimum-window-substring/)
 
 - 思路：滑动窗口

@@ -39,6 +39,38 @@ public:
 };
 ```
 
+[155 最小栈](https://leetcode.cn/problems/min-stack/description/)
+
+代码：
+
+``` c++
+class MinStack {
+ private:
+  stack<int> nums, minNums;
+
+ public:
+  MinStack() {}
+
+  void push(int val) {
+    if (nums.empty() || val <= minNums.top()) {
+      minNums.push(val);
+    }
+    nums.push(val);
+  }
+
+  void pop() {
+    if (nums.top() == minNums.top()) {
+      minNums.pop();
+    }
+    nums.pop();
+  }
+
+  int top() { return nums.top(); }
+
+  int getMin() { return minNums.top(); }
+};
+```
+
 [239 滑动窗口最大值](https://leetcode.cn/problems/sliding-window-maximum/description/)
 
 思路：

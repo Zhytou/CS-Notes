@@ -96,7 +96,7 @@ index:cache block index
 
 ## 策略 Cache Replacement Policy
 
-
+### LRU
 
 ## 模式 Cache Pattern
 

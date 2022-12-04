@@ -26,4 +26,3 @@ public:
     node& operator=(node&&);	//move assignment operator
 }
 ```
-

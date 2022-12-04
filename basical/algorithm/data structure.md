@@ -4,21 +4,53 @@
 
 ## 基础概念
 
-### 栈
+栈
 
-### 堆
+堆
 
-### 队列
+队列
 
-### 哈希表
+哈希表
 
 ## 经典题目
 
 ### 基础题
 
-#### [225 用队列实现栈](https://leetcode-cn.com/problems/implement-stack-using-queues/)
+[155 最小栈](https://leetcode.cn/problems/min-stack/description/)
 
-+ 简介：略
+思路：单调栈
+
+代码：
+
+``` c++
+class MinStack {
+ private:
+  stack<int> nums, minNums;
+
+ public:
+  MinStack() {}
+
+  void push(int val) {
+    if (nums.empty() || val <= minNums.top()) {
+      minNums.push(val);
+    }
+    nums.push(val);
+  }
+
+  void pop() {
+    if (nums.top() == minNums.top()) {
+      minNums.pop();
+    }
+    nums.pop();
+  }
+
+  int top() { return nums.top(); }
+
+  int getMin() { return minNums.top(); }
+};
+```
+
+[225 用队列实现栈](https://leetcode-cn.com/problems/implement-stack-using-queues/)
 
 + 思路：一个队列实现，简单来说就是==循环入队==保证队首始终为最后入队的元素
 
@@ -70,9 +102,9 @@
 
 ### 中等题
 
-#### [71 简化路径](https://leetcode-cn.com/problems/simplify-path/)
+[71 简化路径](https://leetcode-cn.com/problems/simplify-path/)
 
-#### [1996 游戏中的若角色数量](https://leetcode-cn.com/problems/the-number-of-weak-characters-in-the-game/)
+[1996 游戏中的若角色数量](https://leetcode-cn.com/problems/the-number-of-weak-characters-in-the-game/)
 
 + 思路：**单调栈**
 
@@ -104,7 +136,7 @@
   };
   ```
 
-#### [2048 股票价格波动](https://leetcode-cn.com/problems/stock-price-fluctuation/submissions/)
+[2048 股票价格波动](https://leetcode-cn.com/problems/stock-price-fluctuation/submissions/)
 
 + 思路：哈希表 + 两个优先队列
 
