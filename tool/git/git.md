@@ -1,5 +1,13 @@
 # Git
 
+- [Git](#git)
+  - [Basical Concepts](#basical-concepts)
+  - [Usage](#usage)
+    - [Simple example at a glance](#simple-example-at-a-glance)
+    - [Use .gitignore](#use-gitignore)
+    - [Other useful commands](#other-useful-commands)
+  - [Other](#other)
+
 ## Basical Concepts
 
 ![git workflow](../img/git_workflow.jpg)
@@ -46,3 +54,11 @@ git checkout: change the branch
 git branch -a: show all the branches you created including remote
 
 git diff xxx: show differences between two files
+
+## Other
+
+**git branch vs git tag**：
+
+Both tags and branches point to a commit, they are thus aliases for a specific hash and will save you time by not requiring to type in a hash.
+
+The difference between tags and branches are that a branch always points to the top of a development line and will change when a new commit is pushed whereas a tag will not change. Thus tags are more useful to "tag" a specific version and the tag will then always stay on that version and usually not be changed.
