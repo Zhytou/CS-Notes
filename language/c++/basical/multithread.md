@@ -48,12 +48,12 @@
 
 ### Unix process vs Unix thread
 
-**进程process**
+**进程process**:
 
-+ 进程是资源分配的基本单位。
+- 进程是资源分配的基本单位。
 
-+ 一个进程就是一个正在执行程序的实例。
-+ 一个进程包含了：
+- 一个进程就是一个正在执行程序的实例。
+- 一个进程包含了：
   - Process ID, process group ID, user ID, and group ID
   - Environment
   - Working directory
@@ -66,10 +66,10 @@
   - Shared libraries
   - Inter-process communication tools (such as message queues, pipes, semaphores, or shared memory).
 
-**线程thread**
+**线程thread**:
 
-+ 线程是独立调度的基本单元。
-+ 一个线程包含了
+- 线程是独立调度的基本单元。
+- 一个线程包含了
   - Stack pointer
   - Registers
   - Scheduling properties (such as policy or priority)
@@ -88,15 +88,15 @@ As we explained above, concurrent programming involves a shared memory location,
 
 ### Lock-free vs Lock-based Thread Synchronization
 
-**Lock-based**
+**Lock-based**:
 
 The lock-based synchronization is a historically popular way to avoid race conditions. The idea is simple. The segments of code where shared resources are accessed are identified as critical sections. A critical section is protected by a lock which ensures that only one thread can access the shared resource at a given time. To access the shared resource, a thread should acquire the lock first. The thread will release the lock when it no longer requires access to the shared resource. If another thread tries to acquire a lock that has already been acquired, the thread will be blocked (put to sleep) by the system.
 
-**Lock-free**
+**Lock-free**:
 
 As the name implies, the idea is to synchronize threads without the use of locks. Lock-free synchronization relies on atomic instructions and hardware support.
 
-**summary**
+**summary**:
 
 有锁编程利用互斥量来实现，无锁编程利用原子操作来实现。
 
@@ -108,7 +108,7 @@ As the name implies, the idea is to synchronize threads without the use of locks
 
 ### CAS:Compare-And-Swap Loop
 
-**比较并交换(compare and swap, CAS)**，是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。
+**比较并交换(compare and swap, CAS)**是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。
 
 ### volatile vs atomic
 
@@ -137,8 +137,7 @@ synchronization primitives are simple software mechanisms provided by a platform
 自旋锁其实是上面提到的互斥量中的一种，不同之处在于没竞争到自旋锁的线程会等待而非休眠。
 
 > Spin mutexes are a simple spin lock. If the lock is held by another thread when a thread tries to acquire it, the second thread will spin waiting for the lock to be released.
->
->  Due to this spinning nature, a context switch cannot be performed while holding a spin mutex to avoid deadlocking in the case of a thread owning a spin lock not being executed on a CPU and all other CPUs spinning on that lock.
+> Due to this spinning nature, a context switch cannot be performed while holding a spin mutex to avoid deadlocking in the case of a thread owning a spin lock not being executed on a CPU and all other CPUs spinning on that lock.
 
 #### 信号量 semaphore
 
@@ -166,13 +165,13 @@ synchronization primitives are simple software mechanisms provided by a platform
 
 ## 底层
 
-> 锁实际上能通过底层、操作系统和软件实现。
->
-> 硬件层面：CPU提供atomic的指令（lock前缀）
->
-> 软件层面：[Peterson‘s Algorithm](https://en.wikipedia.org/wiki/Peterson's_algorithm)实现
->
-> 操作系统：spin lock或者futex
+- 锁实际上能通过底层、操作系统和软件实现。
+
+- 硬件层面：CPU提供atomic的指令（lock前缀）
+
+- 软件层面：[Peterson‘s Algorithm](https://en.wikipedia.org/wiki/Peterson's_algorithm)实现
+
+- 操作系统：spin lock或者futex
 
 ### mutex底层
 
@@ -182,9 +181,7 @@ synchronization primitives are simple software mechanisms provided by a platform
 
 ### 线程管理 Thread Management
 
->  [Youtube - Bo Qian - C++ 11 Concurrent ](https://www.youtube.com/watch?v=LL8wkskDlbs&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2)
->
-> 学习笔记
+- [Youtube - Bo Qian - C++ 11 Concurrent](https://www.youtube.com/watch?v=LL8wkskDlbs&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2)
 
 #### thread
 
@@ -205,15 +202,15 @@ thread(Function f, Args args);
 
 函数2）为thread的移动构造函数；
 
-+ Constructs the thread object to represent the thread of execution that was represented by `other`. After this call `other` no longer represents a thread of execution.
+- Constructs the thread object to represent the thread of execution that was represented by `other`. After this call `other` no longer represents a thread of execution.
 
 函数3）说明thread 的拷贝构造函数被禁用
 
-+ thread是不能拷贝的，只能用`std::move`将一个线程移动到另一个线程对象中去。
+- thread是不能拷贝的，只能用`std::move`将一个线程移动到另一个线程对象中去。
 
 函数4）最常见的线程创建方式，利用函数和调用该函数的参数创建。
 
-+ 注意，这种创建方式值传参的，想要引用传参必须使用`std::ref`，具体如下：
+- 注意，这种创建方式值传参的，想要引用传参必须使用`std::ref`，具体如下：
 
   ``` c++
   void func(int i);
@@ -224,13 +221,13 @@ thread(Function f, Args args);
   thread t2(func, ref(num))
   ```
 
-**std::thread::join() vs std::thread::detach()**
+**std::thread::join() vs std::thread::detach()**:
 
 On the one hand, `std::thread::join()` allow parent thread to wait for the child thread to finish its execution;
 
 On the other hand, `std::thread::detach()` allow child thread to excute independently.
 
-**std::thread::swap(T&, T&) vs std::move()** 
+**std::thread::swap(T&, T&) vs std::move()** ：
 
 因为thread是不能复制构造的，所以只能使用右值进行转移，比如使用`std::swap`或`std::move`。
 
@@ -260,7 +257,7 @@ t1 = move(t2);
 
 #### mutex
 
-**std::mutex::lock() vs std::lock()**
+**std::mutex::lock() vs std::lock()**:
 
 `std::mutex::lock()`是`std::mutex`类中的一个成员函数，只能被`std::mutex`对象调用，当调用对象可以上锁，则成功锁住，否则发生死锁，所以一般不建议使用这个函数；
 

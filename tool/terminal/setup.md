@@ -2,7 +2,11 @@
 
 ## WSL
 
+Microsoft商店中下载。之后需要分别在Windows和bios中设置启用Windows的Linux子系统和启用虚拟化技术。
+
 ## Windows Terminal
+
+Microsoft商店中下载。
 
 ## Oh-my-zsh
 

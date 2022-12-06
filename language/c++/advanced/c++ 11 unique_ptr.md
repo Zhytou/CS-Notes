@@ -24,7 +24,7 @@ int main() {
     // p2 = nullptr
     // p1 points to Smokey
 
-	func(move(p1));
+    func(move(p1));
     //p1 = nullptr
     //parameter p points to Smokey
     //when out of the func scope, Smokey is destroyed
@@ -37,4 +37,3 @@ int main() {
     unique_ptr<Dog[]> p4(new Dog[3]);
 }
 ```
-

@@ -81,7 +81,7 @@ static_assert();
 //C++ 03
 class dog {
 public:
-   	dog() { init(); }
+    dog() { init(); }
     dog(int a) { init(); doOtherThing(); }
 };
 /* Cons:
@@ -145,4 +145,3 @@ int arr[A() + 3];
 ```
 
 ## lambda function
-

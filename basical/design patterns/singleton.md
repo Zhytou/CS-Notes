@@ -52,20 +52,13 @@
 
 ### 饿汉式
 
-**描述**
-
-+ 饿汉式就是在系统初始化的时候我们已经把对象创建好了，需要用的时候直接拿过来用就好了。
+**描述**：饿汉式就是在系统初始化的时候我们已经把对象创建好了，需要用的时候直接拿过来用就好了。
 
 **优点**
 
-+ 
-
 **缺点**
-
-
 
 ## 参考
 
-+ [singleton](https://refactoringguru.cn/design-patterns/singleton)
-+ [单例模式](https://www.runoob.com/design-pattern/singleton-pattern.html)
-
+- [singleton](https://refactoringguru.cn/design-patterns/singleton)
+- [单例模式](https://www.runoob.com/design-pattern/singleton-pattern.html)

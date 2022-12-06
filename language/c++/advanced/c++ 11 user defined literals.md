@@ -9,8 +9,6 @@ Literals are constants. C++ has 4 kinds of literals:
 - character
 - string
 
-
-
 When the units translation are required, the user defined literals can be helpful.
 
 ``` c++
@@ -30,6 +28,6 @@ Using key word `constexpr` will make compilers get the result before runtime, wh
 
 ## References
 
-+ [C++ Variables, Literals and Constants](https://www.programiz.com/cpp-programming/variables-literals)
+- [C++ Variables, Literals and Constants](https://www.programiz.com/cpp-programming/variables-literals)
 
-+ [cppreference.com - user defined literals](https://en.cppreference.com/w/cpp/language/user_literal)
+- [cppreference.com - user defined literals](https://en.cppreference.com/w/cpp/language/user_literal)

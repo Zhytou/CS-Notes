@@ -1,16 +1,13 @@
 # 基础
 
 - [基础](#基础)
-  - [结构体字节数](#结构体字节数)
+  - [结构体 Struct 字节大小](#结构体-struct-字节大小)
     - [原则](#原则)
     - [例子](#例子)
     - [作用](#作用)
   - [联合 Union](#联合-union)
   - [类型转换](#类型转换)
     - [隐式转换](#隐式转换)
-      - [算数转换](#算数转换)
-      - [数值转指针](#数值转指针)
-      - [转常量](#转常量)
     - [显式转换](#显式转换)
       - [命名的强制类型转换](#命名的强制类型转换)
       - [旧的强制类型转换](#旧的强制类型转换)
@@ -18,15 +15,19 @@
     - [指针与volatile](#指针与volatile)
     - [多线程与volatile](#多线程与volatile)
   - [const](#const)
-    - [引用与const](#引用与const)
     - [指针与const](#指针与const)
     - [成员函数与const](#成员函数与const)
-  - [引用与指针](#引用与指针)
+  - [static](#static)
+    - [局部变量与static](#局部变量与static)
+    - [全局变量与static](#全局变量与static)
+    - [成员变量与static](#成员变量与static)
+    - [成员函数与static](#成员函数与static)
+    - [单例模式与static](#单例模式与static)
   - [位运算](#位运算)
   - [sizeof](#sizeof)
   - [参考](#参考)
 
-## 结构体字节数
+## 结构体 Struct 字节大小
 
 ### 原则
 
@@ -64,11 +65,11 @@ struct A {
 
 ### 隐式转换
 
-#### 算数转换
+- 算数转换
 
-#### 数值转指针
+- 数值转指针
 
-#### 转常量
+- 转常量
 
 ### 显式转换
 
@@ -170,8 +171,6 @@ char* volatile pchv;
 
 ## const
 
-### 引用与const
-
 ### 指针与const
 
 **顶层const**：
@@ -195,7 +194,69 @@ const int *p = 1;//p是一个指向常量的指针，即底层const
 
 可以将`const`放在参数列表之后来修饰`this`指针，从而保障`const`变量也能调用该成员函数。
 
-## 引用与指针
+## static
+
+### 局部变量与static
+
+- 静态局部变量在程序执行到该对象的声明处时被首次初始化，即以后的函数调用不再进行初始化；
+
+- 静态局部变量一般在声明处初始化，如果没有显式初始化，会被程序自动初始化为 0；
+
+### 全局变量与static
+
+- 全局变量是不显式用`static`修饰的全局变量，全局变量默认是有外部链接性的，作用域是整个工程，在一个文件内定义的全局变量，在另一个文件中，通过`extern`全局变量名的声明，就可以使用全局变量。
+
+- 全局静态变量是显式用`static`修饰的全局变量，作用域是声明此变量所在的文件，其他的文件即使用`extern`声明也不能使用。
+
+### 成员变量与static
+
+- 被`static`修饰的变量属于类变量，可以通过类名.变量名直接引用，而不需要创建一个对象。
+
+- 类的非静态成员函数可以调用用静态成员。
+
+- 一般来说，不在类内初始化静态成员变量（仅常量可以在内部初始化）。
+
+### 成员函数与static
+
+- 静态成员函数只能定义在类外部。
+
+- 被 static 修饰的方法属于类方法，可以通过类名.方法名直接引用，而不需要创建一个对象。
+
+- 静态成员函数中不能调用非静态成员。
+
+- 静态成员函数没有 this 指针。
+
+### 单例模式与static
+
+``` c++
+template<typename T>
+class Singleton{
+private:
+  static Singleton* singleton_;
+  T val_;
+public:
+  Singleton(T val) : val_(val) {
+    if (singleton_ == nullptr) {
+      singleton_ = this;
+    }
+  }
+  Singleton(const Singleton& other) = delete;
+  Singleton& operator=(const Singleton& other) = delete;
+
+  static Singleton* getInstance() {
+    return singleton_;
+  }
+}
+
+Singleton::singleton_ = nullptr;
+
+Singleton* Singleton::getInstance() {
+  if (singleton_ == nullptr) {
+    singleton = new Singleton(val)
+  }
+  return singleton_;
+}
+```
 
 ## 位运算
 

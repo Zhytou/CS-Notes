@@ -39,4 +39,3 @@ However, With C++ 17, `shared_ptr` can be used to manage a dynamically allocated
 ``` c++
 shared_ptr<int[]> sp(new int[10]);
 ```
-

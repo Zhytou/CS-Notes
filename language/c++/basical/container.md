@@ -1,12 +1,22 @@
 # 容器
 
+- [容器](#容器)
+  - [顺序容器](#顺序容器)
+    - [vector](#vector)
+    - [priority\_queue](#priority_queue)
+  - [关联容器](#关联容器)
+    - [底层原理](#底层原理)
+      - [实战](#实战)
+    - [冲突解决](#冲突解决)
+      - [开放定址](#开放定址)
+      - [链地址法](#链地址法)
+      - [再哈希法](#再哈希法)
+      - [建立公共溢出区](#建立公共溢出区)
+  - [参考](#参考)
+
 ## 顺序容器
 
-### 底层
-
-### 实战
-
-#### vector
+### vector
 
 ``` c++
 template <typename T>
@@ -50,7 +60,7 @@ private:
 };
 ```
 
-#### priority_queue
+### priority_queue
 
 ``` c++
 //Compare类是Functor,即重载了operator()的类

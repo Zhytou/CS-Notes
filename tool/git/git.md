@@ -62,3 +62,33 @@ git diff xxx: show differences between two files
 Both tags and branches point to a commit, they are thus aliases for a specific hash and will save you time by not requiring to type in a hash.
 
 The difference between tags and branches are that a branch always points to the top of a development line and will change when a new commit is pushed whereas a tag will not change. Thus tags are more useful to "tag" a specific version and the tag will then always stay on that version and usually not be changed.
+
+**set user name and email**:
+
+``` bash
+# make sure the email same as your github registered email, it's important to count your contribution
+git config --global user.name "Zhytou"
+git config --global user.email "zhoytou@gmail.com"
+```
+
+**use ssh instead of http**:
+
+``` bash
+# generate key
+ssh-keygen -t rsa -C "zhoytou@gmail.com"
+
+# show the public key and add it to your personal account
+cat id_rsa.pub
+
+# show remote url and change it into ssh
+git remote -v
+git remote set-url origin git@github.com:Zhytou/project.git
+
+# start ssh-agent
+eval `ssh-agent -s`
+
+# add the private key
+ssh-add ~/.ssh/id_rsa
+
+# then you're ready to go
+```

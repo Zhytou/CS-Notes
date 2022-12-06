@@ -1,10 +1,24 @@
 # 杂项
 
-## Lambda expression
+- [杂项](#杂项)
+  - [迭代器](#迭代器)
+  - [可调用对象](#可调用对象)
+  - [运行时类型识别 RTTI](#运行时类型识别-rtti)
+    - [typeid](#typeid)
+    - [dynamic\_cast](#dynamic_cast)
+  - [PIMPL 具体实现的指针](#pimpl-具体实现的指针)
+  - [CRTP 奇异递归模板模式](#crtp-奇异递归模板模式)
+  - [参考](#参考)
+
+## 迭代器
+
+## 可调用对象
+
+**Lambda**:
 
 A lambda expression creates an nameless functor, it's syntactic sugar.
 
-## Functor class
+**Functor class**:
 
 Functors are objects that can be treated as though they are a function or function pointer.
 
@@ -12,7 +26,7 @@ A functor is pretty much just a class which defines the operator(). That lets yo
 
 One nice thing about functors is that unlike regular functions, they can contain state which means that it can be customized.
 
-## std::function
+**std::function**:
 
 std::function是一个可变参类模板，是一个通用的函数包装器（Polymorphic function wrapper）。std::function的实例可以存储、复制和调用任何可复制构造的可调用目标，包括普通函数、成员函数、类对象（重载了operator()的类的对象）、Lambda表达式等。是对C++现有的可调用实体的一种类型安全的包裹（相比而言，函数指针这种可调用实体，是类型不安全的）。
 
@@ -58,17 +72,17 @@ CRTP（curiously recurring template pattern）是C++模板编程时的一种惯�
 
 **lambda**：
 
-+ [stackoverflow - lambda vs functor](https://stackoverflow.com/questions/4686507/lambda-expression-vs-functor-in-c)
-+ [all about lambda function in c++](http://www.vishalchovatiya.com/learn-lambda-function-in-cpp-with-example/)
+- [stackoverflow - lambda vs functor](https://stackoverflow.com/questions/4686507/lambda-expression-vs-functor-in-c)
+- [all about lambda function in c++](http://www.vishalchovatiya.com/learn-lambda-function-in-cpp-with-example/)
 
 **functor**：
 
-+ [stackoverflow - functor](https://stackoverflow.com/questions/356950/what-are-c-functors-and-their-uses)
+- [stackoverflow - functor](https://stackoverflow.com/questions/356950/what-are-c-functors-and-their-uses)
 
 **RTTI**：
 
-+ [C++ Primer 19.2运行时类型识别](/)
+- [C++ Primer 19.2运行时类型识别](/)
 
 **PIMPL**：
 
-+ [Pimpl技术——编译期封装](https://www.cnblogs.com/KillerAery/p/9539705.html)
+- [Pimpl技术——编译期封装](https://www.cnblogs.com/KillerAery/p/9539705.html)
