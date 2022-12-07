@@ -12,10 +12,59 @@
 ### 访问说明符
 
 - `private`：仅自身和友元可以访问。
+
 - `protected`：仅自身、派生类和友元可以访问。
+  - 注意： 派生类成员或者友元只能通过派生类对象来访问基类的受保护成员。
+
+``` c++
+class Base{
+  protected:
+    int n;
+};
+
+class Test : public Base{
+  // 能访问
+  friend void func1(Test&);
+  // 不能访问
+  friend void func1(Base&);
+};
+```
+
 - `public`：全部公开。
 
 问题：派生类的友元能够访问基类的`private`成员吗？
+
+答案：不可以（实践检验）。
+
+``` c++
+#include <iostream>
+
+using namespace std;
+
+class Base {
+ private:
+  int n;
+};
+
+class Derived : public Base {
+ public:
+  friend FriendClass;
+  friend void printN(Derived& d);
+};
+
+class FriendClass {
+ public:
+  void print(Derived& d) { cout << d.n << endl; };
+};
+
+void printN(Derived& d) { cout << d.n << endl; };
+
+int main() {
+  Derived d;
+  FriendClass fc;
+  fc.print(d);
+}
+```
 
 ### 友元
 
