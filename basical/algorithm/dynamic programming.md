@@ -1,6 +1,26 @@
 # 动态规划
 
+- [动态规划](#动态规划)
+  - [基础概念](#基础概念)
+    - [题型分类](#题型分类)
+  - [经典例题](#经典例题)
+    - [中等题](#中等题)
+    - [难题](#难题)
+
 ## 基础概念
+
+### 题型分类
+
+按内容
+
+- 区间问题
+  - [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
+  - [452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
+- 股票问题
+- 子序列
+- 其他
+
+按解法
 
 ## 经典例题
 
@@ -63,6 +83,36 @@ class Solution {
     }
 
     return dp[n];
+  }
+};
+```
+
+[300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int lengthOfLIS(vector<int>& nums) {
+    int n = nums.size();
+    vector<int> dp(n, 1);
+
+    for (int i = nums.size() - 1; i >= 0; i--) {
+      int dpj = 0;
+      for (int j = nums.size() - 1; j > i; j--) {
+        if (nums[i] < nums[j]) {
+          dpj = max(dpj, dp[j]);
+        }
+      }
+      dp[i] += dpj;
+    }
+
+    int ret = 1;
+    for (int i = 0; i < dp.size(); i++) {
+      ret = max(ret, dp[i]);
+    }
+    return ret;
   }
 };
 ```

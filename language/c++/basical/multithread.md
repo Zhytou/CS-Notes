@@ -187,7 +187,7 @@ synchronization primitives are simple software mechanisms provided by a platform
 
 > 特别注意由于pthread并非默认库，所以编译时要手动将pthread链接进去，具体指令为 g++  xxx.cpp -l pthread -o xxx
 
-**std::thread**
+**std::thread**:
 
 thread主要的构造函数如下：
 
@@ -273,11 +273,11 @@ lock(lk1), lock(lk2);
 lock(lk1, lk2);
 ```
 
-**std::mutex vs std::recursive_mutex**
+**std::mutex vs std::recursive_mutex**:
 
 一个线程尝试多次获取`std::mutex`会导致死锁，但一个线程却可以多次获取`std::recursive_mutex`而不出现问题。
 
-**std::lock_guard vs std::unique_lock**
+**std::lock_guard vs std::unique_lock**:
 
 首先，上述二者都是基于RAII思想的管理互斥量的“锁”，都能够代替互斥量的`lock()`和`unlock()`，并且都能有效解决资源忘记释放的问题；
 
@@ -287,13 +287,13 @@ lock(lk1, lk2);
 
 总的来说，`std::unique_lock`有更高的灵活性，但也要付出更性能损耗；与之相反的，`std::lock_guard`损耗更低，但灵活性也更差。
 
-**std::scoped_lock**
+**std::scoped_lock**:
 
 > C++17 also provides `scoped_lock` for the specific purpose of locking multiple mutexes that prevents deadlock in a RAII style, similar to `lock_guard`.
 
 简单来说，`std::scoped_lock`就是`std::lock_guard`的升级版，它能够以RAII的方式管理多个`std::mutex`。
 
-**std::adpot_lock & std::defer_lock**
+**std::adpot_lock & std::defer_lock**:
 
 `std::defer_lock`一般和`std::unique_lock`一起使用，表示初始化`std::unique_lock`对象时，对应的`mutex`不用立刻上锁。
 
@@ -377,8 +377,8 @@ typedef enum memory_order {
 
 ## 实战
 
-> 参考 陈硕 muduo C++网络库的代码进行的一些总结。
->
+参考 陈硕 muduo C++网络库的代码进行的一些总结。
+
 > muduo库是一个基于POSIX thread的非阻塞事件驱动型C++网络库。
 
 ### 锁
@@ -390,14 +390,6 @@ typedef enum memory_order {
 *MutexLockGuard* is a object that manages *MutexLock object* by keeping it locked. It guarantees the *MutexLock object* is properly unlocked in case an exception is thrown.
 
 > 实际上，MutexLock就对应std::mutex；MutexLockGuard就对应std::lock_guard。
-
-**代码**
-
-``` c++
-
-```
-
-**注意**
 
 ### 条件变量
 
@@ -446,9 +438,6 @@ public:
 ```
 
 ### 无锁栈
-
-``` c++
-```
 
 ### 生产-消费问题
 
@@ -501,72 +490,70 @@ int main() {
 }
 ```
 
-![](../img/producer_consumer_example.png)
+![消费者](../img/producer_consumer_example.png)
 
 ## 参考
 
-**thread pthread & process**
+**thread pthread & process**:
 
-+ [A tutorial on mdern multithreadiing and concurrency in C++](https://www.educative.io/blog/modern-multithreading-and-concurrency-in-cpp)
-+ [POSIX Threads Programming](https://hpc-tutorials.llnl.gov/posix/)
-+ [What is a Thread?](https://hpc-tutorials.llnl.gov/posix/what_is_a_thread/)
-+ [c++11 std::threads vs posix threads](https://stackoverflow.com/questions/13134186/c11-stdthreads-vs-posix-threads)
-+ [陈硕关于thread or pthread的回答](https://www.zhihu.com/question/24109413/answer/26777678)
+- [A tutorial on mdern multithreadiing and concurrency in C++](https://www.educative.io/blog/modern-multithreading-and-concurrency-in-cpp)
+- [POSIX Threads Programming](https://hpc-tutorials.llnl.gov/posix/)
+- [What is a Thread?](https://hpc-tutorials.llnl.gov/posix/what_is_a_thread/)
+- [c++11 std::threads vs posix threads](https://stackoverflow.com/questions/13134186/c11-stdthreads-vs-posix-threads)
+- [陈硕关于thread or pthread的回答](https://www.zhihu.com/question/24109413/answer/26777678)
 
-**Lock free vs Lock based**
+**Lock free vs Lock based**:
 
-+ [Lock-based vs Lock-free Thread Synchronization](https://medium.com/geekculture/lock-based-vs-lock-free-thread-synchronization-cbae710a8ab9)
-+ [原子操作与无锁编程](https://www.hiyu.space/2021/02/20/C-%E5%A4%9A%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%BA%94%EF%BC%89-%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%97%A0%E9%94%81%E7%BC%96%E7%A8%8B/)
-+ **[An introduction to Lock-Free Programming](https://preshing.com/20120612/an-introduction-to-lock-free-programming/)**
+- [Lock-based vs Lock-free Thread Synchronization](https://medium.com/geekculture/lock-based-vs-lock-free-thread-synchronization-cbae710a8ab9)
+- [原子操作与无锁编程](https://www.hiyu.space/2021/02/20/C-%E5%A4%9A%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%BA%94%EF%BC%89-%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%97%A0%E9%94%81%E7%BC%96%E7%A8%8B/)
+- **[An introduction to Lock-Free Programming](https://preshing.com/20120612/an-introduction-to-lock-free-programming/)**
 
-**RMW**
+**RMW**:
 
-+ [read-modify-write](https://zh.wikipedia.org/wiki/Read-modify-write)
+- [read-modify-write](https://zh.wikipedia.org/wiki/Read-modify-write)
 
-**CAS**
+**CAS**:
 
-+ [比较并交换 cas](https://zh.wikipedia.org/wiki/%E6%AF%94%E8%BE%83%E5%B9%B6%E4%BA%A4%E6%8D%A2)
+- [比较并交换 cas](https://zh.wikipedia.org/wiki/%E6%AF%94%E8%BE%83%E5%B9%B6%E4%BA%A4%E6%8D%A2)
 
-**TSL**
+**TSL**:
 
-+ [Test and set lock](https://zh.wikipedia.org/wiki/%E6%A3%80%E6%9F%A5%E5%B9%B6%E8%AE%BE%E7%BD%AE)
+- [Test and set lock](https://zh.wikipedia.org/wiki/%E6%A3%80%E6%9F%A5%E5%B9%B6%E8%AE%BE%E7%BD%AE)
 
-**同步原语**
+**同步原语**:
 
-+ [synchronization primitives](https://stackoverflow.com/questions/8017507/definition-of-synchronization-primitive)
-+ [monitor vs condition variable](https://stackoverflow.com/questions/31331724/monitor-and-conditional-variable-are-they-the-same)
-+ [现代操作系统 2.3 进程间的通信](file:///D:/ZhY/Workspace/Notes/repick_note/basical/operating%20system/%E7%8E%B0%E4%BB%A3%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%20%E5%8E%9F%E4%B9%A6%E7%AC%AC4%E7%89%88[%E9%AB%98%E6%B8%85%E6%89%AB%E6%8F%8F%E7%89%88].pdf)
+- [synchronization primitives](https://stackoverflow.com/questions/8017507/definition-of-synchronization-primitive)
+- [monitor vs condition variable](https://stackoverflow.com/questions/31331724/monitor-and-conditional-variable-are-they-the-same)
+- [现代操作系统 2.3 进程间的通信](file:///D:/ZhY/Workspace/Notes/repick_note/basical/operating%20system/%E7%8E%B0%E4%BB%A3%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%20%E5%8E%9F%E4%B9%A6%E7%AC%AC4%E7%89%88[%E9%AB%98%E6%B8%85%E6%89%AB%E6%8F%8F%E7%89%88].pdf)
 
-**spin lock vs sleep lock(mutex)**
+**spin lock vs sleep lock(mutex)**:
 
-+ [Synchronization Primitives](https://www.usenix.org/legacy/publications/library/proceedings/bsdcon02/full_papers/baldwin/baldwin_html/node5.html)
+- [Synchronization Primitives](https://www.usenix.org/legacy/publications/library/proceedings/bsdcon02/full_papers/baldwin/baldwin_html/node5.html)
 
-**mutex & atomic noncopyable**
+**mutex & atomic noncopyable**:
 
-+ [stackoverflow- why is mutex noncopyable or movable?](https://stackoverflow.com/questions/62369119/why-is-stdmutex-neither-copyable-nor-movable)
-+ [stackoverflow- why is atomic noncopybale?](https://stackoverflow.com/questions/15249998/why-are-stdatomic-objects-not-copyable)
+- [stackoverflow- why is mutex noncopyable or movable?](https://stackoverflow.com/questions/62369119/why-is-stdmutex-neither-copyable-nor-movable)
+- [stackoverflow- why is atomic noncopybale?](https://stackoverflow.com/questions/15249998/why-are-stdatomic-objects-not-copyable)
 
-**底层**
+**底层**:
 
-+ [stackoverflow-how are mutexes implemented](https://stackoverflow.com/questions/1485924/how-are-mutexes-implemented)
-+ [知乎-互斥锁的底层原理是什么？](https://www.zhihu.com/question/332113890)
+- [stackoverflow-how are mutexes implemented](https://stackoverflow.com/questions/1485924/how-are-mutexes-implemented)
+- [知乎-互斥锁的底层原理是什么？](https://www.zhihu.com/question/332113890)
 
-**C++11 STL**
+**C++11 STL**:
 
-+  [Youtube - Bo Qian - C++ 11 Concurrent ](https://www.youtube.com/watch?v=LL8wkskDlbs&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2)
-
-+ [mutex vs recursive_mutex](https://stackoverflow.com/questions/14498892/stdmutex-vs-stdrecursive-mutex-as-class-member)
-+ [std::lock() vs std::mutex::lock()](http://www.cplusplus.com/reference/mutex/lock/)
-+ [unique_lock vs lock_guard](https://stackoverflow.com/questions/20516773/stdunique-lockstdmutex-or-stdlock-guardstdmutex)
-+ [stackoverlfow - locking multiple mutexes](https://stackoverflow.com/questions/13483767/locking-multiple-mutexes)
-+ [cppreference 17 scoped_lock](https://en.cppreference.com/w/cpp/thread/scoped_lock/scoped_lock)
-+ [stackoverflow - adopt_lock vs defer_lock](https://stackoverflow.com/questions/27089434/whats-the-difference-between-first-locking-and-creating-a-lock-guardadopt-lock)
+- [Youtube - Bo Qian - C++ 11 Concurrent](https://www.youtube.com/watch?v=LL8wkskDlbs&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2)
+- [mutex vs recursive_mutex](https://stackoverflow.com/questions/14498892/stdmutex-vs-stdrecursive-mutex-as-class-member)
+- [std::lock() vs std::mutex::lock()](http://www.cplusplus.com/reference/mutex/lock/)
+- [unique_lock vs lock_guard](https://stackoverflow.com/questions/20516773/stdunique-lockstdmutex-or-stdlock-guardstdmutex)
+- [stackoverlfow - locking multiple mutexes](https://stackoverflow.com/questions/13483767/locking-multiple-mutexes)
+- [cppreference 17 scoped_lock](https://en.cppreference.com/w/cpp/thread/scoped_lock/scoped_lock)
+- [stackoverflow - adopt_lock vs defer_lock](https://stackoverflow.com/questions/27089434/whats-the-difference-between-first-locking-and-creating-a-lock-guardadopt-lock)
 
 **实战**
 
-+ [muduo](https://github.com/chenshuo/muduo)
+- [muduo](https://github.com/chenshuo/muduo)
 
 **无锁队列**
 
-+ [Lock Free Queue](https://jbseg.medium.com/lock-free-queues-e48de693654b)
-
+- [Lock Free Queue](https://jbseg.medium.com/lock-free-queues-e48de693654b)

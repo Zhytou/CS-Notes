@@ -17,6 +17,7 @@
     - [std::move vs std::forward](#stdmove-vs-stdforward)
       - [std::move](#stdmove)
       - [std::forward](#stdforward)
+  - [traits 技术](#traits-技术)
   - [参考](#参考)
 
 ## 定义模板
@@ -24,6 +25,8 @@
 ### 函数模板
 
 ### 类模板
+
+**类模板与继承**：
 
 ## 模板参数推断
 
@@ -135,6 +138,8 @@ C++标准库定义了`std::forward`函数来保证实现完美转发。
 当参数不是一个左值引用时，函数返回一个右值引用；
 
 当参数是一个左值引用时，函数什么都不修改直接返回。
+
+## traits 技术
 
 ## 参考
 

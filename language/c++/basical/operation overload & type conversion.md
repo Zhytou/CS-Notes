@@ -2,6 +2,7 @@
 
 - [操作重载与类型转换](#操作重载与类型转换)
   - [下标运算符](#下标运算符)
+  - [递增或递减运算符](#递增或递减运算符)
   - [函数调用运算符（functor）](#函数调用运算符functor)
     - [lambda时函数对象](#lambda时函数对象)
     - [标准库定义的函数对象](#标准库定义的函数对象)
@@ -21,6 +22,21 @@ class StrVec{
 public:
     const string& operator[](size_t n) const;
     string& operator[](size_t n);
+}
+```
+
+## 递增或递减运算符
+
+**如何区分前置和后置运算符**:
+
+``` c++
+class XXX{
+  public:
+  // 前置运算符 ++XXX
+  XXX& operator++();
+  // 后置运算符 XXX++
+  XXX& operator++(size_t);
+
 }
 ```
 
