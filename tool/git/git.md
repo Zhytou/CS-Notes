@@ -7,6 +7,7 @@
     - [Use .gitignore](#use-gitignore)
     - [Other useful commands](#other-useful-commands)
   - [Other](#other)
+  - [References](#references)
 
 ## Basical Concepts
 
@@ -49,7 +50,9 @@ cat .gitignore > .git/info/exclude
 
 git status: check the files state(untracked or unstaged)
 
-git checkout: change the branch
+git checkout -b : add a new branch
+
+git checkout: change to another branch
 
 git branch -a: show all the branches you created including remote
 
@@ -90,5 +93,12 @@ eval `ssh-agent -s`
 # add the private key
 ssh-add ~/.ssh/id_rsa
 
-# then you're ready to go
+# test 
+ssh -T git@github.com
+
+# see something like "Hi Zhytou! You've successfully authenticated, but GitHub does not provide shell access", then you're ready to go
 ```
+
+## References
+
+[conneting to github with ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
