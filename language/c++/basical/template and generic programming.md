@@ -17,10 +17,31 @@
     - [std::move vs std::forward](#stdmove-vs-stdforward)
       - [std::move](#stdmove)
       - [std::forward](#stdforward)
-  - [traits 技术](#traits-技术)
+  - [Traits 技术](#traits-技术)
+    - [模板参数推导](#模板参数推导)
+    - [声明内嵌](#声明内嵌)
+    - [偏特化](#偏特化)
   - [参考](#参考)
 
 ## 定义模板
+
+**typename vs class**:
+
+在模板定义语法中关键字`class`与`typename`的作用完全一样。
+
+但`typename`还有另外一个作用。它能表示使用`嵌套依赖类型(nested depended name)`。例如：
+
+``` c++
+ 1 template <class I>
+ 2 struct iterator_traits {
+ 3     typedef typename I::value_type value_type;
+ 4 };
+ 5 
+ 6 template <class I>
+ 7 struct iterator_traits<T*> {
+ 8     typedef T value_type;
+ 9 };
+```
 
 ### 函数模板
 
@@ -139,8 +160,85 @@ C++标准库定义了`std::forward`函数来保证实现完美转发。
 
 当参数是一个左值引用时，函数什么都不修改直接返回。
 
-## traits 技术
+## Traits 技术
+
+### 模板参数推导
+
+在实现迭代器时，我们可以使用模板参数推导机制写出如下代码：
+
+``` c++
+template <typename Iter, typename ElementType>
+void func_impl(Iter iter, ElementType type) {
+        
+}
+
+template <typename Iter>
+void func_wrapper(Iter iter) {
+        func_impl(iter, *iter); 
+}
+```
+
+这里我们需要多写一个包装函数来掩盖底层实现，否则就要每次多传一个迭代器指向的值，而且无法返回指向类型。显然，我们还需要找到更好的方法。
+
+### 声明内嵌
+
+声明内嵌型别似乎是个好主意，这样我们就可以直接获取元素类型。
+
+``` c++
+template <typename T>
+class MyIter {
+    typedef T value_type; // 内嵌型别声明
+};
+
+template <class I>
+// 返回类型为迭代器指向类型
+typename I::value_type func(I ite) {
+    return *ite;
+}
+```
+
+尽管上述代码已经很不错了，但它有一个致命的问题——不支持原生指针。这时候就需要偏特化的出现了。
+
+### 偏特化
+
+偏特化是指针对模板参数进行更进一步的条件限制所设计出来的一个特化版本。例如：
+
+``` c++
+// 模板
+template<typename T>
+class XXX{
+  ...
+};
+
+// 偏特化模板
+template<typename T>
+class XXX<T*>{
+  ...
+};
+```
+
+所谓的`Traits`技术，又被叫做特性萃取技术。例如，下面这个模板就是使用了`Traits`技术来萃取迭代器的特性。
+
+``` c++
+// 迭代器萃取器
+template<typename I>
+struct iterator_traits {
+  typedef typename I::value_type value_type;
+}
+
+// 该迭代器萃取器 偏特化版本（支持原生指针）
+template<typename T>
+struct iterator_traits<T*>{
+  typedef T value_type;
+}
+
+// 某迭代器函数（支持原生指针）
+template<typename I>
+typename iterator_traits<I>::value_type func(I itr) {}
+```
 
 ## 参考
 
-- [C++ Primer](\)
+- [C++ Primer](https://github.com/bumzy/book/blob/master/C%2B%2B%20%20Primer%E4%B8%AD%E6%96%87%E7%89%88%EF%BC%88%E7%AC%AC%E4%BA%94%E7%89%88%EF%BC%89.pdf)
+- [STL 源码剖析-3.4 Traits编程技法](\https://leezw.net/assets/pdf/STL%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90.pdf)
+- [C++ Traits技术浅谈](https://www.cnblogs.com/mangoyuan/p/6446046.html)
