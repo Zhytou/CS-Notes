@@ -18,9 +18,12 @@
 - 区间问题
   - [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
   - [452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
-- 股票问题
-- 子序列
+- 最长子序列
+  - [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
+  - [646 最长数对链](https://leetcode.cn/problems/maximum-length-of-pair-chain/description/)
+  - [354 俄罗斯套娃信封问题](https://leetcode.cn/problems/russian-doll-envelopes/)
 - 其他
+  - [738 单调递增的数字](https://leetcode.cn/problems/monotone-increasing-digits/)
 
 ## 经典例题
 
@@ -77,6 +80,33 @@ public:
 
 [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
 
+思路：类似[452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int eraseOverlapIntervals(vector<vector<int>>& intervals) {
+    int ret = 0;
+    sort(
+        intervals.begin(), intervals.end(),
+        [](const vector<int>& a, const vector<int>& b) { return a[0] < b[0]; });
+
+    int i = intervals.size() - 1;
+    while (i >= 0) {
+      int j = i - 1;
+      while (j >= 0 && intervals[j][1] > intervals[i][0]) {
+        j -= 1;
+      }
+      ret += i - j - 1;
+      i = j;
+    }
+    return ret;
+  }
+};
+```
+
 [452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
 
 思路：
@@ -112,11 +142,15 @@ class Solution {
 
 [646 最长数对链](https://leetcode.cn/problems/maximum-length-of-pair-chain/description/)
 
-思路：和[300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)思路类似，同样是维护一个数组`d` ，表示长度为`i`的上升子序列的末尾数对的最小右边界值。
+思路：
+
+- 解法一：和[300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)思路类似，同样是维护一个数组`d` 。只不过该数组中`i`位置元素表示的是长度为`i`的上升子序列的末尾数对的最小右边界值。
+- 解法二：要挑选最长数对链的第一个数对时，最优的选择是挑选第二个数字最小的，这样能给挑选后续的数对留下更多的空间。按照这样的思路，可以先将输入按照第二个数字排序，然后不停地判断第一个数字是否能满足大于前一个数对的第二个数字即可。
 
 代码：
 
 ``` c++
+// 解法一
 class Solution {
  public:
   int findLongestChain(vector<vector<int>>& pairs) {
@@ -149,15 +183,123 @@ class Solution {
     return ret;
   }
 };
+
+// 解法二
+class Solution {
+public:
+    int findLongestChain(vector<vector<int>>& pairs) {
+        int curr = INT_MIN, res = 0;
+        sort(pairs.begin(), pairs.end(), [](const vector<int> &a, const vector<int> &b) {
+            return a[1] < b[1];
+        });
+        for (auto &p : pairs) {
+            if (curr < p[0]) {
+                curr = p[1];
+                res++;
+            }
+        }
+        return res;
+    }
+};
 ```
 
 [738 单调递增的数字](https://leetcode.cn/problems/monotone-increasing-digits/)
+
+思路：很直接明了的一道题。从左至右遍历每位数字，找到第一个开始下降的数字，将其减一，然后将其后续全部设置为9。需要注意的一点是，减一之后这个数之前的序列可能不满足递增了，需要递归减一并检查。
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int monotoneIncreasingDigits(int n) {
+    vector<int> num;
+    string sn = to_string(n);
+    for (int i = 0; i < sn.size(); i++) {
+      if (i != 0 && sn[i - 1] > sn[i]) {
+        break;
+      }
+      num.push_back(sn[i] - '0');
+    }
+
+    if (num.size() < sn.size()) {
+      for (int i = num.size() - 1; i >= 0; i--) {
+        num[i] -= 1;
+        if (i > 0 && num[i] >= num[i - 1]) {
+          break;
+        }
+        if (i > 0) {
+          num.pop_back();
+        }
+      }
+    }
+
+    int ret = 0;
+    for (int i = 0; i < sn.size(); i++) {
+      ret *= 10;
+      if (i < num.size()) {
+        ret += num[i];
+      } else {
+        ret += 9;
+      }
+    }
+    return ret;
+  }
+};
+```
 
 [1775 通过最少的次数使数组相等](https://leetcode.cn/problems/equal-sum-arrays-with-minimum-number-of-operations/description/)
 
 ### 难题
 
 [354 俄罗斯套娃信封问题](https://leetcode.cn/problems/russian-doll-envelopes/)
+
+思路：
+
+- 和[646 最长数对链](https://leetcode.cn/problems/maximum-length-of-pair-chain/description/)思路相同。维护一个数组`d` 数组中`i`位置元素表示的是长度为`i`的上升子序列的末尾数对的最小右边界值。
+- 只不过排序有新要求。第一个元素升序排列；在第一个元素相同时，第二个元素降序排列。这是为了避免`[[4,5],[4,6],[4,7]]`这种情况，若不对排序进行修改，则会得到三的错误答案。
+- 简单来说，这题就是在限定一个维度的情况下，在另一个维度中寻找最长序列。
+
+代码：
+
+```c++
+class Solution {
+ public:
+  int maxEnvelopes(vector<vector<int>>& envelopes) {
+    int ret = 0;
+    sort(envelopes.begin(), envelopes.end(),
+         [](const vector<int>& a, const vector<int>& b) {
+           return a[0] < b[0] || a[0] == b[0] && a[1] > b[1];
+         });
+
+    vector<int> d;
+
+    for (auto& envelope : envelopes) {
+      if (d.empty() || d[ret - 1] < envelope[1]) {
+        d.push_back(envelope[1]);
+        ret += 1;
+        continue;
+      }
+
+      int low = 0, high = ret;
+      while (low < high) {
+        int mid = low + (high - low) / 2;
+        if (d[mid] == envelope[1]) {
+          high = mid;
+          break;
+        } else if (d[mid] > envelope[1]) {
+          high = mid;
+        } else {
+          low = mid + 1;
+        }
+      }
+      d[high] = min(d[high], envelope[1]);
+    }
+
+    return ret;
+  }
+};
+```
 
 ## 参考
 
