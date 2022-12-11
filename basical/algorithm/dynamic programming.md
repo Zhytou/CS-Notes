@@ -4,6 +4,7 @@
   - [基础概念](#基础概念)
     - [题型分类](#题型分类)
   - [经典例题](#经典例题)
+    - [简单题](#简单题)
     - [中等题](#中等题)
     - [难题](#难题)
 
@@ -13,16 +14,32 @@
 
 按内容
 
-- 区间问题
-  - [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
-  - [452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
+- 背包问题
 - 股票问题
+  - [121 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
+  - [122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
+  - [123 买卖股票的最佳时机Ⅲ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/)
+  - [188 买卖股票的最佳时机Ⅳ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/)
+  - [309 买卖股票的最佳时机含冷冻期](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
+  - [713 买卖股票的最佳时机含手续费](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/)
 - 子序列
+  - 不连续
+    - [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
+  - 连续
+  - 编辑距离
 - 其他
+  - [96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
 
 按解法
 
+- 一维dp
+- 二维dp
+
 ## 经典例题
+
+### 简单题
+
+[121 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
 
 ### 中等题
 
@@ -87,6 +104,31 @@ class Solution {
 };
 ```
 
+[122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
+
+思路：
+
+- 分别记录第i天交易完后手里没有股票的最大利润和手里持有一支股票的最大利润。
+- 返回最后一天不持有股票的最大利润即可。
+
+代码：
+
+``` c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        int dp[n][2];
+        dp[0][0] = 0, dp[0][1] = -prices[0];
+        for (int i = 1; i < n; ++i) {
+            dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i]);
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+        }
+        return dp[n - 1][0];
+    }
+};
+```
+
 [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
 
 代码：
@@ -118,6 +160,28 @@ class Solution {
 ```
 
 ### 难题
+
+[123 买卖股票的最佳时机Ⅲ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/)
+
+代码：
+
+``` c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        int buy1 = -prices[0], sell1 = 0;
+        int buy2 = -prices[0], sell2 = 0;
+        for (int i = 1; i < n; ++i) {
+            buy1 = max(buy1, -prices[i]);
+            sell1 = max(sell1, buy1 + prices[i]);
+            buy2 = max(buy2, sell1 - prices[i]);
+            sell2 = max(sell2, buy2 + prices[i]);
+        }
+        return sell2;
+    }
+};
+```
 
 [688 骑士在棋盘上的概率](https://leetcode-cn.com/problems/knight-probability-in-chessboard/)
 

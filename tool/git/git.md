@@ -87,7 +87,7 @@ cat id_rsa.pub
 git remote -v
 git remote set-url origin git@github.com:Zhytou/project.git
 
-# start ssh-agent
+# start ssh-agent(if you are using windows terminal, then skip this step)
 eval `ssh-agent -s`
 
 # add the private key

@@ -21,6 +21,7 @@
     - [模板参数推导](#模板参数推导)
     - [声明内嵌](#声明内嵌)
     - [偏特化](#偏特化)
+    - [嵌套template参数](#嵌套template参数)
   - [参考](#参考)
 
 ## 定义模板
@@ -77,7 +78,7 @@
 
 #### 从左值引用函数参数推断类型
 
-**非const型**
+**非const型**：
 
 ``` c++
 template <typename T> void f(T&);//实参必须是一个左值
@@ -86,7 +87,7 @@ f(ci);//ci是一个int，模板参数T是const int
 f(5);//错误，实参必须是左值
 ```
 
-**const型**
+**const型**：
 
 ``` c++
 template <typename T> void f2(const T&);//可以接收一个右值
@@ -131,8 +132,8 @@ f3(i);// 正确，因为引用迭代
 
 如果我们简介创建了一个引用的引用，则这些引用形成了“折叠”。在这种情况下（一个例外），引用会折叠成以恶搞普通的左值引用。即，对于一个给定类型X：
 
-+ X& &、X& &&和X&& &都折叠成类型&；
-+ 类型X&& &&折叠成X&&。
+- X& &、X& &&和X&& &都折叠成类型&；
+- 类型X&& &&折叠成X&&。
 
 在这种规则下，我们将得到一个惊人的结果，即：如果一个函数参数是指向模板参数类型的右值引用，则可以传递给他任意类型的实参。
 
@@ -140,7 +141,7 @@ f3(i);// 正确，因为引用迭代
 
 #### std::move
 
-**描述**
+**描述**：
 
 我们还可以通过调用一个名为`std::move`的新标准函数来获得绑定到左值上的右值引用。
 
@@ -148,7 +149,7 @@ f3(i);// 正确，因为引用迭代
 
 #### std::forward
 
-**描述**
+**描述**：
 
 C++标准库定义了`std::forward`函数来保证实现完美转发。
 
@@ -236,6 +237,18 @@ struct iterator_traits<T*>{
 template<typename I>
 typename iterator_traits<I>::value_type func(I itr) {}
 ```
+
+### 嵌套template参数
+
+``` c++
+template <template<class, class> class V, class T, class A>
+void f(V<T, A> &v) {
+    // This can be "typename V<T, A>::value_type",
+    // but we are pretending we don't have it
+}
+```
+
+这样做也算是`Traits`技术的一种替代品。
 
 ## 参考
 

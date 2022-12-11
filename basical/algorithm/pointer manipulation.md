@@ -16,6 +16,7 @@
 |          快慢指针        | [19 删除链表倒数第N个节点](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/)、[142 环形链表](https://leetcode.cn/problems/linked-list-cycle-ii/)、[876 链表的中间节点](https://leetcode-cn.com/problems/middle-of-the-linked-list/) |
 |          左右指针        | [11 盛水最多的容器](https://leetcode.cn/problems/container-with-most-water/)、[15 三数之和](https://leetcode-cn.com/problems/3sum/)、[16 最接近的三数之和](https://leetcode.cn/problems/3sum-closest/)、[18 四数之和](https://leetcode.cn/problems/4sum/)|
 |          滑动窗口        | [76 最小覆盖子串](https://leetcode-cn.com/problems/minimum-window-substring/) |
+|          区间排序        | [56 合并区间](https://leetcode.cn/problems/merge-intervals/description/) [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/) |
 
 用于维护滑动窗口中某特点而设计的新数据结构
 
@@ -23,6 +24,17 @@
 |-------------------------|-------------------|
 |           单调栈        | [42 接雨水](https://leetcode.cn/problems/trapping-rain-water/)、[239 滑动窗口最大值](https://leetcode.cn/problems/sliding-window-maximum/description/) |
 |           对顶堆        | [480 滑动窗口中位数](https://leetcode.cn/problems/sliding-window-median/) |
+
+内容分类
+
+- nSUM问题
+  - [15 三数之和](https://leetcode-cn.com/problems/3sum/)
+  - [16 最接近的三数之和](https://leetcode.cn/problems/3sum-closest/)
+  - [18 四数之和](https://leetcode.cn/problems/4sum/)
+- 区间（排序）
+  - [56 合并区间](https://leetcode.cn/problems/merge-intervals/description/)
+  - [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
+  - [452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
 
 ## 经典例题
 

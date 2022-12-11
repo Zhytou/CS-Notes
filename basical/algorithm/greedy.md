@@ -33,6 +33,30 @@
 
 ### 中等题
 
+[122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
+
+思路：遍历股票价格，只有有递增就继续持有，直到价格下滑，就抛出。
+代码：
+
+``` c++
+class Solution {
+ public:
+  int maxProfit(vector<int>& prices) {
+    int ret = 0;
+    int i = 0;
+    while (i < prices.size()) {
+      int j = i + 1;
+      while (j < prices.size() && prices[j - 1] <= prices[j]) {
+        j += 1;
+      }
+      ret += prices[j - 1] - prices[i];
+      i = j;
+    }
+    return ret;
+  }
+};
+```
+
 [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
 
 思路：
@@ -80,7 +104,9 @@ public:
 
 [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
 
-思路：类似[452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
+思路：
+
+类似[452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
 
 代码：
 

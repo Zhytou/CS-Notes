@@ -11,6 +11,8 @@
     - [显式转换](#显式转换)
       - [命名的强制类型转换](#命名的强制类型转换)
       - [旧的强制类型转换](#旧的强制类型转换)
+  - [引用](#引用)
+    - [std::ref](#stdref)
   - [volatile](#volatile)
     - [指针与volatile](#指针与volatile)
     - [多线程与volatile](#多线程与volatile)
@@ -142,6 +144,14 @@ char *pc = reinterpret_cast<char*>(ip);
 type (expr);//函数形式的强制类型转换
 (type) expr;//C语言风格的强制类型转换
 ```
+
+## 引用
+
+### std::ref
+
+C++11 中引入`std::ref`用于取某个变量的引用，这个引入是为了解决一些传参问题。
+
+我们知道 C++ 中本来就有引用的存在，为何 C++11 中还要引入一个`std::ref`了？主要是考虑函数式编程（如`std::bind`）在使用时，是对参数直接拷贝，而不是引用。
 
 ## volatile
 

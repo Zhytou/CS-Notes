@@ -19,6 +19,14 @@ C++中迭代器分成以下几种：
 - 反向迭代器
 - 移动迭代器
 
+迭代器类别萃取器一般需要支持的特性：
+
+- value type
+- difference type
+- reference type
+- pointer type
+- iterator category
+
 ## 可调用对象
 
 **Lambda表达式**:

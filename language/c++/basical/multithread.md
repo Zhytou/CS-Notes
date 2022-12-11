@@ -24,18 +24,14 @@
     - [atomic底层](#atomic底层)
   - [基础](#基础)
     - [线程管理 Thread Management](#线程管理-thread-management)
-      - [thread](#thread)
     - [有锁编程 Lock-based Coding](#有锁编程-lock-based-coding)
       - [mutex](#mutex)
       - [lazy initialization](#lazy-initialization)
       - [condition\_variable](#condition_variable)
     - [无锁编程 Lock-free Coding](#无锁编程-lock-free-coding)
-      - [atomic](#atomic)
     - [异步编程 Async Coding](#异步编程-async-coding)
-      - [future](#future)
   - [实战](#实战)
     - [锁](#锁)
-      - [概述](#概述)
     - [条件变量](#条件变量)
     - [计数器](#计数器)
     - [线程池](#线程池)
@@ -183,8 +179,6 @@ synchronization primitives are simple software mechanisms provided by a platform
 
 - [Youtube - Bo Qian - C++ 11 Concurrent](https://www.youtube.com/watch?v=LL8wkskDlbs&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2)
 
-#### thread
-
 > 特别注意由于pthread并非默认库，所以编译时要手动将pthread链接进去，具体指令为 g++  xxx.cpp -l pthread -o xxx
 
 **std::thread**:
@@ -293,11 +287,32 @@ lock(lk1, lk2);
 
 简单来说，`std::scoped_lock`就是`std::lock_guard`的升级版，它能够以RAII的方式管理多个`std::mutex`。
 
+注意：如果一次需要上锁多个互斥量，需要在一个操作内完成（比如使用`std::scoped_lock`），否则有可能发生死锁。例如：
+
+``` c++
+void func1() {
+  m1.lock();
+  m2.lock();
+}
+void func2() {
+  m2.lock();
+  m1.lock();
+}
+```
+
+如果需要自行实现一次上锁多个互斥量且不发生死锁，可以参考如下思路：
+
+- 遍历所有互斥量，使用`try_lock`判断互斥量是否被占用；
+- 如果被占用，则将前面成功上锁互斥量释放，从此处重新开始遍历；
+  - 下一次循环从`try_lock`失败处重新开始的原因是：
+  - `try_lock`失败意味着该锁正被另一线程占据, 如果不换顺序, 下一次尝试的时候, 可能又会发生先锁的成功了, 后锁的仍然被其他线程占据, 如此重复加锁解锁, 虽然逻辑上没毛病, 但却是增加锁竞争, 浪费CPU的行为。
+- 如果没有占用，则上锁，直到完全遍历完所有互斥量。
+
 **std::adpot_lock & std::defer_lock**:
 
 `std::defer_lock`一般和`std::unique_lock`一起使用，表示初始化`std::unique_lock`对象时，对应的`mutex`不用立刻上锁。
 
-> We first create the lock without acquiring it (that's the point of `std::defer_lock`) 
+> We first create the lock without acquiring it (that's the point of `std::defer_lock`).
 
 ``` c++
 mutex mtx;
@@ -306,9 +321,7 @@ uniuqe_lock<mutex> locker(mtx, defer_lock);
 
 `std::adopt_lock`则一般和`std::lock_guard`一起使用，表示初始化`std::lock_guard`对象时，对应的`mutex`已经上锁。
 
-> Now, here we first acquire the locks (still avoiding deadlocks), and *then* we create the lockguards to make sure that they are properly released.
->
-> Note that `std::adopt_lock` requires that the current thread owns the mutex (which is the case since we just locked them)
+> Now, here we first acquire the locks (still avoiding deadlocks), and *then* we create the lockguards to make sure that they are properly released. Note that `std::adopt_lock` requires that the current thread owns the mutex (which is the case since we just locked them)
 
 ``` c++
 mutex mtx1, mtx2;
@@ -318,23 +331,23 @@ lock_guard<mutex> lk1(mtx1, adopt_lock), lk2(mtx2, adopt_lock);
 
 #### lazy initialization
 
-**std::once_flag**
+**std::once_flag**：
 
 #### condition_variable
 
 > 例子可以参考实战中的生产-消费问题
 
-**std::condition_variable**
+**std::condition_variable**：
 
 `std::condition_variable`的初始化并不需要`std::mutex`或者`mutex`RAII的包装类，而是无需传其他参数就可以直接使用。
 
-**std::condition_variable::notify_one() vs std::condition_variable::notify_all()**
+**std::condition_variable::notify_one() vs std::condition_variable::notify_all()**：
 
 `std::condition_variable::notify_one()`和`std::condition_variable::notify_all()`的唯一区别就是：前者仅唤醒一个关联该条件变量的线程，而后者唤醒所有这种线程。
 
 这两个函数都只能唤醒线程，释放锁仍然需要该线程的`std::unique_lock`对象手动调用`std::unique_lock::unlock()`函数释放；否则唤醒后的线程会因为无法获取所需的锁，而再次进入睡眠状态。
 
-**std::condition_variable::wait(std::unique_lock lock, function predicate)**
+**std::condition_variable::wait(std::unique_lock lock, function predicate)**：
 
 `std::condition_variable::wait()`函数一定要接收第一个锁参数，而第二个预测函数则是可选参数，其作用是避免线程虚假苏醒`(suprious wakeup)`，仅当该参数值为真时，线程苏醒；否则，线程继续休眠。
 
@@ -342,13 +355,9 @@ lock_guard<mutex> lk1(mtx1, adopt_lock), lk2(mtx2, adopt_lock);
 
 ### 无锁编程 Lock-free Coding
 
-#### atomic
+> 一般来说，atomic都是不可拷贝的。这是因为有些不支持原子指令的硬件平台必须要通过锁来实现原子操作，而锁又是无法拷贝的。因此，atomic是无法拷贝的
 
-> 一般来说，atomic都是不可拷贝的。
->
-> 这是因为有些不支持原子指令的硬件平台必须要通过锁来实现原子操作，而锁又是无法拷贝的。因此，atomic是无法拷贝的
-
-**std::memory_order**
+**std::memory_order**：
 
 ``` c++
 typedef enum memory_order {
@@ -363,17 +372,15 @@ typedef enum memory_order {
 
 设置指令的执行顺序。
 
-**std::atomic::is_lock_free()**
+**std::atomic::is_lock_free()**：
 
 返回该变量是否无锁。无锁变量不会导致其他线程访问阻塞。
 
 ### 异步编程 Async Coding
 
-#### future
+**std::async**：
 
-**std::async**
-
-**std::future**
+**std::future**：
 
 ## 实战
 
@@ -382,14 +389,6 @@ typedef enum memory_order {
 > muduo库是一个基于POSIX thread的非阻塞事件驱动型C++网络库。
 
 ### 锁
-
-#### 概述
-
-*MutexLock* is a lockable object;
-
-*MutexLockGuard* is a object that manages *MutexLock object* by keeping it locked. It guarantees the *MutexLock object* is properly unlocked in case an exception is thrown.
-
-> 实际上，MutexLock就对应std::mutex；MutexLockGuard就对应std::lock_guard。
 
 ### 条件变量
 
@@ -440,55 +439,6 @@ public:
 ### 无锁栈
 
 ### 生产-消费问题
-
-``` c++
-#include<iostream>
-#include<queue>
-#include<thread>
-#include<mutex>
-#include<condition_variable>
-
-using namespace std;
-
-queue<int> q;
-mutex mu;
-condition_variable cond;
-
-void producer(int& num) {
-    while (num > 0){
-        int data = num--;
-        unique_lock<mutex> locker(mu);
-        q.push(data);
-        cout << "producer sends " << data << endl;
-        locker.unlock();
-        cond.notify_one();
-        this_thread::sleep_for(chrono::seconds(1));
-    }
-}
-
-void consumer () {
-    int data = 0;
-    while (data != 1) {
-        unique_lock<mutex> locker(mu);
-        cond.wait(locker, []() {
-            return !q.empty();
-        });
-        data = q.front();
-        q.pop();
-        cout << "consumer gets " << data << endl;
-    }
-}
-
-int main() {
-    int data_num = 5;
-    cout << "before the process, data num = " << data_num << endl;
-    thread t1(producer, ref(data_num)), t2(consumer);
-    t1.join();
-    t2.join();
-    cout << "after the process, data num = " << data_num << endl;
-    return 0;
-}
-```
 
 ![消费者](../img/producer_consumer_example.png)
 
@@ -550,10 +500,10 @@ int main() {
 - [cppreference 17 scoped_lock](https://en.cppreference.com/w/cpp/thread/scoped_lock/scoped_lock)
 - [stackoverflow - adopt_lock vs defer_lock](https://stackoverflow.com/questions/27089434/whats-the-difference-between-first-locking-and-creating-a-lock-guardadopt-lock)
 
-**实战**
+**实战**：
 
 - [muduo](https://github.com/chenshuo/muduo)
 
-**无锁队列**
+**无锁队列**：
 
 - [Lock Free Queue](https://jbseg.medium.com/lock-free-queues-e48de693654b)
