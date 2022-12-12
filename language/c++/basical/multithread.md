@@ -25,19 +25,11 @@
   - [基础](#基础)
     - [线程管理 Thread Management](#线程管理-thread-management)
     - [有锁编程 Lock-based Coding](#有锁编程-lock-based-coding)
-      - [mutex](#mutex)
-      - [lazy initialization](#lazy-initialization)
-      - [condition\_variable](#condition_variable)
+      - [使用mutex](#使用mutex)
+      - [使用condition\_variable](#使用condition_variable)
     - [无锁编程 Lock-free Coding](#无锁编程-lock-free-coding)
     - [异步编程 Async Coding](#异步编程-async-coding)
   - [实战](#实战)
-    - [锁](#锁)
-    - [条件变量](#条件变量)
-    - [计数器](#计数器)
-    - [线程池](#线程池)
-    - [无锁队列](#无锁队列)
-    - [无锁栈](#无锁栈)
-    - [生产-消费问题](#生产-消费问题)
   - [参考](#参考)
 
 ## 简介
@@ -249,7 +241,7 @@ t1 = move(t2);
 
 ### 有锁编程 Lock-based Coding
 
-#### mutex
+#### 使用mutex
 
 **std::mutex::lock() vs std::lock()**:
 
@@ -329,13 +321,7 @@ std::lock(mtx1, mtx2);
 lock_guard<mutex> lk1(mtx1, adopt_lock), lk2(mtx2, adopt_lock);
 ```
 
-#### lazy initialization
-
-**std::once_flag**：
-
-#### condition_variable
-
-> 例子可以参考实战中的生产-消费问题
+#### 使用condition_variable
 
 **std::condition_variable**：
 
@@ -349,9 +335,23 @@ lock_guard<mutex> lk1(mtx1, adopt_lock), lk2(mtx2, adopt_lock);
 
 **std::condition_variable::wait(std::unique_lock lock, function predicate)**：
 
-`std::condition_variable::wait()`函数一定要接收第一个锁参数，而第二个预测函数则是可选参数，其作用是避免线程虚假苏醒`(suprious wakeup)`，仅当该参数值为真时，线程苏醒；否则，线程继续休眠。
+`std::condition_variable::wait()`函数一定要接收第一个锁RAII管理类参数，且必须是能够多次解锁和上锁的`std::unqiue_lock`，因为`std::condition_variable`要保证等待结束后恢复成结束之前的状态。
 
-> 虚假唤醒
+`std::condition_variable::wait()`的第二个参数是可选参数。用户可以选择传入预测函数，其作用是避免线程虚假苏醒`(suprious wakeup)`。在C++中，程序员常用while循环代替if语句做等待判断，来避免条件变量被虚假唤醒。
+
+因此，传入第二个参数，也就等价于：
+
+``` c++
+// cond.wait(lock)
+std::mutex mtx;
+std::condition_variable cond;
+
+std::unique_lock<std::mutex> lock;
+// 第二个参数pred是个仿函数类
+while(!pred()) {
+  cond.wait(lock);
+}
+```
 
 ### 无锁编程 Lock-free Coding
 
@@ -384,63 +384,29 @@ typedef enum memory_order {
 
 ## 实战
 
-参考 陈硕 muduo C++网络库的代码进行的一些总结。
+基本使用
 
-> muduo库是一个基于POSIX thread的非阻塞事件驱动型C++网络库。
+- 锁
+- 条件变量
+- 线程管理
 
-### 锁
+进阶
 
-### 条件变量
+- 原子
+- 异步
 
-### 计数器
+常用包装类和基础设施
 
-### 线程池
+- 计数器
+- 任务队列
+- 线程池
 
-### 无锁队列
+线程安全数据结构
 
-``` c++
-template<typename T>
-class lock_free_queue
-{
-private:
-    struct node
-    {
-        std::shared_ptr<T> data;
-        std::atomic<node*> next;
-        node(T const& data_):
-            data(std::make_shared<T>(data_))
-        {}
-    };
-    std::atomic<node*> head;
-    std::atomic<node*> tail;
-public:
-    void push(T const& data)
-    {
-        std::atomic<node*> const new_node=new node(data);
-        node* old_tail = tail.load();
-        while(!old_tail->next.compare_exchange_weak(nullptr, new_node)){
-          node* old_tail = tail.load();
-        }
-        tail.compare_exchange_weak(old_tail, new_node);
-    }
-    std::shared_ptr<T> pop()
-    {
-        node* old_head=head.load();
-        while(old_head &&
-            !head.compare_exchange_weak(old_head,old_head->next)){
-            old_head=head.load();
-        }
-        return old_head ? old_head->data : std::shared_ptr<T>();
-    }
-};
+- 无锁队列
+- 无锁栈
 
-```
-
-### 无锁栈
-
-### 生产-消费问题
-
-![消费者](../img/producer_consumer_example.png)
+> 具体代码可以参考我的[repo](https://github.com/Zhytou/MultiThreadPracticeInCPP.git)
 
 ## 参考
 

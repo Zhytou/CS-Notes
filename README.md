@@ -61,7 +61,7 @@
 
 - 顺序容器
   - 数组底层
-  - 栈、（有限队列）堆和队列
+  - 栈、（优先队列）堆和队列
 - 关联容器
   - 分类
   - 基本操作
@@ -302,28 +302,28 @@
 
 **综合**：
 
-[github + CS+NOTES](https://github.com/Zhytou/CS+Notes)
-[github system design](https://github.com/donnemartin/system-design-primer)
-[phoenix framework](https://icyfenix.cn/)
+- [github + CS+NOTES](https://github.com/Zhytou/CS+Notes)
+- [github system design](https://github.com/donnemartin/system-design-primer)
+- [phoenix framework](https://icyfenix.cn/)
 
 **Java**：
 
-[JavaGuide](https://javaguide.cn/)
+- [JavaGuide](https://javaguide.cn/)
 
 **C++**：
 
-[C++ Primer](https://github.com/bumzy/book/blob/master/C%2B%2B%20%20Primer%E4%B8%AD%E6%96%87%E7%89%88%EF%BC%88%E7%AC%AC%E4%BA%94%E7%89%88%EF%BC%89.pdf)
-[STL 源码剖析](https://github.com/SilverMaple/STLSourceCodeNote/blob/master/STL%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E5%AE%8C%E6%95%B4%E7%89%88(%E6%B8%85%E6%99%B0%E6%89%AB%E6%8F%8F%E5%B8%A6%E7%9B%AE%E5%BD%95).pdf)
-[youtube + boqian](https://www.youtube.com/user/BoQianTheProgrammer)
-[知乎 + C++](https://zhuanlan.zhihu.com/p/417640759)
-[知乎 + 当面试官问C++ 11新特性时，应该怎么样回答？](https://zhuanlan.zhihu.com/p/420710578)
-[帅地 + C++面试题指南](https://www.iamshuaidi.com/2309.html)
+- [C++ Primer](https://github.com/bumzy/book/blob/master/C%2B%2B%20%20Primer%E4%B8%AD%E6%96%87%E7%89%88%EF%BC%88%E7%AC%AC%E4%BA%94%E7%89%88%EF%BC%89.pdf)
+- [STL 源码剖析](https://github.com/SilverMaple/STLSourceCodeNote/blob/master/STL%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E5%AE%8C%E6%95%B4%E7%89%88(%E6%B8%85%E6%99%B0%E6%89%AB%E6%8F%8F%E5%B8%A6%E7%9B%AE%E5%BD%95).pdf)
+- [youtube + boqian](https://www.youtube.com/user/BoQianTheProgrammer)
+- [知乎 + C++](https://zhuanlan.zhihu.com/p/417640759)
+- [知乎 + 当面试官问C++ 11新特性时，应该怎么样回答？](https://zhuanlan.zhihu.com/p/420710578)
+- [帅地 + C++面试题指南](https://www.iamshuaidi.com/2309.html)
 
 **JavaScript**：
 
-[MDN](https://developer.mozilla.org/zh+CN/docs/Learn)
+- [MDN](https://developer.mozilla.org/zh+CN/docs/Learn)
 
 **刷题**：
 
-[CodeTop](https://codetop.cc/home)
-[Leetcode](https://leetcode+cn.com/)
+- [CodeTop](https://codetop.cc/home)
+- [Leetcode](https://leetcode+cn.com/)

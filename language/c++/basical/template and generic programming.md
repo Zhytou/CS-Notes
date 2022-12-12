@@ -22,6 +22,10 @@
     - [声明内嵌](#声明内嵌)
     - [偏特化](#偏特化)
     - [嵌套template参数](#嵌套template参数)
+  - [可变参数模板](#可变参数模板)
+    - [可变参数函数模板](#可变参数函数模板)
+    - [包扩展](#包扩展)
+    - [转发包参数](#转发包参数)
   - [参考](#参考)
 
 ## 定义模板
@@ -249,6 +253,66 @@ void f(V<T, A> &v) {
 ```
 
 这样做也算是`Traits`技术的一种替代品。
+
+## 可变参数模板
+
+一个`可变参数模板(variadic template)`就是一个接受可变数目参数的模板函数或者模板类。
+
+可变数目的参数被称为`参数包(parameter packet)`。我们用一个省略号来指出一个可变数目参数。例如：
+
+``` c++
+template<typename T, typename... Args>
+void func(const T& t, const Args& ... rest);
+```
+
+当我们想知道参数包中有多少参数时，我们可以使用`sizeof...()`运算符计算。
+
+### 可变参数函数模板
+
+可变参数函数通常是递归的。例如：
+
+``` c++
+// 非可变参数版本用于终止递归
+template<typename T>
+ostream& print(ostream& os, const T& t) {
+  os << t;
+}
+
+template<typename T, typename... Args>
+ostream& print(ostream& os, const T& t, const Args... rest) {
+  os << t;
+  print(os, rest);
+}
+```
+
+### 包扩展
+
+对于一个参数包，除了能获取其大小外，我们能对它做的唯一事情就是`扩展(expand)`它。
+
+扩展一个包就是将它分解为构成元素，对每个元素应用模式，获得扩展后的列表。我们通过在模式右边放一个省略号来触发扩展操作。
+
+例如，下面的print函数包含了两个扩展：
+
+``` c++
+template<typename T, typename... Args>
+ostream& print(ostream& os, const T& t, const Args... rest) { // 扩展
+  os << t;
+  print(os, rest);// 扩展
+}
+```
+
+### 转发包参数
+
+我们可以使用可变参数模板与`std::forward`机制来编写函数，实现将其实参不变地转递给其他函数。例如：
+
+``` c++
+class StrVec{
+  public:
+    template<typename... Args> void func1(Args&&... args) {
+      func2(std::forward<Args>(args));
+    }
+};
+```
 
 ## 参考
 

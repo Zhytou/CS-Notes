@@ -50,7 +50,7 @@ auto cmp1 = [sz](const string& s) {
 }
 
 // 引用捕获sz
-auto cmp2 = [sz](const string& s) {
+auto cmp2 = [&sz](const string& s) {
   return s.size() >= sz;
 }
 
@@ -61,6 +61,21 @@ auto cmp3 = [=](const string& s) {
 
 // 隐式引用捕获（捕获所有局部变量）
 auto cmp4 = [&](const string& s) {
+  return s.size() >= sz;
+}
+```
+
+补充一些更复杂的捕获列表及其含义：
+
+- a, &b。将a按值进行传递，b按引用进行传递。
+- =，&a, &b。除a和b按引用进行传递外，其他参数都按值进行传递。
+- &, a, b。除a和b按值进行传递外，其他参数都按引用进行传递
+
+另外， 如果我们想捕获一个类内变量，需要在捕获列表内传入`this`指针。例如：
+
+``` c++
+// 隐式引用捕获（捕获所有局部变量）
+auto cmp5 = [this](const string& s) {
   return s.size() >= sz;
 }
 ```
