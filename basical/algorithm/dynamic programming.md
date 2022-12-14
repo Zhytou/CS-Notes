@@ -2,6 +2,9 @@
 
 - [动态规划](#动态规划)
   - [基础概念](#基础概念)
+    - [常用解法](#常用解法)
+      - [01背包问题](#01背包问题)
+      - [完全背包问题](#完全背包问题)
     - [题型分类](#题型分类)
   - [经典例题](#经典例题)
     - [简单题](#简单题)
@@ -10,11 +13,59 @@
 
 ## 基础概念
 
+### 常用解法
+
+#### 01背包问题
+
+**问题描述**：
+
+有N件物品和一个容量为M的背包。第i件物品的重量是w[i]，价值是v[i]。求解将哪些物品装入背包可使这些物品的重量总和不超过背包容量，且价值总和最大。
+
+**朴素解法**：
+
+将容量为`j`装入`i`个物品的背包最大价值记为`dp[i][j]`，则转移方程为：`dp[i] = max(dp[i], dp[i - 1][j - w[i]] + v[i])`，将该问题转换为如何在已经装入`i-1`个物品的背包是再装一个物品获得最大价值。
+
+``` c++
+// weight数组的大小 就是物品个数
+for(int i = 1; i < weight.size(); i++) { // 遍历物品
+  for(int j = 0; j <= bagweight; j++) { // 遍历背包容量
+    if (j < weight[i]){
+      dp[i][j] = dp[i - 1][j];
+    } 
+    else {
+      dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - weight[i]] + value[i]);
+    }
+  }
+}
+```
+
+**压缩解法**：
+
+对于背包问题其实状态都是可以压缩的。我们可以使用一维数组，也可以理解是一个滚动数组来代替原本的二维数组。
+
+``` c++
+for (int i = 0; i < weight.size(); i++) {         // 遍历物品
+  for (int j = bagWeight; j >= weight[i]; j--) {  // 遍历背包容量
+    dp[j] = max(dp[j], dp[j - weight[i]] + value[i]);
+  }
+}
+```
+
+注意：使用压缩解法的时候，需要倒序遍历，否则小容量背包的dp值会被先覆盖。
+
+#### 完全背包问题
+
+完全背包和01背包问题唯一不同的地方就是，每种物品有无限件。
+
 ### 题型分类
 
 按内容
 
-- 背包问题
+- 01 背包问题
+  - [416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
+  - [474 一和零](https://leetcode.cn/problems/ones-and-zeroes/description/)
+  - [494 目标和](https://leetcode.cn/problems/target-sum/description/)
+- 完全背包问题
 - 股票问题
   - [121 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
   - [122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
@@ -155,6 +206,121 @@ class Solution {
       ret = max(ret, dp[i]);
     }
     return ret;
+  }
+};
+```
+
+[416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
+
+思路：
+
+- 背包的体积为sum / 2。
+- 背包要放入的商品（集合里的元素）重量为元素的数值，价值也为元素的数值。
+- 背包如果正好装满，说明找到了总和为 sum / 2 的子集。
+- 背包中每一个元素是不可重复放入。
+
+注意：需要注意的是第二层的循环我们需要从大到小计算，因为如果我们从小到大更新 dp 值，那么在计算较大序号dp值的时候，较小序号dp值已经是被更新过的状态，不再是上一行的dp值。
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  bool canPartition(vector<int>& nums) {
+    int sum = 0;
+    for (int i = 0; i < nums.size(); i++) {
+      sum += nums[i];
+    }
+
+    if (sum % 2 == 1) return false;
+    int target = sum / 2;
+
+    vector<int> dp(target + 1, 0);
+    // 开始 01背包
+    for (int i = 0; i < nums.size(); i++) {
+      for (int j = target; j >= nums[i]; j--) {
+        dp[j] = max(dp[j], dp[j - nums[i]] + nums[i]);
+      }
+    }
+    // 集合中的元素正好可以凑成总和target
+    if (dp[target] == target) return true;
+    return false;
+  }
+};
+```
+
+[474 一和零](https://leetcode.cn/problems/ones-and-zeroes/description/)
+
+思路：十分类似经典的背包问题，只不过背包容量是两个维度（1的数量和0的数量）上统计，且所有物品（字符串）的价值均为一。因此，只需将原本的一维数组转换成二维数组，即可得到新的状态转移方程如下：
+
+``` c++
+// dp[i][j]表示数字0容量为i、数字1容量为j时，背包能存放字符串的最大数量（价值）
+dp[i][j] = max(dp[i][j], dp[i - zeros][j - ones] + 1);
+```
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int findMaxForm(vector<string>& strs, int m, int n) {
+    int len = strs.size();
+    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+
+    for (int k = 0; k < len; k++) {
+      int ones = 0, zeros = 0;
+      for (auto& ch : strs[k]) {
+        if (ch == '1') {
+          ones += 1;
+        } else {
+          zeros += 1;
+        }
+      }
+
+      for (int i = m; i >= zeros; i--) {
+        for (int j = n; j >= ones; j--) {
+          dp[i][j] = max(dp[i][j], dp[i - zeros][j - ones] + 1);
+        }
+      }
+    }
+
+    return dp[m][n];
+  }
+};
+```
+
+[494 目标和](https://leetcode.cn/problems/target-sum/description/)
+
+思路：
+
+- 本题直接思路应该是回溯，此处略过；
+- 想要使用动态规划解决本题，首先需要找到转移方程。
+  - 根据数学推导得出，加负号的数字和可以表达为：`negative = (sum - target)/2`；
+  - 因此，整个问题可以转换成，如何找出所有价值刚刚好为`(sum - target)/2`的物品组合；
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int findTargetSumWays(vector<int>& nums, int target) {
+    int sum = 0;
+    for (int& num : nums) {
+      sum += num;
+    }
+    int diff = sum - target;
+    if (diff < 0 || diff % 2 != 0) {
+      return 0;
+    }
+    int neg = diff / 2;
+    vector<int> dp(neg + 1);
+    dp[0] = 1;
+    for (int& num : nums) {
+      for (int j = neg; j >= num; j--) {
+        dp[j] += dp[j - num];
+      }
+    }
+    return dp[neg];
   }
 };
 ```

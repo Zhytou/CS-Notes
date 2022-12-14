@@ -33,6 +33,31 @@
 
 ### 中等题
 
+[45 跳跃游戏Ⅱ](https://leetcode.cn/problems/jump-game-ii/description/)
+
+思路：移动下标只要遇到当前覆盖最远距离的下标，直接步数加一，不考虑是不是终点的情况。
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int jump(vector<int>& nums) {
+    int maxPos = 0, n = nums.size(), end = 0, step = 0;
+    for (int i = 0; i < n - 1; ++i) {
+      if (maxPos >= i) {
+        maxPos = max(maxPos, i + nums[i]);
+        if (i == end) {
+          end = maxPos;
+          ++step;
+        }
+      }
+    }
+    return step;
+  }
+};
+```
+
 [122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
 
 思路：遍历股票价格，只有有递增就继续持有，直到价格下滑，就抛出。

@@ -85,7 +85,7 @@ DELETE /file.html HTTP/1.1
 CONNECT www.example.com:443 HTTP/1.1
 ```
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/dc00f70e-c5c8-4d20-baf1-2d70014a97e3.jpg" width=""/> </div><br>
+![http](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/dc00f70e-c5c8-4d20-baf1-2d70014a97e3.jpg)
 
 ### TRACE
 
