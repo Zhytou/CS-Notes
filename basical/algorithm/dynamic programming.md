@@ -57,6 +57,8 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
 
 完全背包和01背包问题唯一不同的地方就是，每种物品有无限件。
 
+完全背包问题需要注意先遍历物品还是背包，例子可以参考[518 零钱兑换Ⅱ](https://leetcode.cn/problems/coin-change-ii/description/)。
+
 ### 题型分类
 
 按内容
@@ -65,7 +67,10 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
   - [416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
   - [474 一和零](https://leetcode.cn/problems/ones-and-zeroes/description/)
   - [494 目标和](https://leetcode.cn/problems/target-sum/description/)
+  - [1049 最后一个石头的重量Ⅱ](https://leetcode.cn/problems/last-stone-weight-ii/description/)
 - 完全背包问题
+  - [322 零钱兑换](https://leetcode.cn/problems/coin-change/description/)
+  - [518 零钱兑换Ⅱ](https://leetcode.cn/problems/coin-change-ii/description/)
 - 股票问题
   - [121 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
   - [122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
@@ -76,7 +81,12 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
 - 子序列
   - 不连续
     - [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
+    - [1035 不相交的线](https://leetcode.cn/problems/uncrossed-lines/)
+    - [1143 最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/description/)
   - 连续
+    - [53 最大子序列和](https://leetcode.cn/problems/maximum-subarray/)
+    - [674 最长连续递增序列](https://leetcode.cn/problems/longest-continuous-increasing-subsequence/description/)
+    - [718 最长重复子数组](https://leetcode.cn/problems/maximum-length-of-repeated-subarray/description/)
   - 编辑距离
 - 其他
   - [96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
@@ -210,6 +220,44 @@ class Solution {
 };
 ```
 
+[322 零钱兑换](https://leetcode.cn/problems/coin-change/description/)
+
+思路：
+
+- 本题是一道完全背包问题，即：商品数量无限。
+- 分析题意可以得到转移方程如下：
+
+``` c++
+// dp[i]表示面值为 i 的现金替换需要的最少硬币数量
+dp[i] = min(dp[i - coin]) + 1;
+```
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int coinChange(vector<int>& coins, int amount) {
+    vector<int> dp(amount + 1, -1);
+
+    dp[0] = 0;
+    sort(coins.begin(), coins.end());
+    for (int i = 1; i <= amount; i++) {
+      for (auto& coin : coins) {
+        if (coin > i) {
+          break;
+        }
+        if (dp[i - coin] != -1 && (dp[i] == -1 || dp[i] > dp[i - coin] + 1)) {
+          dp[i] = dp[i - coin] + 1;
+        }
+      }
+    }
+
+    return dp[amount];
+  }
+};
+```
+
 [416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
 
 思路：
@@ -321,6 +369,185 @@ class Solution {
       }
     }
     return dp[neg];
+  }
+};
+```
+
+[518 零钱兑换Ⅱ](https://leetcode.cn/problems/coin-change-ii/description/)
+
+思路：
+
+- 遍历硬币数组，对于进行如下操作：
+  - 从 coin 到 amount 遍历，将 dp[i−coin] 的值加到 dp[i]。
+  - 最终得到 dp[amount]的值即为答案。
+- 与[322 零钱兑换](https://leetcode.cn/problems/coin-change/description/)不同，此题需要注意如何避免重复计算兑换方案。具体来说，就是外层循环遍历硬币数组，内层循环是遍历不同的金额之和，在计算 dp[i] 的值时，可以确保金额之和等于 i 的硬币面额的顺序，由于顺序确定，因此不会重复计算不同的排列。
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int change(int amount, vector<int>& coins) {
+    vector<int> dp(amount + 1, 0);
+
+    dp[0] = 1;
+    sort(coins.begin(), coins.end());
+    for (auto coin : coins) {
+      for (int i = 1; i <= amount; i++) {
+        if (i >= coin) {
+          dp[i] += dp[i - coin];
+        }
+      }
+    }
+
+    return dp[amount];
+  }
+};
+```
+
+[718 最长重复子数组](https://leetcode.cn/problems/maximum-length-of-repeated-subarray/description/)
+
+思路：
+
+- 典型的二维dp类型题目。
+- 定义二维数组，其中元素`dp[i][j]`表示`nums1[0:i]`和`nums2[0:j]`中以`nums1[i]`和`nums2[j]`为结尾的最长重复子数组的长度。
+- 由此可以得到转移方程：
+
+``` c++
+if (nums1[i] == nums2[j]) {
+  if (i > 0 && j > 0) {
+    dp[i][j] = max(dp[i - 1][j - 1] + 1, 1);
+  } else {
+    dp[i][j] = 1;
+  }
+}
+```
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int findLength(vector<int>& nums1, vector<int>& nums2) {
+    int ret = 0;
+    int m = nums1.size(), n = nums2.size();
+    vector<vector<int>> dp(m, vector<int>(n, 0));
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+        if (nums1[i] == nums2[j]) {
+          if (i > 0 && j > 0) {
+            dp[i][j] = max(dp[i - 1][j - 1] + 1, 1);
+          } else {
+            dp[i][j] = 1;
+          }
+          ret = max(ret, dp[i][j]);
+        }
+      }
+    }
+    return ret;
+  }
+};
+```
+
+[1035 不相交的线](https://leetcode.cn/problems/uncrossed-lines/)
+
+思路：本题思路与[1143 最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/description/)极其相似，甚至连转移方程都一致。
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int maxUncrossedLines(vector<int>& nums1, vector<int>& nums2) {
+    int m = nums1.size(), n = nums2.size();
+    vector<vector<int>> dp(m, vector<int>(n, 0));
+
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+        if (nums1[i] == nums2[j]) {
+          dp[i][j] = (i > 0 && j > 0 ? dp[i - 1][j - 1] : 0) + 1;
+        } else {
+          dp[i][j] = max(i > 0 ? dp[i - 1][j] : 0, j > 0 ? dp[i][j - 1] : 0);
+        }
+      }
+    }
+
+    return dp[m - 1][n - 1];
+  }
+};
+```
+
+[1049 最后一个石头的重量Ⅱ](https://leetcode.cn/problems/last-stone-weight-ii/description/)
+
+思路：
+
+- 本题经过适当分析，可以转换为一个01背包问题。其分析方法类似[494 目标和](https://leetcode.cn/problems/target-sum/description/)
+- 总的来说，就是将问题转换成如何将所有石头分成重量最接近的两份。
+  - 因此，我们可以定义一个长度为所有石头重量之和一半的数组，作为保存背包状态的dp数组。
+  - 最终，我们希望容量最大背包（dp数组尾部元素）中物品价值（石头重量）最接近所有物品价值的一半。
+  - 整个思路类似[416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int lastStoneWeightII(vector<int>& stones) {
+    int sum = 0;
+    for (auto& stone : stones) {
+      sum += stone;
+    }
+
+    int n = sum / 2 + 1;
+    vector<int> dp(n + 1, 0);
+    for (auto& stone : stones) {
+      for (int i = n; i >= 0; i--) {
+        if (i > stone) {
+          dp[i] = max(dp[i], dp[i - stone] + stone);
+        }
+      }
+    }
+
+    return sum - 2 * dp[n];
+  }
+};
+```
+
+[1143 最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/description/)
+
+思路：
+
+- 非常经典的一道二维dp例题。
+- 只要能够写出转移方程即可解决本题。转移方程如下：
+
+``` c++
+if (text1[i] == text[j]) {
+  dp[i][j] = dp[i - 1][j - 1] + 1;
+} else {
+  dp[i][j] = max(dp[i][j - 1], dp[i - 1][j]);
+}
+```
+
+代码：
+
+```  c++
+class Solution {
+ public:
+  int longestCommonSubsequence(string text1, string text2) {
+    int m = text1.length(), n = text2.length();
+    vector<vector<int>> dp(m + 1, vector<int>(n + 1));
+    for (int i = 1; i <= m; i++) {
+      char c1 = text1.at(i - 1);
+      for (int j = 1; j <= n; j++) {
+        char c2 = text2.at(j - 1);
+        if (c1 == c2) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+    return dp[m][n];
   }
 };
 ```
