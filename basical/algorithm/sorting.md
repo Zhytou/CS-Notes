@@ -92,7 +92,7 @@
           //选出两个子节点中较大的
           if (son + 1 < heapSize && nums[son] < nums[son + 1])
               son += 1;
-         	//若此时父节点已经大于子节点，则已经符合堆规制；否则继续堆化。
+          //若此时父节点已经大于子节点，则已经符合堆规制；否则继续堆化。
           if (nums[dad] < nums[son]) {
               swap(nums[dad], nums[son]);
               dad = son;
@@ -106,21 +106,63 @@
   void heapSort(vector<int>& nums) {
       //自下而上的建立堆
       for (int i = nums.size() / 2; i >= 0; i--)
-          heapify(nums, cmp, i, nums.size());
+          heapify(nums, i, nums.size());
       
       
       for (int i = nums.size() - 1; i > 0; i--) {
           //将堆顶最大值与堆尾交换，重新堆化
           //此处必须要传入heapSize参数，因为堆长度减少了1
           swap(nums[0], nums[i]);
-          heapify(nums, cmp, 0, i);
+          heapify(nums, 0, i);
       }
       
       return ;
   }
   ```
-  
+
 - 时间复杂度：`O(nlogn)`
+
+**补充**：使用堆排序算法实现一个优先队列（大顶堆）
+
+``` c++
+template <typename T>
+class priority_queue {
+ private:
+  std::vector<T> pq;
+
+ public:
+  void push(const T& val) {
+    pq.push_back(val);
+    int son = pq.size() - 1, dad = (son - 1) / 2;
+
+    while (dad >= 0 && pq[dad] < pq[son]) {
+      swap(pq[dad], pq[son]);
+      son = dad;
+      dad -= 1;
+      dad /= 2;
+    }
+  }
+
+  void pop() {
+    swap(pq[0], pq[pq.size() - 1]);
+    pq.pop_back();
+
+    int dad = 0, son = 2 * dad + 1;
+    while (son < pq.size() && pq[dad] < pq[son]) {
+      if (son + 1 < pq.size() && pq[son] < pq[son + 1]) {
+        son += 1;
+      }
+      swap(pq[dad], pq[son]);
+      dad = son;
+      son = 2 * dad + 1;
+    }
+  }
+
+  T& top() { return pq[0]; }
+
+  bool empty() { return pq.empty(); }
+};
+```
 
 ### 其他排序 other
 
