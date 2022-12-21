@@ -4,6 +4,7 @@
   - [单调栈/单调队列](#单调栈单调队列)
   - [字典树](#字典树)
   - [对顶堆](#对顶堆)
+  - [并查集](#并查集)
 
 ## 单调栈/单调队列
 
@@ -247,3 +248,57 @@ public:
 [259 数据流的中位数](https://leetcode-cn.com/problems/find-median-from-data-stream/)
 
 [480 滑动窗口中位数](https://leetcode.cn/problems/sliding-window-median/)
+
+## 并查集
+
+**实现**：
+
+``` c++
+class UnionSet {
+  vector<int> parent;
+  vector<int> rank;
+
+ public:
+  int count;
+  UnionSet();
+  UnionSet(int n);
+  ~UnionSet();
+
+  int find(int index);
+  bool merge(int index1, int index2);
+};
+
+UnionSet::UnionSet() { count = 0; }
+
+UnionSet::~UnionSet() {}
+
+UnionSet::UnionSet(int n) : count(n) {
+  for (int i = 0; i < n; i++) {
+    rank.push_back(0);
+    parent.push_back(i);
+  }
+}
+
+int UnionSet::find(int index) {
+  if (parent[index] != index) {
+    parent[index] = find(parent[index]);
+  }
+  return parent[index];
+}
+
+bool UnionSet::merge(int index1, int index2) {
+  auto root1 = find(index1);
+  auto root2 = find(index2);
+  if (root1 == root2) return false;
+  if (rank[root2] > rank[root1]) {
+    parent[root1] = root2;
+  } else if (rank[root2] < rank[root1]) {
+    parent[root2] = root1;
+  } else {
+    parent[root2] = root1;
+    rank[root1] += 1;
+  }
+  count--;
+  return true;
+}
+```

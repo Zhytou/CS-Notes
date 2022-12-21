@@ -3,6 +3,7 @@
 - [贪心算法](#贪心算法)
   - [基础概念](#基础概念)
     - [题型分类](#题型分类)
+    - [常用技巧](#常用技巧)
   - [经典例题](#经典例题)
     - [简单题](#简单题)
     - [中等题](#中等题)
@@ -18,12 +19,22 @@
 - 区间问题
   - [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
   - [452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
+  - [1326 灌溉花园的水龙头最少数目](https://leetcode.cn/problems/minimum-number-of-taps-to-open-to-water-a-garden/description/)
 - 最长子序列
   - [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
   - [646 最长数对链](https://leetcode.cn/problems/maximum-length-of-pair-chain/description/)
   - [354 俄罗斯套娃信封问题](https://leetcode.cn/problems/russian-doll-envelopes/)
 - 其他
   - [738 单调递增的数字](https://leetcode.cn/problems/monotone-increasing-digits/)
+
+### 常用技巧
+
+- 左边界排序+从右到左遍历（右边界排序+从左到右遍历）
+  - 见[452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)解法
+- 维护数组
+  - 见[300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)解法
+- 单调栈代替遍历
+  - 见[122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)解法二
 
 ## 经典例题
 
@@ -60,10 +71,15 @@ class Solution {
 
 [122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
 
-思路：遍历股票价格，只有有递增就继续持有，直到价格下滑，就抛出。
+思路：
+
+- 解法一：遍历股票价格，只有有递增就继续持有，直到价格下滑，就抛出。
+- 解法二：使用单调栈维护股票，减少遍历次数。
+
 代码：
 
 ``` c++
+// 解法一
 class Solution {
  public:
   int maxProfit(vector<int>& prices) {
@@ -76,6 +92,25 @@ class Solution {
       }
       ret += prices[j - 1] - prices[i];
       i = j;
+    }
+    return ret;
+  }
+};
+// 解法二
+class Solution {
+ public:
+  int maxProfit(vector<int>& prices) {
+    int ret = 0;
+    stack<int> stk;
+    for (auto price : prices) {
+      int lastPrice = stk.empty() ? price : stk.top();
+      while (!stk.empty() && price > stk.top()) {
+        stk.pop();
+      }
+      if (lastPrice < price) {
+        ret += price - lastPrice;
+      }
+      stk.push(price);
     }
     return ret;
   }
@@ -97,41 +132,41 @@ class Solution {
 
 ``` c++
 class Solution {
-public:
-    int lengthOfLIS(vector<int>& nums) {
-        int len = 1, n = (int)nums.size();
-        if (n == 0) {
-            return 0;
-        }
-        vector<int> d(n + 1, 0);
-        d[len] = nums[0];
-        for (int i = 1; i < n; ++i) {
-            if (nums[i] > d[len]) {
-                d[++len] = nums[i];
-            } else {
-                int l = 1, r = len, pos = 0; // 如果找不到说明所有的数都比 nums[i] 大，此时要更新 d[1]，所以这里将 pos 设为 0
-                while (l <= r) {
-                    int mid = (l + r) >> 1;
-                    if (d[mid] < nums[i]) {
-                        pos = mid;
-                        l = mid + 1;
-                    } else {
-                        r = mid - 1;
-                    }
-                }
-                d[pos + 1] = nums[i];
-            }
-        }
-        return len;
+ public:
+  int lengthOfLIS(vector<int>& nums) {
+    int len = 1, n = (int)nums.size();
+    if (n == 0) {
+      return 0;
     }
+    vector<int> d(n + 1, 0);
+    d[len] = nums[0];
+    for (int i = 1; i < n; ++i) {
+      if (nums[i] > d[len]) {
+        d[++len] = nums[i];
+      } else {
+        int l = 1, r = len,
+            pos = 0;  // 如果找不到说明所有的数都比 nums[i] 大，此时要更新
+                      // d[1]，所以这里将 pos 设为 0
+        while (l <= r) {
+          int mid = (l + r) >> 1;
+          if (d[mid] < nums[i]) {
+            pos = mid;
+            l = mid + 1;
+          } else {
+            r = mid - 1;
+          }
+        }
+        d[pos + 1] = nums[i];
+      }
+    }
+    return len;
+  }
 };
 ```
 
 [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
 
-思路：
-
-类似[452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
+思路：类似[452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
 
 代码：
 

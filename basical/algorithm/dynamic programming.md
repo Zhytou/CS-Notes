@@ -3,19 +3,20 @@
 - [动态规划](#动态规划)
   - [基础概念](#基础概念)
     - [常用解法](#常用解法)
-      - [01背包问题](#01背包问题)
-      - [完全背包问题](#完全背包问题)
     - [题型分类](#题型分类)
   - [经典例题](#经典例题)
-    - [简单题](#简单题)
-    - [中等题](#中等题)
-    - [难题](#难题)
+    - [01背包问题](#01背包问题)
+    - [完全背包问题](#完全背包问题)
+    - [股票问题](#股票问题)
+    - [子序列问题](#子序列问题)
+    - [博弈策略问题](#博弈策略问题)
+    - [其他](#其他)
 
 ## 基础概念
 
 ### 常用解法
 
-#### 01背包问题
+01背包：
 
 **问题描述**：
 
@@ -23,7 +24,7 @@
 
 **朴素解法**：
 
-将容量为`j`装入`i`个物品的背包最大价值记为`dp[i][j]`，则转移方程为：`dp[i] = max(dp[i], dp[i - 1][j - w[i]] + v[i])`，将该问题转换为如何在已经装入`i-1`个物品的背包是再装一个物品获得最大价值。
+将容量为`j`装入`i`个物品的背包最大价值记为`dp[i][j]`，则转移方程为：`dp[i][j] = max(dp[i-1][j], dp[i - 1][j - w[i]] + v[i])`，将该问题转换为如何在已经装入`i-1`个物品的背包是再装一个物品获得最大价值。
 
 ``` c++
 // weight数组的大小 就是物品个数
@@ -53,7 +54,7 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
 
 注意：使用压缩解法的时候，需要倒序遍历，否则小容量背包的dp值会被先覆盖。
 
-#### 完全背包问题
+完全背包：
 
 完全背包和01背包问题唯一不同的地方就是，每种物品有无限件。
 
@@ -78,6 +79,7 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
   - [188 买卖股票的最佳时机Ⅳ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/)
   - [309 买卖股票的最佳时机含冷冻期](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
   - [713 买卖股票的最佳时机含手续费](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/)
+- 打家劫舍问题
 - 子序列
   - 不连续
     - [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
@@ -88,6 +90,9 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
     - [674 最长连续递增序列](https://leetcode.cn/problems/longest-continuous-increasing-subsequence/description/)
     - [718 最长重复子数组](https://leetcode.cn/problems/maximum-length-of-repeated-subarray/description/)
   - 编辑距离
+- 博弈策略问题
+  - [486 预测赢家](https://leetcode.cn/problems/predict-the-winner/)
+  - [877 石子游戏](https://leetcode.cn/problems/stone-game/description/)
 - 其他
   - [96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
 
@@ -98,165 +103,7 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
 
 ## 经典例题
 
-### 简单题
-
-[121 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
-
-### 中等题
-
-[64 最小路径和](https://leetcode-cn.com/problems/minimum-path-sum/)
-
-代码
-
-  ``` c++
-  class Solution {
-  public:
-      int minPathSum(vector<vector<int>>& grid) {
-          if (grid.size() == 0 || grid[0].size() == 0) {
-              return 0;
-          }
-          int rows = grid.size(), columns = grid[0].size();
-          auto dp = vector < vector <int> > (rows, vector <int> (columns));
-          dp[0][0] = grid[0][0];
-          for (int i = 1; i < rows; i++) {
-              dp[i][0] = dp[i - 1][0] + grid[i][0];
-          }
-          for (int j = 1; j < columns; j++) {
-              dp[0][j] = dp[0][j - 1] + grid[0][j];
-          }
-          for (int i = 1; i < rows; i++) {
-              for (int j = 1; j < columns; j++) {
-                  dp[i][j] = min(dp[i - 1][j], dp[i][j - 1]) + grid[i][j];
-              }
-          }
-          return dp[rows - 1][columns - 1];
-      }
-  };
-  ```
-
-[96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
-
-代码：
-
-``` c++
-class Solution {
-  vector<int> dp;
-
- public:
-  int numTrees(int n) {
-    if (n >= dp.size()) {
-      for (int i = dp.size(); i <= n; i++) {
-        if (i == 0 || i == 1) {
-          dp.push_back(i);
-          continue;
-        }
-        int dpi = 0;
-        for (int root = 1; root <= i; root++) {
-          int left = root - 1 == 0 ? 1 : dp[root - 1];
-          int right = i - root == 0 ? 1 : dp[i - root];
-          dpi += left * right;
-        }
-        dp.push_back(dpi);
-      }
-    }
-
-    return dp[n];
-  }
-};
-```
-
-[122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
-
-思路：
-
-- 分别记录第i天交易完后手里没有股票的最大利润和手里持有一支股票的最大利润。
-- 返回最后一天不持有股票的最大利润即可。
-
-代码：
-
-``` c++
-class Solution {
-public:
-    int maxProfit(vector<int>& prices) {
-        int n = prices.size();
-        int dp[n][2];
-        dp[0][0] = 0, dp[0][1] = -prices[0];
-        for (int i = 1; i < n; ++i) {
-            dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i]);
-            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
-        }
-        return dp[n - 1][0];
-    }
-};
-```
-
-[300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
-
-代码：
-
-``` c++
-class Solution {
- public:
-  int lengthOfLIS(vector<int>& nums) {
-    int n = nums.size();
-    vector<int> dp(n, 1);
-
-    for (int i = nums.size() - 1; i >= 0; i--) {
-      int dpj = 0;
-      for (int j = nums.size() - 1; j > i; j--) {
-        if (nums[i] < nums[j]) {
-          dpj = max(dpj, dp[j]);
-        }
-      }
-      dp[i] += dpj;
-    }
-
-    int ret = 1;
-    for (int i = 0; i < dp.size(); i++) {
-      ret = max(ret, dp[i]);
-    }
-    return ret;
-  }
-};
-```
-
-[322 零钱兑换](https://leetcode.cn/problems/coin-change/description/)
-
-思路：
-
-- 本题是一道完全背包问题，即：商品数量无限。
-- 分析题意可以得到转移方程如下：
-
-``` c++
-// dp[i]表示面值为 i 的现金替换需要的最少硬币数量
-dp[i] = min(dp[i - coin]) + 1;
-```
-
-代码：
-
-``` c++
-class Solution {
- public:
-  int coinChange(vector<int>& coins, int amount) {
-    vector<int> dp(amount + 1, -1);
-
-    dp[0] = 0;
-    sort(coins.begin(), coins.end());
-    for (int i = 1; i <= amount; i++) {
-      for (auto& coin : coins) {
-        if (coin > i) {
-          break;
-        }
-        if (dp[i - coin] != -1 && (dp[i] == -1 || dp[i] > dp[i - coin] + 1)) {
-          dp[i] = dp[i - coin] + 1;
-        }
-      }
-    }
-
-    return dp[amount];
-  }
-};
-```
+### 01背包问题
 
 [416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
 
@@ -373,6 +220,82 @@ class Solution {
 };
 ```
 
+[1049 最后一个石头的重量Ⅱ](https://leetcode.cn/problems/last-stone-weight-ii/description/)
+
+思路：
+
+- 本题经过适当分析，可以转换为一个01背包问题。其分析方法类似[494 目标和](https://leetcode.cn/problems/target-sum/description/)
+- 总的来说，就是将问题转换成如何将所有石头分成重量最接近的两份。
+  - 因此，我们可以定义一个长度为所有石头重量之和一半的数组，作为保存背包状态的dp数组。
+  - 最终，我们希望容量最大背包（dp数组尾部元素）中物品价值（石头重量）最接近所有物品价值的一半。
+  - 整个思路类似[416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int lastStoneWeightII(vector<int>& stones) {
+    int sum = 0;
+    for (auto& stone : stones) {
+      sum += stone;
+    }
+
+    int n = sum / 2 + 1;
+    vector<int> dp(n + 1, 0);
+    for (auto& stone : stones) {
+      for (int i = n; i >= 0; i--) {
+        if (i > stone) {
+          dp[i] = max(dp[i], dp[i - stone] + stone);
+        }
+      }
+    }
+
+    return sum - 2 * dp[n];
+  }
+};
+```
+
+### 完全背包问题
+
+[322 零钱兑换](https://leetcode.cn/problems/coin-change/description/)
+
+思路：
+
+- 本题是一道完全背包问题，即：商品数量无限。
+- 分析题意可以得到转移方程如下：
+
+``` c++
+// dp[i]表示面值为 i 的现金替换需要的最少硬币数量
+dp[i] = min(dp[i - coin]) + 1;
+```
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int coinChange(vector<int>& coins, int amount) {
+    vector<int> dp(amount + 1, -1);
+
+    dp[0] = 0;
+    sort(coins.begin(), coins.end());
+    for (int i = 1; i <= amount; i++) {
+      for (auto& coin : coins) {
+        if (coin > i) {
+          break;
+        }
+        if (dp[i - coin] != -1 && (dp[i] == -1 || dp[i] > dp[i - coin] + 1)) {
+          dp[i] = dp[i - coin] + 1;
+        }
+      }
+    }
+
+    return dp[amount];
+  }
+};
+```
+
 [518 零钱兑换Ⅱ](https://leetcode.cn/problems/coin-change-ii/description/)
 
 思路：
@@ -401,6 +324,92 @@ class Solution {
     }
 
     return dp[amount];
+  }
+};
+```
+
+### 股票问题
+
+[121 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
+
+[122 买卖股票的最佳时机Ⅱ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/)
+
+思路：
+
+- 分别记录第i天交易完后手里没有股票的最大利润和手里持有一支股票的最大利润。
+- 返回最后一天不持有股票的最大利润即可。
+- 此外，本题还可以使用贪心+单调栈的方法解决。
+
+代码：
+
+``` c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        int dp[n][2];
+        dp[0][0] = 0, dp[0][1] = -prices[0];
+        for (int i = 1; i < n; ++i) {
+            dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] + prices[i]);
+            dp[i][1] = max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+        }
+        return dp[n - 1][0];
+    }
+};
+```
+
+[123 买卖股票的最佳时机Ⅲ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/)
+
+代码：
+
+``` c++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        int buy1 = -prices[0], sell1 = 0;
+        int buy2 = -prices[0], sell2 = 0;
+        for (int i = 1; i < n; ++i) {
+            buy1 = max(buy1, -prices[i]);
+            sell1 = max(sell1, buy1 + prices[i]);
+            buy2 = max(buy2, sell1 - prices[i]);
+            sell2 = max(sell2, buy2 + prices[i]);
+        }
+        return sell2;
+    }
+};
+```
+
+[188 买卖股票的最佳时机Ⅳ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/)
+
+### 子序列问题
+
+[300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
+
+代码：
+
+``` c++
+class Solution {
+ public:
+  int lengthOfLIS(vector<int>& nums) {
+    int n = nums.size();
+    vector<int> dp(n, 1);
+
+    for (int i = nums.size() - 1; i >= 0; i--) {
+      int dpj = 0;
+      for (int j = nums.size() - 1; j > i; j--) {
+        if (nums[i] < nums[j]) {
+          dpj = max(dpj, dp[j]);
+        }
+      }
+      dp[i] += dpj;
+    }
+
+    int ret = 1;
+    for (int i = 0; i < dp.size(); i++) {
+      ret = max(ret, dp[i]);
+    }
+    return ret;
   }
 };
 ```
@@ -477,42 +486,6 @@ class Solution {
 };
 ```
 
-[1049 最后一个石头的重量Ⅱ](https://leetcode.cn/problems/last-stone-weight-ii/description/)
-
-思路：
-
-- 本题经过适当分析，可以转换为一个01背包问题。其分析方法类似[494 目标和](https://leetcode.cn/problems/target-sum/description/)
-- 总的来说，就是将问题转换成如何将所有石头分成重量最接近的两份。
-  - 因此，我们可以定义一个长度为所有石头重量之和一半的数组，作为保存背包状态的dp数组。
-  - 最终，我们希望容量最大背包（dp数组尾部元素）中物品价值（石头重量）最接近所有物品价值的一半。
-  - 整个思路类似[416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
-
-代码：
-
-``` c++
-class Solution {
- public:
-  int lastStoneWeightII(vector<int>& stones) {
-    int sum = 0;
-    for (auto& stone : stones) {
-      sum += stone;
-    }
-
-    int n = sum / 2 + 1;
-    vector<int> dp(n + 1, 0);
-    for (auto& stone : stones) {
-      for (int i = n; i >= 0; i--) {
-        if (i > stone) {
-          dp[i] = max(dp[i], dp[i - stone] + stone);
-        }
-      }
-    }
-
-    return sum - 2 * dp[n];
-  }
-};
-```
-
 [1143 最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/description/)
 
 思路：
@@ -552,27 +525,91 @@ class Solution {
 };
 ```
 
-### 难题
+### 博弈策略问题
 
-[123 买卖股票的最佳时机Ⅲ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/)
+[486 预测赢家](https://leetcode.cn/problems/predict-the-winner/)
+
+[877 石子游戏](https://leetcode.cn/problems/stone-game/description/)
+
+``` c++
+class Solution {
+ public:
+  bool stoneGame(vector<int>& piles) {
+    int length = piles.size();
+    auto dp = vector<int>(length);
+    for (int i = 0; i < length; i++) {
+      dp[i] = piles[i];
+    }
+    for (int i = length - 2; i >= 0; i--) {
+      for (int j = i + 1; j < length; j++) {
+        dp[j] = max(piles[i] - dp[j], piles[j] - dp[j - 1]);
+      }
+    }
+    return dp[length - 1] > 0;
+  }
+};
+```
+
+### 其他
+
+[64 最小路径和](https://leetcode-cn.com/problems/minimum-path-sum/)
+
+代码
+
+  ``` c++
+  class Solution {
+  public:
+      int minPathSum(vector<vector<int>>& grid) {
+          if (grid.size() == 0 || grid[0].size() == 0) {
+              return 0;
+          }
+          int rows = grid.size(), columns = grid[0].size();
+          auto dp = vector < vector <int> > (rows, vector <int> (columns));
+          dp[0][0] = grid[0][0];
+          for (int i = 1; i < rows; i++) {
+              dp[i][0] = dp[i - 1][0] + grid[i][0];
+          }
+          for (int j = 1; j < columns; j++) {
+              dp[0][j] = dp[0][j - 1] + grid[0][j];
+          }
+          for (int i = 1; i < rows; i++) {
+              for (int j = 1; j < columns; j++) {
+                  dp[i][j] = min(dp[i - 1][j], dp[i][j - 1]) + grid[i][j];
+              }
+          }
+          return dp[rows - 1][columns - 1];
+      }
+  };
+  ```
+
+[96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
 
 代码：
 
 ``` c++
 class Solution {
-public:
-    int maxProfit(vector<int>& prices) {
-        int n = prices.size();
-        int buy1 = -prices[0], sell1 = 0;
-        int buy2 = -prices[0], sell2 = 0;
-        for (int i = 1; i < n; ++i) {
-            buy1 = max(buy1, -prices[i]);
-            sell1 = max(sell1, buy1 + prices[i]);
-            buy2 = max(buy2, sell1 - prices[i]);
-            sell2 = max(sell2, buy2 + prices[i]);
+  vector<int> dp;
+
+ public:
+  int numTrees(int n) {
+    if (n >= dp.size()) {
+      for (int i = dp.size(); i <= n; i++) {
+        if (i == 0 || i == 1) {
+          dp.push_back(i);
+          continue;
         }
-        return sell2;
+        int dpi = 0;
+        for (int root = 1; root <= i; root++) {
+          int left = root - 1 == 0 ? 1 : dp[root - 1];
+          int right = i - root == 0 ? 1 : dp[i - root];
+          dpi += left * right;
+        }
+        dp.push_back(dpi);
+      }
     }
+
+    return dp[n];
+  }
 };
 ```
 

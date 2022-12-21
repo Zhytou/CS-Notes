@@ -56,22 +56,21 @@ ARM架构处理器占市面上所有32位嵌入式RISC处理器90%的比例。
 
 ## 参考
 
-**体系结构**
+**体系结构**：
 
 + [知乎 - 体系结构和计组的关系](https://www.zhihu.com/question/326558346/answer/840859773)
 + [what is computer architecture?](https://online.sunderland.ac.uk/what-is-computer-architecture/)
 + [wiki -  computer architecture](https://en.wikipedia.org/wiki/Computer_architecture)
 
-**ISA**
+**ISA**：
 
 + [wiki - Instruction Set Architecture](https://en.wikipedia.org/wiki/Instruction_set_architecture)
 + [ISA vs Machine Language](https://www.cise.ufl.edu/~mssz/CompOrg/CDA-lang.html)
 
-**x86 vs x64**
+**x86 vs x64**：
 
 + [x86 vs x64](https://www.seeedstudio.com/blog/2020/02/24/what-is-x86-architecture-and-its-difference-between-x64/)
 
-**Computer Organization**
+**Computer Organization**：
 
 + [wiki - microarchitecture](https://en.wikipedia.org/wiki/Microarchitecture)
-
