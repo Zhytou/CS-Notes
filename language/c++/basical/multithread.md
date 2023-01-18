@@ -92,11 +92,11 @@ As the name implies, the idea is to synchronize threads without the use of locks
 
 ### RMW: Atomic Read-Modify-Write Operations
 
-**读-修改-写**（read-modify-write）是计算机科学中的一个原子操作（atomic operation，类似的还有test-and-set, fetch-and-add, compare-and-swap等），操作过程是读一个内存位置（或IO端口），修改其值，再写回原位置。
+**读-修改-写read-modify-write**是计算机科学中的一个原子操作（atomic operation，类似的还有test-and-set, fetch-and-add, compare-and-swap等），操作过程是读一个内存位置（或IO端口），修改其值，再写回原位置。
 
 ### CAS:Compare-And-Swap Loop
 
-**比较并交换(compare and swap, CAS)**是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。
+**比较并交换compare and swap, CAS**是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。
 
 ### volatile vs atomic
 

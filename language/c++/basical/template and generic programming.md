@@ -317,5 +317,5 @@ class StrVec{
 ## 参考
 
 - [C++ Primer](https://github.com/bumzy/book/blob/master/C%2B%2B%20%20Primer%E4%B8%AD%E6%96%87%E7%89%88%EF%BC%88%E7%AC%AC%E4%BA%94%E7%89%88%EF%BC%89.pdf)
-- [STL 源码剖析-3.4 Traits编程技法](\https://leezw.net/assets/pdf/STL%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90.pdf)
+- [STL 源码剖析-3.4 Traits编程技法](https://leezw.net/assets/pdf/STL%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90.pdf)
 - [C++ Traits技术浅谈](https://www.cnblogs.com/mangoyuan/p/6446046.html)
