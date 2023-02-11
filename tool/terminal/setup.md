@@ -1,5 +1,7 @@
 # 终端设置
 
+> Windows terminal + WSL + Zsh + Oh-my-zsh
+
 ## WSL
 
 Microsoft商店中下载。之后需要分别在Windows和bios中设置启用Windows的Linux子系统和启用虚拟化技术。
@@ -7,6 +9,8 @@ Microsoft商店中下载。之后需要分别在Windows和bios中设置启用Win
 ## Windows Terminal
 
 Microsoft商店中下载。
+
+## Zsh
 
 ## Oh-my-zsh
 
