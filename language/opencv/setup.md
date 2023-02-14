@@ -2,18 +2,19 @@
 
 - [OpenCV Setup](#opencv-setup)
   - [Use OpenCV on WSL](#use-opencv-on-wsl)
-    - [Install OpenCV](#install-opencv)
+    - [Install OpenCV on WSL](#install-opencv-on-wsl)
     - [Install VcXsrv](#install-vcxsrv)
   - [Use OpenCV on Windows](#use-opencv-on-windows)
-  - [Install OpenCV](#install-opencv-1)
-  - [Use OpenCV in Visual Studio](#use-opencv-in-visual-studio)
+    - [Install OpenCV on Windows](#install-opencv-on-windows)
+    - [Add to Path](#add-to-path)
+    - [Use OpenCV in Visual Studio](#use-opencv-in-visual-studio)
 
 ## Use OpenCV on WSL
 
 > WSL + OpenCV + VcXsrv + VSCode
 > 关于WSL以及终端的设置可以参考[这里](https://github.com/Zhytou/CS-Notes/blob/main/tool/terminal/setup.md)
 
-### Install OpenCV
+### Install OpenCV on WSL
 
 ``` bash
 # Install minimal prerequisites (Ubuntu 18.04 as reference) 
@@ -55,12 +56,17 @@ source ~/.bashrc or source ~/.zshrc
 > OpenCV + Visual Stdio
 > 关于VS的更多使用介绍可以看[这里](https://github.com/Zhytou/CS-Notes/blob/main/tool/vs/vs.md)
 
-## Install OpenCV
+### Install OpenCV on Windows
 
 - 前往[官网](https://opencv.org/releases/)下载安装包；
+
 - 双击运行安装。
 
-## Use OpenCV in Visual Studio
+### Add to Path
+
+- 打开高级系统设置-高级-环境变量，将`D:\opencv\build\x64\vc16\bin`添加至环境变量中。此处包含运行OpenCV所需的动态链接库。
+
+### Use OpenCV in Visual Studio
 
 - 在项目-属性-VC++包含目录-包含目录中添加OpenCV头文件路径；
 
