@@ -1,5 +1,7 @@
 # 终端设置
 
+> Windows terminal + WSL + Zsh + Oh-my-zsh
+
 - [终端设置](#终端设置)
   - [WSL](#wsl)
     - [Zsh](#zsh)
