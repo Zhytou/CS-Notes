@@ -78,7 +78,7 @@ set-ExecutionPolicy RemoteSigned
 # 获取Oh-my-posh主题
 Get-PoshThemes
 # 选择脚本，修改$PROFILE为以下
- oh-my-posh init pwsh | Invoke-Expression
+oh-my-posh init pwsh | Invoke-Expression
 oh-my-posh init pwsh --config 'C:\Users\[Your Name]\AppData\Local\Programs\oh-my-posh\themes\[Theme Name].omp.json'| Invoke-Expression
 # 重新启用$PROFILE
 . $PROFILE
