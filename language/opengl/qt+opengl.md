@@ -1,3 +1,0 @@
-# qt+opengl
-
-直接使用QGLWidget这个类，OpenGL Context的创建和管理由Qt接管，不用自己操心，OpenGL API则由QGLFunction这个类暴露出来，原形和OpenGL原生API几乎是一样的，看文档就知道使用方法了，要不要引入glew或glee，看你自己了，如果OpenGL2的API就够用的话，就不需要，如果要使用OpenGL2以上的API，自己去解API指针并探测扩展可不可用，比较麻烦，建议还是引入，使用方法同你使用原生OpenGLAPI一样，在OpenGL Context有效的情况下，直接调用即可。但有几个注意事项，第一个，创建QGLWidget的时候，注意正确构造QGLFormat参数，选择合适的OpenGL版本和Profile，一般情况下，版本往高了填，本机不支持的话会自动降级到最高可用版本，但也有例外，有些老的OpenGL驱动比较奇葩，会降到2.1版本，多机使用的话，考虑清楚；第二个，如果原生API调用和Qt的GLPainterEngine混用的话，要记得调用beginNativePainting/endNativePainting，使得GLPaintEngine能够同步OpenGL状态，这些文档里都有说，仔细看看吧
