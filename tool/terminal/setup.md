@@ -86,7 +86,7 @@ oh-my-posh init pwsh --config 'C:\Users\[Your Name]\AppData\Local\Programs\oh-my
 
 **其他**：
 
-一般来说，还需要安装字体（可以前往[这里]寻找字体(https://www.nerdfonts.com/)），才能保证显示正常。
+一般来说，还需要安装字体（可以前往[这里](https://www.nerdfonts.com/)寻找字体），才能保证显示正常。
 
 ## Use Windows Terminal to Mange All Your Shells
 

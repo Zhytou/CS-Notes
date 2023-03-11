@@ -8,6 +8,7 @@
     - [Install OpenCV on Windows](#install-opencv-on-windows)
     - [Add to Path](#add-to-path)
     - [Use OpenCV in Visual Studio](#use-opencv-in-visual-studio)
+    - [Install OpenCV using vckpg in Visual Studio](#install-opencv-using-vckpg-in-visual-studio)
 
 ## Use OpenCV on WSL
 
@@ -73,3 +74,28 @@ source ~/.bashrc or source ~/.zshrc
 - 在项目-属性-VC++包含目录-库目录中添加OpenCV库路径；
 
 - 在项目-属性-链接器-输入-附加依赖项中添加OpenCV库名称。
+
+### Install OpenCV using vckpg in Visual Studio
+
+> 关于vckpg包管理器的更多使用介绍可以看[这里](https://github.com/Zhytou/CS-Notes/blob/main/tool/vckpg/basis.md)
+
+使用vckpg相比直接使用OpenCV官网安装器管理和配置都更方便，具体操作如下：
+
+``` powershell
+# 安装vckpg
+git clone https://github.com/microsoft/vcpkg
+.\vcpkg\bootstrap-vcpkg.bat
+
+# 使用安装opencv
+.\vcpkg\vcpkg install opencv
+
+# 开启集成管理
+.\vcpkg\vcpkg integrate install
+
+# 生成配置
+.\vcpkg\vcpkg integrate project
+```
+
+之后需要在 visual studio 中设置 Nuget（Nuget 实际上包平台，类似 npm 之于 nodejs），具体操作可见这篇[博客](https://zhuanlan.zhihu.com/p/153199835)。
+
+设置完成之后，就可以直接`#include<opencv2/opencv.hpp>`而不需要去添加头文件和库目录了。
