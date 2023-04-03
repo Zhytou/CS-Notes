@@ -1,5 +1,42 @@
 # Vue基础知识
 
+## 项目结构
+
+一般来说，一个 Vue 项目具有以下结构。其中，根目录下的 .vue 文件和 main.js 入口文件是vue项目中最重要最基础的文件。
+
+.vue 文件是 Vue 单文件组件的文件格式，它可以包含三个部分：template、script 和 style。其中，script 段包含了 Vue 组件的 JavaScript 代码，而 main.js 是整个项目的入口文件，它负责创建 Vue 实例并将其挂载到 HTML 页面上。
+
+在 Vue 项目中，通过在 main.js 中引入.vue 文件，可以将.vue 文件中定义的组件注册为全局组件。具体地，通过在 main.js 中导入 .vue 文件并使用 Vue.component() 方法来注册组件，然后在 HTML 页面中使用该组件。这样，当页面加载时，Vue 将会自动调用组件中的 template、script 和 style 部分，从而渲染出完整的组件。
+
+``` bash
+├── node_modules/                  # 依赖模块目录
+├── public/                        # 静态资源目录
+│   ├── index.html                 # 应用入口 HTML 文件
+│   └── favicon.ico                # 网站图标
+├── src/                           # 源码目录
+│   ├── assets/                    # 静态资源目录，如图片、字体等
+│   ├── components/                # 组件目录，存放 Vue 组件
+│   ├── router/                    # 路由目录，存放 Vue Router 相关配置
+│   ├── store/                     # 状态管理目录，存放 Vuex 相关配置
+│   ├── views/                     # 视图目录，存放页面级组件
+│   ├── App.vue                    # 根组件
+│   └── main.js                    # 入口 JavaScript 文件
+├── .eslintrc.js                    # ESLint 配置文件
+├── .gitignore                      # Git 忽略文件列表
+├── babel.config.js                 # Babel 配置文件
+├── package.json                    # 项目配置文件
+├── README.md                       # 项目说明文件
+└── vue.config.js                   # Vue CLI 配置文件
+```
+
+Vue 之所以被称为基于组件的框架，是因为它将应用程序拆分成了多个独立的组件，每个组件都有自己的模板、逻辑和样式。在 Vue 中，我们可以将一个组件定义在一个单独的文件中，这个文件通常被称为 Vue 单文件组件。因此，Vue 的组件化开发模式和 Vue 单文件组件是密不可分的，但并不是说 Vue 单文件组件是 Vue 组件化开发的唯一方式。
+
+此外，在 Vue 中也可以使用多文件组件来组织应用程序的代码。多文件组件通常是将一个组件的模板代码、逻辑代码和样式代码分别放在三个不同的文件中，然后使用 template, script 和 style 标签来引入它们。
+
+## 常用组件
+
+vue-cli: vue command line interface
+
 ## 一些问题
 
 **为什么要使用Webpack打包？一个Vue项目不就是一些html、css和js文件组成的吗？浏览器应该可以直接执行的吧。**：
