@@ -88,6 +88,8 @@ oh-my-posh init pwsh --config 'C:\Users\[Your Name]\AppData\Local\Programs\oh-my
 
 一般来说，还需要安装字体（可以前往[这里](https://www.nerdfonts.com/)寻找字体），才能保证显示正常。
 
+安装完成后，在终端设置-默认值-外观-字体中选择新下载的字体，即可正常显示。
+
 ## Use Windows Terminal to Mange All Your Shells
 
 `PowerShell`是命令行程序，真正执行指令的程序，而`Windows Terminal`则是管理各种命令行的工具。
