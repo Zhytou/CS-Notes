@@ -41,6 +41,7 @@
 
 - 深度优先 Depth First Search
 - 广度优先 Breadth First Search
+  - 双向广度优先遍历 Bidirectional Breadth First Search（当起点和终点已知时，使用这种方法可以提高效率）
 
 ### 拓扑排序
 
@@ -312,7 +313,7 @@
 
 | 类型                   | 算法                                         | 例题 |
 | :--------------------- | -------------------------------------------- | ---- |
-| 遍历                   | DFS、BFS                                     |      |
+| 遍历                   | DFS、BFS、BBFS                                |[127 单词接龙](https://leetcode-cn.com/problems/word-ladder/)      |
 | 最短路径               | 单点对单点：BFS、Floyd；单点对多点：Dijkstra |      |
 | 最小生成树             | Prim                                         |      |
 | 无向图连通性、成环个数 | Unionset                                     |      |
@@ -602,7 +603,94 @@ public:
   };
   ```
 
-- 法二 迪杰斯科拉 Dijkstra：
+- 法二 双向广度优先遍历 BBFS
+  
+``` c++
+class Solution {
+public:
+    unordered_map<string, int> wordId;
+    vector<vector<int>> edge;
+    int nodeNum = 0;
+
+    void addWord(string& word) {
+        if (!wordId.count(word)) {
+            wordId[word] = nodeNum++;
+            edge.emplace_back();
+        }
+    }
+
+    void addEdge(string& word) {
+        addWord(word);
+        int id1 = wordId[word];
+        for (char& it : word) {
+            char tmp = it;
+            it = '*';
+            addWord(word);
+            int id2 = wordId[word];
+            edge[id1].push_back(id2);
+            edge[id2].push_back(id1);
+            it = tmp;
+        }
+    }
+
+    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {
+        for (string& word : wordList) {
+            addEdge(word);
+        }
+        addEdge(beginWord);
+        if (!wordId.count(endWord)) {
+            return 0;
+        }
+
+        vector<int> disBegin(nodeNum, INT_MAX);
+        int beginId = wordId[beginWord];
+        disBegin[beginId] = 0;
+        queue<int> queBegin;
+        queBegin.push(beginId);
+
+        vector<int> disEnd(nodeNum, INT_MAX);
+        int endId = wordId[endWord];
+        disEnd[endId] = 0;
+        queue<int> queEnd;
+        queEnd.push(endId);
+
+        while (!queBegin.empty() && !queEnd.empty()) {
+            int queBeginSize = queBegin.size();
+            for (int i = 0; i < queBeginSize; ++i) {
+                int nodeBegin = queBegin.front();
+                queBegin.pop();
+                if (disEnd[nodeBegin] != INT_MAX) {
+                    return (disBegin[nodeBegin] + disEnd[nodeBegin]) / 2 + 1;
+                }
+                for (int& it : edge[nodeBegin]) {
+                    if (disBegin[it] == INT_MAX) {
+                        disBegin[it] = disBegin[nodeBegin] + 1;
+                        queBegin.push(it);
+                    }
+                }
+            }
+
+            int queEndSize = queEnd.size();
+            for (int i = 0; i < queEndSize; ++i) {
+                int nodeEnd = queEnd.front();
+                queEnd.pop();
+                if (disBegin[nodeEnd] != INT_MAX) {
+                    return (disBegin[nodeEnd] + disEnd[nodeEnd]) / 2 + 1;
+                }
+                for (int& it : edge[nodeEnd]) {
+                    if (disEnd[it] == INT_MAX) {
+                        disEnd[it] = disEnd[nodeEnd] + 1;
+                        queEnd.push(it);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+};
+```
+
+- 法三 迪杰斯科拉 Dijkstra：
 
   ``` c++
   class Solution {
@@ -676,3 +764,91 @@ public:
       }
   };
   ```
+
+[126 单词接龙Ⅱ](https://leetcode.cn/problems/word-ladder-ii/description/)
+
+- 思路：BFS + HashMap + Backtracking
+- 代码：
+  
+``` c++
+class Solution {
+public:
+    vector<vector<string>> findLadders(string beginWord, string endWord, vector<string> &wordList) {
+        vector<vector<string>> res;
+        // 因为需要快速判断扩展出的单词是否在 wordList 里，因此需要将 wordList 存入哈希表，这里命名为「字典」
+        unordered_set<string> dict = {wordList.begin(), wordList.end()};
+        // 修改以后看一下，如果根本就不在 dict 里面，跳过
+        if (dict.find(endWord) == dict.end()) {
+            return res;
+        }
+        // 特殊用例处理
+        dict.erase(beginWord);
+
+        // 第 1 步：广度优先搜索建图
+        // 记录扩展出的单词是在第几次扩展的时候得到的，key：单词，value：在广度优先搜索的第几层
+        unordered_map<string, int> steps = {{beginWord, 0}};
+        // 记录了单词是从哪些单词扩展而来，key：单词，value：单词列表，这些单词可以变换到 key ，它们是一对多关系
+        unordered_map<string, set<string>> from = {{beginWord, {}}};
+        int step = 0;
+        bool found = false;
+        queue<string> q = queue<string>{{beginWord}};
+        int wordLen = beginWord.length();
+        while (!q.empty()) {
+            step++;
+            int size = q.size();
+            for (int i = 0; i < size; i++) {
+                const string currWord = move(q.front());
+                string nextWord = currWord;
+                q.pop();
+                // 将每一位替换成 26 个小写英文字母
+                for (int j = 0; j < wordLen; ++j) {
+                    const char origin = nextWord[j];
+                    for (char c = 'a'; c <= 'z'; ++c) {
+                        nextWord[j] = c;
+                        if (steps[nextWord] == step) {
+                            from[nextWord].insert(currWord);
+                        }
+                        if (dict.find(nextWord) == dict.end()) {
+                            continue;
+                        }
+                        // 如果从一个单词扩展出来的单词以前遍历过，距离一定更远，为了避免搜索到已经遍历到，且距离更远的单词，需要将它从 dict 中删除
+                        dict.erase(nextWord);
+                        // 这一层扩展出的单词进入队列
+                        q.push(nextWord);
+                        // 记录 nextWord 从 currWord 而来
+                        from[nextWord].insert(currWord);
+                        // 记录 nextWord 的 step
+                        steps[nextWord] = step;
+                        if (nextWord == endWord) {
+                            found = true;
+                        }
+                    }
+                    nextWord[j] = origin;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        // 第 2 步：回溯找到所有解，从 endWord 恢复到 beginWord ，所以每次尝试操作 path 列表的头部
+        if (found) {
+            vector<string> Path = {endWord};
+            backtrack(res, endWord, from, Path);
+        }
+        return res;
+    }
+
+    void backtrack(vector<vector<string>> &res, const string &Node, unordered_map<string, set<string>> &from,
+             vector<string> &path) {
+        if (from[Node].empty()) {
+            res.push_back({path.rbegin(), path.rend()});
+            return;
+        }
+        for (const string &Parent: from[Node]) {
+            path.push_back(Parent);
+            backtrack(res, Parent, from, path);
+            path.pop_back();
+        }
+    }
+};
+```
