@@ -4,8 +4,7 @@
   - [Basical Concepts](#basical-concepts)
   - [Usage](#usage)
     - [Simple example at a glance](#simple-example-at-a-glance)
-    - [Use .gitignore](#use-gitignore)
-    - [Other useful commands](#other-useful-commands)
+    - [Advanced git commands](#advanced-git-commands)
   - [Other](#other)
   - [References](#references)
 
@@ -35,30 +34,69 @@ git commit -m "first commit"
 # add your personal remote repo and set the upstream 
 git remote add origin https://github.com/Zhytou/project.git
 git push -u origin master
-
 ```
 
-### Use .gitignore
-
-change .git/info/exclude to make .gitignore work
+**Use .gitignore**:
 
 ``` bash
+# change .git/info/exclude to make .gitignore work
 cat .gitignore > .git/info/exclude
 ```
 
-### Other useful commands
+**Other useful commands**:
 
-git status: check the files state(untracked or unstaged)
+``` bash
+# check the files state(untracked or unstaged)
+git status
 
-git checkout -b : add a new branch
+# change to another branch
+git checkout [branch name]
 
-git checkout: change to another branch
+# show commit history
+git log
 
-git branch -a: show all the branches you created including remote
+# show differences between two files
+git diff [file name]
+```
 
-git diff xxx: show differences between two files
+### Advanced git commands
+
+**Add & delete branch**:
+
+``` bash
+# add a new branch
+git checkout -b [new-branch-name] | git branch [new-branch-name]
+
+# delete a branch
+git branch -D [branch-name]
+```
+
+**Stash temporary changes**:
+
+``` bash
+# move your modified files into a stack
+git stash
+# pop out your modified files into working directory
+# the first command applies the most recent stash to your working directory and then removes it from the stash list, while the second one applies the most recent stash to your working directory, but does not remove it from the stash list. 
+git stash pop | git stash apply
+```
+
+**Revert commits**:
+
+``` bash
+# Hard delete unpublished commits
+git reset --hard [commit number]
+
+# undo published commits with new commits
+```
 
 ## Other
+
+**git add vs git stash**：
+
+Stash will move your modified files into a stack. So, later in the same or in another branch, you will be able to bring them back and see those modifications in your project.
+
+Stage is the step before to make a commit, you add modified files to "Staged files" to create your next commit.
 
 **git branch vs git tag**：
 
@@ -101,4 +139,5 @@ ssh -T git@github.com
 
 ## References
 
-[conneting to github with ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
+- [conneting to github with ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
+- [git revert handbook](https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging#_undoing_merges)
