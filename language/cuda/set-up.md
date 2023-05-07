@@ -36,5 +36,5 @@ cd /usr/local
 
 ## Reference
 
-- ![zhihu win10安装CUDA和cuDNN的正确姿势](https://zhuanlan.zhihu.com/p/94220564)
+- [zhihu win10安装CUDA和cuDNN的正确姿势](https://zhuanlan.zhihu.com/p/94220564)
 - [github issue cmake cuda](https://github.com/facebookresearch/faiss/issues/1424)
