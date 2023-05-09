@@ -188,6 +188,18 @@ type tester interface {
 
 所有成员在包内均可访问，无论是否在同一源码文件中。但只有名称首字母大写的为可导出成员，在包外可视。
 
+类似Java， Go语言需要定义一个main包，用于标识程序入口的包。其中包含了一个程序的主函数。
+
+``` golang
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Print("Hello world!")
+}
+```
+
 ## 参考
 
 [Go语言圣经](https://books.studygolang.com/gopl-zh/)
