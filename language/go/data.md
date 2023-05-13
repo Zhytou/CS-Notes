@@ -34,7 +34,75 @@ byte是Go语言中的内置数据类型，它是一个8位无符号整数类型�
 
 rune是Go语言中的另一个内置数据类型，它是一个32位有符号整数类型，可以用来表示Unicode编码字符集中的字符。
 
-**字符串 & byte切片**：
+**字符串 & byte切片 & rune切片**：
+
+由于Go语言字符是不可变的，当遇到需要操作字符串时，可以使用byte切片或rune切片代替，只需要在最后将其转换为字符串类型即可。
+
+例如，在N皇后问题中需要操作字符串切片，我们可以将其替换成rune切片。
+
+``` go
+func main() {
+    n := 4
+    board := make([][]rune, n)
+    for i := range board {
+        board[i] = make([]rune, n)
+        for j := range board[i] {
+            board[i][j] = '.'
+        }
+    }
+
+    var solutions [][]string
+    backtrack(&solutions, board, 0)
+
+    fmt.Println(solutions)
+}
+
+func backtrack(solutions *[][]string, board [][]rune, row int) {
+    if row == len(board) {
+        var solution []string
+        for _, row := range board {
+            solution = append(solution, string(row))
+        }
+        *solutions = append(*solutions, solution)
+        return
+    }
+
+    for col := 0; col < len(board); col++ {
+        if isValid(board, row, col) {
+            board[row][col] = 'Q'
+            backtrack(solutions, board, row+1)
+            board[row][col] = '.'
+        }
+    }
+}
+
+func isValid(board [][]rune, row, col int) bool {
+    n := len(board)
+
+    // 检查列
+    for i := 0; i < row; i++ {
+        if board[i][col] == 'Q' {
+            return false
+        }
+    }
+
+    // 检查左上角到右下角的对角线
+    for i, j := row-1, col-1; i >= 0 && j >= 0; i, j = i-1, j-1 {
+        if board[i][j] == 'Q' {
+            return false
+        }
+    }
+
+    // 检查右上角到左下角的对角线
+    for i, j := row-1, col+1; i >= 0 && j < n; i, j = i-1, j+1 {
+        if board[i][j] == 'Q' {
+            return false
+        }
+    }
+
+    return true
+}
+```
 
 ## 引用类型
 
