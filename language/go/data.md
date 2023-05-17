@@ -293,6 +293,131 @@ Go语言中并没有直接提供如优先队列、栈和队列等常见的数据
 
 ### 优先队列
 
+``` golang
+type Item struct {
+    value    interface{} // 值
+    priority int         // 优先级
+    index    int         // 在堆中的索引
+}
+
+type PriorityQueue []*Item
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+
+func (pq PriorityQueue) Less(i, j int) bool {
+    return pq[i].priority < pq[j].priority
+}
+
+func (pq PriorityQueue) Swap(i, j int) {
+    pq[i], pq[j] = pq[j], pq[i]
+    pq[i].index = i
+    pq[j].index = j
+}
+
+func (pq *PriorityQueue) Push(x interface{}) {
+    n := len(*pq)
+    item := x.(*Item)
+    item.index = n
+    *pq = append(*pq, item)
+}
+
+func (pq *PriorityQueue) Pop() interface{} {
+    old := *pq
+    n := len(old)
+    item := old[n-1]
+    item.index = -1 // for safety
+    *pq = old[0 : n-1]
+    return item
+}
+
+func (pq *PriorityQueue) update(item *Item, value interface{}, priority int) {
+    item.value = value
+    item.priority = priority
+    heap.Fix(pq, item.index)
+}
+
+pq := make(PriorityQueue, 0)
+heap.Init(&pq)
+
+// 添加元素
+heap.Push(&pq, &Item{value: "foo", priority: 1})
+heap.Push(&pq, &Item{value: "bar", priority: 2})
+
+// 弹出元素
+item1 := heap.Pop(&pq).(*Item)
+fmt.Println(item1.value) // 输出 "bar"
+
+// 更新元素
+item2 := &pq[0] // 获取第一个元素
+pq.update(item2, item2.value, 3)
+```
+
 ### 栈
 
+``` golang
+type Stack []interfice {}
+
+func (stack Stack) Len() int {
+    return len(stack)
+}
+
+func (stack Stack) Cap() int {
+    return cap(stack)
+}
+
+func (stack *Stack) Push(value interface{})  {
+    *stack = append(*stack, value)
+}
+
+func (stack *Stack) Pop() (interface{}, error)  {
+    theStack := *stack
+    if len(theStack) == 0 {
+        return nil, errors.New("Out of index, len is 0")
+    }
+    value := theStack[len(theStack) - 1]
+    *stack = theStack[:len(theStack) - 1]
+    return value, nil
+}
+
+func (stack Stack) Top() (interface{}, error)  {
+    if len(stack) == 0 {
+        return nil, errors.New("Out of index, len is 0")
+    }
+    return stack[len(stack) - 1], nil
+}
+```
+
 ### 队列
+
+``` golang
+type Queue []interfice {}
+
+func (queue Queue) Len() int {
+    return len(queue)
+}
+
+func (queue Queue) Cap() int {
+    return cap(queue)
+}
+
+func (queue *Queue) Push(value interface{})  {
+    *queue = append(*queue, value)
+}
+
+func (queue *Queue) Pop() (interface{}, error)  {
+    theQueue := *queue
+    if len(theQueue) == 0 {
+        return nil, errors.New("Out of index, len is 0")
+    }
+    value := theQueue[0]
+    *queue = theQueue[1:]
+    return value, nil
+}
+
+func (queue Queue) Front() (interface{}, error)  {
+    if len(stack) == 0 {
+        return nil, errors.New("Out of index, len is 0")
+    }
+    return queue[0], nil
+}
+```
