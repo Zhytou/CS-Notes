@@ -30,7 +30,7 @@
 | -------- | ------------------------------------------------------------ |
 | 子集     | [子集](https://leetcode-cn.com/problems/subsets/)、[子集Ⅱ](https://leetcode-cn.com/problems/subsets-ii/) |
 | 组合     | [组合](https://leetcode-cn.com/problems/combinations/)、[组合总和](https://leetcode-cn.com/problems/combination-sum/)、[组合的总和Ⅱ](https://leetcode-cn.com/problems/combination-sum-ii/) |
-| 排列     | [全排列](https://leetcode-cn.com/problems/permutations/)、[全排列Ⅱ](https://leetcode-cn.com/problems/permutations-ii/)、[字符串的全排列](https://leetcode-cn.com/problems/zi-fu-chuan-de-pai-lie-lcof/)、[字母大小写全排列](https://leetcode-cn.com/problems/letter-case-permutation/) |
+| 排列     | [全排列](https://leetcode-cn.com/problems/permutations/)、[全排列Ⅱ](https://leetcode-cn.com/problems/permutations-ii/)、[字符串的全排列](https://leetcode-cn.com/problems/zi-fu-chuan-de-pai-lie-lcof/)、[字母大小写全排列](https://leetcode-cn.com/problems/letter-case-permutation/)、[活字印刷](https://leetcode.cn/problems/letter-tile-possibilities/description/)|
 | 搜索     | [二进制手表](https://leetcode-cn.com/problems/binary-watch/)、[解数独](https://leetcode-cn.com/problems/sudoku-solver/)、[单词搜索](https://leetcode-cn.com/problems/word-search/)、[N皇后](https://leetcode-cn.com/problems/eight-queens-lcci/)、[分割回文串](https://leetcode-cn.com/problems/palindrome-partitioning/) |
 
 子集
@@ -411,6 +411,43 @@ public:
     }
 };
 
+```
+
+[1079 活字印刷](https://leetcode.cn/problems/letter-tile-possibilities/description/)
+
+思路：首先，统计给定字符串中出现字符数量；接着，每次递归回溯时确定一个字符并将该字符数量减一。
+
+代码：
+
+``` c++
+class Solution {
+public:
+    int numTilePossibilities(string tiles) {
+        unordered_map<char, int> count;
+        set<char> tile;
+        int n = tiles.length();
+        for (char c : tiles) {
+            count[c]++;
+            tile.insert(c);
+        }
+        return dfs(count, tile, n) - 1;
+    }
+
+    int dfs(unordered_map<char, int>& count, set<char>& tile, int i) {
+        if (i == 0) {
+            return 1;
+        }
+        int res = 1;
+        for (char t : tile) {
+            if (count[t] > 0) {
+                count[t]--;
+                res += dfs(count, tile, i - 1);
+                count[t]++;
+            }
+        }
+        return res;
+    }
+};
 ```
 
 ### 难题
