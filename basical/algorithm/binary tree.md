@@ -192,6 +192,40 @@ class Solution {
 - 隐式中序遍历
   - 思想同上，只不过减小了空间复杂度，即：在遍历的同时找出问题节点并修复，而不用分三步——先用vector储存中序遍历结果；找出问题节点；最后修复问题节点。
 
+- 实现
+
+``` c++
+class Solution {
+public:
+    void recoverTree(TreeNode* root) {
+        stack<TreeNode*> stk;
+        TreeNode* x = nullptr;
+        TreeNode* y = nullptr;
+        TreeNode* pred = nullptr;
+
+        while (!stk.empty() || root != nullptr) {
+            while (root != nullptr) {
+                stk.push(root);
+                root = root->left;
+            }
+            root = stk.top();
+            stk.pop();
+            if (pred != nullptr && root->val < pred->val) {
+                y = root;
+                if (x == nullptr) {
+                    x = pred;
+                }
+                else break;
+            }
+            pred = root;
+            root = root->right;
+        }
+
+        swap(x->val, y->val);
+    }
+};
+```
+
 [109 有序链表转换为二叉搜索树](https://leetcode.cn/problems/convert-sorted-list-to-binary-search-tree/description/)
 
 - 思路：先用快慢指针找到链表中点，再利用分而治之的思想分别构造左右子树。

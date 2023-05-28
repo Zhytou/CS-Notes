@@ -14,6 +14,10 @@
 
 ## 基础概念
 
+动态规划的题目分为两大类，一种是求最优解类，典型问题是背包问题，另一种就是计数类，比如典型的统计可行方案数量，它们都存在一定的递推性质。
+
+前者的递推性质还有一个名字，叫做 「最优子结构」 ——即当前问题的最优解取决于子问题的最优解，后者类似，当前问题的方案数取决于子问题的方案数。所以在遇到求方案数的问题时，我们可以往动态规划的方向考虑。
+
 ### 常用解法
 
 01背包：
@@ -80,6 +84,10 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
   - [309 买卖股票的最佳时机含冷冻期](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
   - [713 买卖股票的最佳时机含手续费](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/)
 - 打家劫舍问题
+- 路线
+  - [62 不同的路径](https://leetcode.cn/problems/unique-paths/description/)
+  - [63 不同的路径Ⅱ](https://leetcode.cn/problems/unique-paths-ii/)
+  - [2684 矩阵中移动的最大次数](https://leetcode.cn/problems/maximum-number-of-moves-in-a-grid/)
 - 子序列
   - 不连续
     - [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
