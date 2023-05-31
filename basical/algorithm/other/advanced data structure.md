@@ -8,10 +8,6 @@
 
 ## 单调栈/单调队列
 
-**描述**：
-
-**例题**：
-
 [42 接雨水](https://leetcode.cn/problems/trapping-rain-water/description/)
 
 ``` c++
@@ -113,6 +109,38 @@ public:
 ```
 
 [496 下一个元素更大](https://leetcode.cn/problems/next-greater-element-i/)
+
+[1130 叶值的最小代价生成树](https://leetcode.cn/problems/minimum-cost-tree-from-leaf-values/description/)
+
+- 问题可以转化为：给定一个数组 arr\textit{arr}arr，不断地合并相邻的数，合并代价为两个数的乘积，合并之后的数为两个数的最大值，直到数组只剩一个数，求最小合并代价和。
+
+``` c++
+class Solution {
+public:
+    int mctFromLeafValues(vector<int>& arr) {
+        int res = 0;
+        stack<int> stk;
+        for (int x : arr) {
+            while (!stk.empty() && stk.top() <= x) {
+                int y = stk.top();
+                stk.pop();
+                if (stk.empty() || stk.top() > x) {
+                    res += y * x;
+                } else {
+                    res += stk.top() * y;
+                }
+            }
+            stk.push(x);
+        }
+        while (stk.size() >= 2) {
+            int x = stk.top();
+            stk.pop();
+            res += stk.top() * x;
+        }
+        return res;
+    }
+};
+```
 
 ## 字典树
 
