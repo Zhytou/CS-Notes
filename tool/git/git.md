@@ -5,6 +5,7 @@
   - [Usage](#usage)
     - [Simple example at a glance](#simple-example-at-a-glance)
     - [Advanced git commands](#advanced-git-commands)
+    - [How to write a good git commit message](#how-to-write-a-good-git-commit-message)
   - [Other](#other)
   - [References](#references)
 
@@ -36,14 +37,14 @@ git remote add origin https://github.com/Zhytou/project.git
 git push -u origin master
 ```
 
-**Use .gitignore**:
+**use .gitignore**:
 
 ``` bash
 # change .git/info/exclude to make .gitignore work
 cat .gitignore > .git/info/exclude
 ```
 
-**Other useful commands**:
+**other useful commands**:
 
 ``` bash
 # check the files state(untracked or unstaged)
@@ -61,7 +62,7 @@ git diff [file name]
 
 ### Advanced git commands
 
-**Add & delete branch**:
+**add & delete branch**:
 
 ``` bash
 # add a new branch
@@ -71,7 +72,7 @@ git checkout -b [new-branch-name] | git branch [new-branch-name]
 git branch -D [branch-name]
 ```
 
-**Stash temporary changes**:
+**stash temporary changes**:
 
 ``` bash
 # move your modified files into a stack
@@ -81,13 +82,52 @@ git stash
 git stash pop | git stash apply
 ```
 
-**Revert commits**:
+**revert commits**:
 
 ``` bash
 # Hard delete unpublished commits
 git reset --hard [commit number]
 
 # undo published commits with new commits
+```
+
+### How to write a good git commit message
+
+**introduction to conventional commits**:
+
+AngularJS commit message format, also known as conventional commits follows a specific structure:
+
+``` txt
+<type>(<scope>): subject
+
+<body>
+
+<footer>
+```
+
+**label**:
+
+- The type field indicates the type of commits and must be one of the following:
+  - feat
+  - fix
+  - docs
+  - style
+  - refactor
+  - test
+  - chore
+- The scope field is optional and indicates the scope of the commit, such as the module or file name.
+- The subject field is a brief description of the commit, no more than 50 characters, and is used to display in Git log.
+- The body field (optional) is a detailed description of the commit, used to explain the reason and impact of the commit and can contain multiple lines of text.
+- The footer field (optional) is used to close an issue or add metadata, etc.
+
+**example**:
+
+``` txt
+feat(users): add login feature
+
+This commit adds a login feature to the users module. Users can now create accounts and log in to the application using their email address and password. This feature required changes to the user model and the addition of several new routes and templates.
+
+Closes #123
 ```
 
 ## Other
