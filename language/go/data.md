@@ -38,6 +38,21 @@ byte是Go语言中的内置数据类型，它是一个8位无符号整数类型�
 
 rune是Go语言中的另一个内置数据类型，它是一个32位有符号整数类型，可以用来表示Unicode编码字符集中的字符。
 
+**字符串遍历**：
+
+值得注意的是，使用索引循环遍历和关键字`range`遍历访问到的的值类型是不同的，前者是`byte`后者是`rune`。
+
+``` golang
+for i := 0; i < len(nums); i++ {
+    // type of nums[i] is byte
+    var num byte = nums[i]
+}
+
+for _, ch := range(nums) {
+    // type of ch is rune
+}
+```
+
 **字符串 & byte切片 & rune切片**：
 
 由于Go语言字符是不可变的，当遇到需要操作字符串时，可以使用byte切片或rune切片代替，只需要在最后将其转换为字符串类型即可。
