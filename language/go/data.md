@@ -195,9 +195,74 @@ s = append(s[:index], s[index+1:]...)
 
 *注意*：由于`append`函数可能会导致底层指针发生变化，因此，尽管切片是一个引用类型，但当前做参数传入某函数，且该函数内调用了`append`函数，应当将传入的切片修改为指针类型。对于其他引用数据类型，如：哈希表也是同理。
 
+**排序**：
+
+Go语言提供了常见切片类型的排序方法，包括：
+
+- []int 切片的排序方法：`sort.Ints`
+- []float64 切片的排序方法：`sort.Float64s`
+- []string 切片的排序方法：`sort.Strings`
+
+``` golang
+// 定义一个 []int 切片
+nums := []int{3, 5, 2, 8, 1, 9}
+
+// 使用 sort 包对切片进行排序
+sort.Ints(nums)
+```
+
+此外，Go语言还定义了[]interface{}切片的排序方法`sort.Slice`。使用`sort.Slice`函数可以向其传入自定义的比较函数。
+
+``` golang
+// 定义一个 []interface{} 切片
+values := []interface{}{3, 1, 4, 1, 5}
+
+// 使用 sort 包和自定义比较函数对切片进行排序
+sort.Slice(values, func(i, j int) bool {
+    return values[i].(int) < values[j].(int)
+})
+```
+
+最后，针对一个自定义类型的切片进行排序，只需要使用`sort.Sort`函数并实现该类型的`sort.Interface`接口方法即可。其中`sort.Interface`如下：
+
+``` golang
+type Interface interface {
+    Len() int           // 获取数据的长度
+    Less(i, j int) bool // 对数据进行比较
+    Swap(i, j int)      // 交换数据
+}
+```
+
+``` golang
+// 定义Person类型
+type Person struct {
+    name string
+    age  int
+}
+
+type ByAge []Person
+
+func (a ByAge) Len() int           { return len(a) }
+func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByAge) Less(i, j int) bool { return a[i].age < a[j].age }
+
+// 定义一个 []Person 切片
+people := []Person{
+    {"Alice", 25},
+    {"Bob", 30},
+    {"Charlie", 20},
+    {"David", 35},
+}
+
+// 使用 sort 包对切片进行排序
+sort.Sort(ByAge(people))
+```
+
 ### 哈希表
 
 Go语言中，哈希表是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间复杂度内检索、更新或删除对应的value。其中key必须是支持==比较运算符的数据类型。
+
+*值得注意的是*map的每次遍历顺序都是不同的。
 
 **定义**：
 
