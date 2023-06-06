@@ -123,6 +123,51 @@ func isValid(board [][]rune, row, col int) bool {
 }
 ```
 
+**字符串操作**：
+
+Go语言主要提供了`strings`和`strconv`两个包用于操作字符串。其中，`strings`包适用于字符串的基本操作，而`strconv` 包适用于将字符串转换为数值类型和反之的操作。
+
+此外，我们还可能会用到如：`bytes`包：提供用于操作字节切片的函数和方法，可以用于处理二进制数据、大型文本文件等；`fmt`包：提供了格式化输出的功能，可以将数据格式化为字符串并输出到控制台或文件。
+
+简单介绍一下常用函数：
+
+``` golang
+// 返回子字符串 substr 在字符串 s 中第一次出现的索引。
+// 如果 substr 未找到，则返回 -1。
+strings.Index(s, substr string) int
+
+
+// 返回一个新的字符串，其中前 n 个旧字符串 old 被替换为新字符串。
+// 参数 s 是原始字符串，参数 old 是要被替换的子串，参数 new 是替换后的新子串，参数 n 是指定替换的次数。如果 n 的值为 -1，则会替换所有出现的子串。
+strings.Replace(s, old, new string, n int) string
+
+// 将字符串切片中的所有字符串连接起来，生成一个新的字符串，并返回这个新字符串。
+// 参数 a 是要连接的字符串切片，参数 sep 是分隔符。
+strings.Join(a []string, sep string) string
+
+// 将 int 类型的值转换为字符串类型
+strconv.Itoa(a int) string
+
+// 将字符串类型的整数转换为 int 类型的值
+strconv.Atoi(s string) int
+```
+
+下面举例说明常见的字符串操作：
+
+``` golang
+// 切片转字符串
+nums := []int{1, 2, 3, 4, 5}
+ss := make([]string, len(nums))
+for i, num := range nums {
+    ss[i] = strconv.Itoa(num)
+}
+str := strings.Join(ss, "")
+
+// 切片转字符串
+nums := []int{1, 2, 3, 4, 5}
+str = fmt.Sprint(nums)
+```
+
 ## 引用类型
 
 **声明 & 初始化**：
@@ -277,7 +322,7 @@ sort.Sort(ByAge(people))
 
 Go语言中，哈希表是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间复杂度内检索、更新或删除对应的value。其中key必须是支持==比较运算符的数据类型。
 
-*值得注意的是*map的每次遍历顺序都是不同的。
+*值得注意的是*map的每次遍历顺序都是不同的。此外，切片和数组均不能作为哈希表键值。
 
 **定义**：
 
@@ -323,6 +368,21 @@ m["abc"] = 1
 
 // 删除键值对（“abc",1)
 delete(m, "abc")
+```
+
+**自定义类型作为键**：
+
+在 Go 语言中，自定义类型可以作为 map 的键类型，这需要满足以下条件：
+
+- 自定义类型必须支持相等运算符 ==，否则无法判断两个键是否相等。
+- 自定义类型不能是函数类型、映射类型或切片类型，否则会导致编译错误。
+
+在满足上述条件的情况下，只需要实现以下两个函数即可。
+
+``` golang
+func (t T) Equals(other T) bool
+
+func (t T) HashCode() int
 ```
 
 ### 结构体
