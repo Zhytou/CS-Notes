@@ -9,9 +9,12 @@
     - [内置类型](#内置类型)
     - [引用类型](#引用类型)
     - [自定义类型](#自定义类型)
-  - [语句](#语句)
-    - [for](#for)
+  - [关键字](#关键字)
+    - [for \& range](#for--range)
+    - [select](#select)
     - [defer](#defer)
+    - [panic \& recover](#panic--recover)
+    - [make \& new](#make--new)
   - [操作](#操作)
     - [函数](#函数)
     - [方法](#方法)
@@ -119,11 +122,9 @@ Go语言将数据类型分为四类：
 - `type TypeAlias = xxx` 定义别名语法
 - `type NewType xxx` 定义新类型语法
 
-## 语句
+## 关键字
 
-Go语句加分号和不加分号都可以
-
-### for
+### for & range
 
 ``` golang
 // 类似 while
@@ -142,10 +143,38 @@ for idx, val := range arr {
 }
 ```
 
+### select
+
+select 是与 switch 相似的控制结构，与 switch 不同的是，select 中虽然也有多个 case，但是这些 case 中的表达式必须都是 Channel 的收发操作。
+
+``` golang
+select {
+  case c <- x:
+   x, y = y, x+y
+  case <-quit:
+   fmt.Println("quit")
+   return
+  }
+```
+
+当我们在 Go 语言中使用 select 控制结构时，会遇到两个有趣的现象：
+
+- select 能在 Channel 上进行非阻塞的收发操作；
+- select 在遇到多个 Channel 同时响应时，会随机执行一种情况；
+
 ### defer
 
 - 多个defer语句满足先进后出的规则
 - 在return之后执行
+
+### panic & recover
+
+- panic 能够改变程序的控制流，调用 panic 后会立刻停止执行当前函数的剩余代码，并在当前 Goroutine 中递归执行调用方的 defer；
+- recover 可以中止 panic 造成的程序崩溃。它是一个只能在 defer 中发挥作用的函数，在其他作用域中调用不会发挥作用
+
+### make & new
+
+make 关键字的作用是创建切片、哈希表和 Channel 等内置的数据结构，而 new 的作用是为类型申请一片内存空间，并返回指向这片内存的指针。
 
 ## 操作
 
@@ -210,4 +239,5 @@ func main() {
 
 ## 参考
 
-[Go语言圣经](https://books.studygolang.com/gopl-zh/)
+- [Go语言圣经](https://books.studygolang.com/gopl-zh/)
+- [Go语言设计与实现](https://draveness.me/golang/)
