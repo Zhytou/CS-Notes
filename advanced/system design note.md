@@ -188,3 +188,4 @@
 - [comparison-centrilized-decentrlized-and-distributed-systems](https://www.geeksforgeeks.org/comparison-centralized-decentralized-and-distributed-systems/)
 - [system-design-primer](https://github.com/donnemartin/system-design-primer)
 - [scalability-availability-stability-patterns](https://www.slideshare.net/jboner/scalability-availability-stability-patterns/)
+- [凤凰架构](http://icyfenix.cn/)
