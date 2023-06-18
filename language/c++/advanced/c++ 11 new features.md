@@ -31,7 +31,7 @@ private:
 
 ## foreach
 
-This works on any class that has begin() and end(). 
+This works on any class that has begin() and end().
 
 ``` c++
 vector<int> v;
@@ -113,9 +113,7 @@ C++ 11 introduces a new key word `override`, which allows to specifically  tell 
 
 ## final
 
-C++ 11 introduces a new key word `final`, which allows to 
-
-prohibit function or class from deriveing
+C++ 11 introduces a new key word `final`, which allows to prohibit function or class from deriveing.
 
 ## Compiler Generated Default Constructor
 

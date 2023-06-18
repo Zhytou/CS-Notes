@@ -1,5 +1,13 @@
 # 计算机体系结构 Computer Architecture
 
+- [计算机体系结构 Computer Architecture](#计算机体系结构-computer-architecture)
+  - [微架构 Microarchitecture | 计算机组成 Computer Organization](#微架构-microarchitecture--计算机组成-computer-organization)
+  - [指令集架构 Instruction Set Architecture](#指令集架构-instruction-set-architecture)
+    - [简介](#简介)
+    - [分类](#分类)
+    - [其他](#其他)
+  - [参考](#参考)
+
 ![computer architecture](../img/computer_architecture.png)
 
 ## 微架构 Microarchitecture | 计算机组成 Computer Organization
@@ -22,7 +30,7 @@
 
 ### 分类
 
-#### 复杂指令集架构 Complex Instruction Set Computer CISC
+**复杂指令集架构 Complex Instruction Set Computer CISC**：
 
 复杂指令集架构是一种微处理器指令集架构。每个指令可以指向若干低端操作，即若干操作集于单一指令中。
 
@@ -30,7 +38,7 @@
 
 基于CISC架构的处理器有x86、x64家族等。
 
-#### 精简指令集架构 Reduced Instruction Set Computer RISC
+**精简指令集架构 Reduced Instruction Set Computer RISC**：
 
 这种指令集的特点是指令数目少，每条指令都采用标准字长、执行时间短、中央处理器的实现细节对于机器级程序是可见的等等。
 
@@ -38,17 +46,17 @@ RISC设计的根本原则——针对流水线化的处理器优化——没有�
 
 ### 其他
 
-#### x86 vs x64
+**x86 vs x64**：
 
 x86 和 x64都是CISC.
 
 > x86 refers to a 32-bit CPU and operating system while x64 refers to a 64-bit CPU and operating system.
 
-#### MIPS
+**MIPS**：
 
 MIPS架构也是一种RISC，是一般课程的重要教学材料。
 
-#### ARM
+**ARM**：
 
 ARM架构是一种RISC，过去称作Advanced RISC Machine。
 
@@ -58,19 +66,19 @@ ARM架构处理器占市面上所有32位嵌入式RISC处理器90%的比例。
 
 **体系结构**：
 
-+ [知乎 - 体系结构和计组的关系](https://www.zhihu.com/question/326558346/answer/840859773)
-+ [what is computer architecture?](https://online.sunderland.ac.uk/what-is-computer-architecture/)
-+ [wiki -  computer architecture](https://en.wikipedia.org/wiki/Computer_architecture)
+- [知乎 - 体系结构和计组的关系](https://www.zhihu.com/question/326558346/answer/840859773)
+- [what is computer architecture?](https://online.sunderland.ac.uk/what-is-computer-architecture/)
+- [wiki -  computer architecture](https://en.wikipedia.org/wiki/Computer_architecture)
 
 **ISA**：
 
-+ [wiki - Instruction Set Architecture](https://en.wikipedia.org/wiki/Instruction_set_architecture)
-+ [ISA vs Machine Language](https://www.cise.ufl.edu/~mssz/CompOrg/CDA-lang.html)
+- [wiki - Instruction Set Architecture](https://en.wikipedia.org/wiki/Instruction_set_architecture)
+- [ISA vs Machine Language](https://www.cise.ufl.edu/~mssz/CompOrg/CDA-lang.html)
 
 **x86 vs x64**：
 
-+ [x86 vs x64](https://www.seeedstudio.com/blog/2020/02/24/what-is-x86-architecture-and-its-difference-between-x64/)
+- [x86 vs x64](https://www.seeedstudio.com/blog/2020/02/24/what-is-x86-architecture-and-its-difference-between-x64/)
 
 **Computer Organization**：
 
-+ [wiki - microarchitecture](https://en.wikipedia.org/wiki/Microarchitecture)
+- [wiki - microarchitecture](https://en.wikipedia.org/wiki/Microarchitecture)

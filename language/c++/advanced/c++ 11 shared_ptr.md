@@ -34,7 +34,7 @@ int main() {
 }
 ```
 
-However, With C++ 17, `shared_ptr` can be used to manage a dynamically allocated array. The `shared_ptr` template argument in this case must be `T[N]` or `T[]`. 
+However, With C++ 17, `shared_ptr` can be used to manage a dynamically allocated array. The `shared_ptr` template argument in this case must be `T[N]` or `T[]`.
 
 ``` c++
 shared_ptr<int[]> sp(new int[10]);
