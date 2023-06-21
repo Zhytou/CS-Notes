@@ -10,6 +10,8 @@
     - [On-my-posh](#on-my-posh)
     - [PowerShell Themes](#powershell-themes)
   - [Use Windows Terminal to Mange All Your Shells](#use-windows-terminal-to-mange-all-your-shells)
+    - [Introduction](#introduction)
+    - [Simple Usage](#simple-usage)
   - [References](#references)
 
 ## Prettify Shell on WSL
@@ -92,9 +94,42 @@ oh-my-posh init pwsh --config 'C:\Users\[Your Name]\AppData\Local\Programs\oh-my
 
 ## Use Windows Terminal to Mange All Your Shells
 
+### Introduction
+
+**概述**：
+
 `PowerShell`是命令行程序，真正执行指令的程序，而`Windows Terminal`则是管理各种命令行的工具。
 
+**下载**：
+
 Microsoft商店中下载。
+
+### Simple Usage
+
+**Tab vs Pane**：
+
+在 Windows Terminal 中，Pane 和 Tab 都是用于分割终端窗口和管理多个终端会话的功能，但它们之间有一些区别：
+
+- 每个 Tab 都是一个独立的终端会话。
+- Pane 是一种将终端会话分割成多个窗格的方式。
+
+这里和Tmux中有些概念相关。
+
+**快捷键**：
+
+![windows_terminal](../img/windows_terminal.png)
+
+打开/关闭终端：Ctrl+Alt+T 或 Win+Shift+Enter
+创建新的标签页：Ctrl+Shift+T
+关闭标签页：Ctrl+Shift+W
+切换标签页：Ctrl+Tab 或 Ctrl+Shift+Tab
+切换全屏模式：F11
+缩放终端：Ctrl+鼠标滚轮 或 Ctrl++/-
+复制文本：Ctrl+Shift+C
+粘贴文本：Ctrl+Shift+V
+打开命令面板：Ctrl+Shift+P 或 F1
+改变字体大小：Ctrl+鼠标滚轮
+以管理员身份运行当前终端：Ctrl+Shift+Enter
 
 ## References
 
