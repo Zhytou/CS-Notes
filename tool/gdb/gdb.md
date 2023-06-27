@@ -1,6 +1,17 @@
 # gdb
 
-## Setup
+- [gdb](#gdb)
+  - [简介](#简介)
+  - [使用](#使用)
+  - [参考](#参考)
+
+## 简介
+
+**概述**：
+
+gdb是`GNU Debugger`的缩写，是一个在Linux和其他类Unix系统上使用的常见调试工具。
+
+**安装 & 配置**：
 
 ``` bash
 # 安装gdb
@@ -11,7 +22,7 @@ gcc -g test.c -o test
 export LD_LIBRARY_PATH=..
 ```
 
-## Simple Usage
+## 使用
 
 ``` bash
 # 导入需要调试的可执行程序
@@ -19,10 +30,12 @@ file xxx
 
 # 运行
 run
-# 单步
+# 单步步过执行
 next
-# 步入
+# 单步步入执行
 step
+# 单步汇编指令执行
+step instruction | si
 # 运行到下一断点
 continue
 
@@ -52,7 +65,7 @@ x /1c  0x7ffff7d44060
 print xxx | p xxx
 ```
 
-## References
+## 参考
 
 - [Debugging Under Unix: gdb Tutorial](https://www.cs.cmu.edu/~gilpin/tutorial/)
 - [GDB Tutorial: Advanced Debugging Tips For C/C++ Programmers](https://www.techbeamers.com/how-to-use-gdb-top-debugging-tips/)
