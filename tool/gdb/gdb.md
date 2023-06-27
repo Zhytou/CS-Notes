@@ -1,6 +1,6 @@
-# gdb
+# GDB
 
-- [gdb](#gdb)
+- [GDB](#gdb)
   - [简介](#简介)
   - [使用](#使用)
   - [参考](#参考)
@@ -9,7 +9,7 @@
 
 **概述**：
 
-gdb是`GNU Debugger`的缩写，是一个在Linux和其他类Unix系统上使用的常见调试工具。
+GDB（GNU Debugger）是一个在Linux和其他类Unix系统上使用的常见调试工具。
 
 **安装 & 配置**：
 
@@ -29,11 +29,11 @@ export LD_LIBRARY_PATH=..
 file xxx
 
 # 运行
-run
+run | r
 # 单步步过执行
-next
+next | n
 # 单步步入执行
-step
+step | s
 # 单步汇编指令执行
 step instruction | si
 # 运行到下一断点
@@ -41,19 +41,24 @@ continue
 
 # 添加断点
 break func1 | break main.c:10
+b func1 | b main.c:10
 # 删除断点
 delete 3
 
 # 查看当前执行位置代码
 list
 # 查看当前执行位置汇编指令
-disassemble
+disassemble | disas
+# 查看当前调用链
+backtrace | bt
 
-# 查看断点
+# 查看所有断点信息
 info break
 # 查看当前寄存器信息
 info registers
-# 查看当前调用帧
+# 查看当前堆栈
+info stack
+# 查看当前调用堆栈帧帧
 info frame
 # 查看当前局部变量
 info locals
