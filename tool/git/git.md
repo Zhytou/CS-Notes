@@ -6,6 +6,7 @@
     - [Simple example at a glance](#simple-example-at-a-glance)
     - [Advanced git commands](#advanced-git-commands)
     - [How to write a good git commit message](#how-to-write-a-good-git-commit-message)
+    - [How to open a pull request in github](#how-to-open-a-pull-request-in-github)
   - [Other](#other)
   - [References](#references)
 
@@ -130,6 +131,24 @@ This commit adds a login feature to the users module. Users can now create accou
 Closes #123
 ```
 
+### How to open a pull request in github
+
+> Check this [video](https://www.youtube.com/embed/dSl_qnWO104) for more details
+
+Fork the repository: Go to the GitHub repository you want to contribute to and click the "Fork" button in the top right corner of the page. This will create a copy of the repository in your own GitHub account.
+
+Create a new branch: Go to your forked repository and create a new branch for your changes. You can do this by clicking the "Branch" dropdown and entering a name for your new branch.
+
+Make changes: Make your changes to the code in your new branch. You can do this by editing files directly on the GitHub website or by cloning the repository to your local machine and making changes there.
+
+Commit your changes: Once you have made your changes, commit them to your new branch. You can do this on the GitHub website or using Git on your local machine.
+
+Open a pull request: Go to your forked repository on GitHub and click the "New pull request" button. Select the branch containing your changes as the "compare" branch and the branch you want to merge your changes into as the "base" branch. Review your changes and enter a description of your pull request. Then, click "Create pull request" to submit your changes for review.
+
+Respond to feedback: Once you have submitted your pull request, other developers can review your changes and provide feedback. You can address their feedback by making additional commits to your branch and pushing them to your forked repository. The pull request will automatically update with your new changes.
+
+Merge your changes: Once your pull request has been reviewed and approved, you can merge your changes into the target branch by clicking the "Merge pull request" button on the GitHub website.
+
 ## Other
 
 **git add vs git stash**：
@@ -143,6 +162,10 @@ Stage is the step before to make a commit, you add modified files to "Staged fil
 Both tags and branches point to a commit, they are thus aliases for a specific hash and will save you time by not requiring to type in a hash.
 
 The difference between tags and branches are that a branch always points to the top of a development line and will change when a new commit is pushed whereas a tag will not change. Thus tags are more useful to "tag" a specific version and the tag will then always stay on that version and usually not be changed.
+
+**git merge vs git pull request**:
+
+Git merge is a command used to integrate changes within your local repository, while a git pull request is a feature provided by Git hosting platforms used to propose changes to a shared codebase and collaborate with other developers.
 
 **set user name and email**:
 
