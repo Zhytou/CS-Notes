@@ -4,24 +4,18 @@
   - [简介](#简介)
     - [Unix process vs Unix thread](#unix-process-vs-unix-thread)
     - [并发 concurrency vs 并行 parallelism](#并发-concurrency-vs-并行-parallelism)
-    - [Posix threads vs std::threads](#posix-threads-vs-stdthreads)
+    - [POSIX threads vs std::threads](#posix-threads-vs-stdthreads)
     - [Lock-free vs Lock-based Thread Synchronization](#lock-free-vs-lock-based-thread-synchronization)
-    - [RMW: Atomic Read-Modify-Write Operations](#rmw-atomic-read-modify-write-operations)
-    - [CAS:Compare-And-Swap Loop](#cascompare-and-swap-loop)
     - [volatile vs atomic](#volatile-vs-atomic)
-    - [内存栅栏](#内存栅栏)
   - [概念](#概念)
     - [同步原语 synchronization primitive](#同步原语-synchronization-primitive)
       - [临界区 critical section](#临界区-critical-section)
-      - [互斥量 mutex](#互斥量-mutex)
-      - [自旋锁 spin lock](#自旋锁-spin-lock)
+      - [锁 lock](#锁-lock)
       - [信号量 semaphore](#信号量-semaphore)
       - [管程 monitor](#管程-monitor)
       - [条件变量 condition variable](#条件变量-condition-variable)
-    - [原子操作 atomic](#原子操作-atomic)
+    - [原子操作 atomic operation](#原子操作-atomic-operation)
   - [底层](#底层)
-    - [mutex底层](#mutex底层)
-    - [atomic底层](#atomic底层)
   - [基础](#基础)
     - [线程管理 Thread Management](#线程管理-thread-management)
     - [有锁编程 Lock-based Coding](#有锁编程-lock-based-coding)
@@ -72,7 +66,9 @@ For example, you could use parallelism to send requests to different websites bu
 
 As we explained above, concurrent programming involves a shared memory location, and the different threads actually “read” the information provided by the previous threads.
 
-### Posix threads vs std::threads
+### POSIX threads vs std::threads
+
+POSIX threads是在Unix/Linux系统中广泛使用的线程API，它是由IEEE POSIX标准化组织定义的，因此可以在符合POSIX标准的系统上使用。而std::threads是C++11标准定义的线程库，只能在支持C++11标准的编译器上使用。
 
 ### Lock-free vs Lock-based Thread Synchronization
 
@@ -90,42 +86,35 @@ As the name implies, the idea is to synchronize threads without the use of locks
 
 其中，C++中的std::atomic原子操作可能是由CPU提供的原子指令来支持，也可能是由操作系统中的spinlock来支持，具体可以根据std::atomic::is_lock_free()去判断。
 
-### RMW: Atomic Read-Modify-Write Operations
-
-**读-修改-写read-modify-write**是计算机科学中的一个原子操作（atomic operation，类似的还有test-and-set, fetch-and-add, compare-and-swap等），操作过程是读一个内存位置（或IO端口），修改其值，再写回原位置。
-
-### CAS:Compare-And-Swap Loop
-
-**比较并交换compare and swap, CAS**是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。
-
 ### volatile vs atomic
 
 如果一个基本变量被volatile修饰，编译器将不会把它保存到寄存器中，而是每一次都去访问内存中实际保存该变量的位置上。
-
-### 内存栅栏
 
 ## 概念
 
 ### 同步原语 synchronization primitive
 
-synchronization primitives are simple software mechanisms provided by a platform (e.g. operating system) to its users for the purposes of supporting thread or process synchronization.
+同步原语是一种计算机编程中的基本构造，用于实现多个线程或进程之间的同步和互斥。
+
+它们可以用于协调多个线程或进程的执行顺序和访问共享资源的方式，避免不同线程或进程之间的竞争和冲突。
 
 #### 临界区 critical section
 
 在同步的程序设计中，临界区段（Critical section）或称为关键区块 ，指的是一个访问共享资源（例如：共享设备或是共享存储器）的程序片段，而这些共享资源又无法同时被多个线程访问的特性。
 
-#### 互斥量 mutex
+#### 锁 lock
 
-互斥量是一种用于多线程编程中，防止两条线程同时对同一公共资源（比如全局变量）进行读写的机制。一般来说，我们也将其称之为互斥锁。
+> 关于锁更细致的介绍可以阅读我的这篇博客[南大OS学习笔记——5 并发控制：互斥](https://zhytou.top/post/2023-6-19/nju-os/)
 
-在系统中，一个线程在没有竞争到它所需要的互斥量时，就会进入休眠状态，因此，我们也常常将这种锁称为`sleep lock`。
+**互斥量 mutex**:
 
-#### 自旋锁 spin lock
+互斥锁（mutex）是一种基于操作系统的同步原语，它使用了操作系统提供的系统调用来实现线程同步和互斥。互斥锁的实现通常是基于一种叫做“睡眠-唤醒”机制的方式，当一个线程需要获取锁时，如果锁已经被占用，那么这个线程会被阻塞，直到锁被释放。当锁被释放时，操作系统会唤醒等待的线程，让它们竞争锁。
 
-自旋锁其实是上面提到的互斥量中的一种，不同之处在于没竞争到自旋锁的线程会等待而非休眠。
+**自旋锁 spin lock**:
 
-> Spin mutexes are a simple spin lock. If the lock is held by another thread when a thread tries to acquire it, the second thread will spin waiting for the lock to be released.
-> Due to this spinning nature, a context switch cannot be performed while holding a spin mutex to avoid deadlocking in the case of a thread owning a spin lock not being executed on a CPU and all other CPUs spinning on that lock.
+自旋锁（spinlock）是一种基于忙等待的锁，它不涉及系统调用，而是使用了一种忙等待的方式来实现线程同步和互斥。当一个线程需要获取自旋锁时，如果锁已经被占用，那么这个线程会一直忙等待，直到锁被释放。自旋锁的实现通常是基于原子操作的方式，当一个线程获取锁时，它会使用原子操作来修改锁的状态，以避免并发访问锁时的数据竞争问题。
+
+**快速用户空间锁 futex**:
 
 #### 信号量 semaphore
 
@@ -135,7 +124,7 @@ synchronization primitives are simple software mechanisms provided by a platform
 
 #### 管程 monitor
 
-管程是由进程、变量及数据结构等组成的一个集合，它们组成一个特殊 的模块或软件包。
+管程是由进程、变量及数据结构等组成的一个集合，它们组成一个特殊的模块或软件包。
 
 管程提供了一种机制，线程可以临时放弃互斥访问，等待某些条件得到满足后，重新获得执行权恢复它的互斥访问。
 
@@ -145,25 +134,23 @@ synchronization primitives are simple software mechanisms provided by a platform
 
 > C++只提供了两种同步原语——互斥量和条件变量。
 
-### 原子操作 atomic
+### 原子操作 atomic operation
 
 原子操作：顾名思义就是不可分割的操作，该操作只存在未开始和已完成两种状态，不存在中间状态；
 
-原子类型：原子库中定义的数据类型，对这些类型的所有操作都是原子的，包括通过原子类模板std::atomic< T >实例化的数据类型，也都是支持原子操作的。
+原子类型：原子库中定义的数据类型，对这些类型的所有操作都是原子的，包括通过原子类模板`std::atomic<T>`实例化的数据类型，也都是支持原子操作的。
+
+**读-修改-写read-modify-write**是计算机科学中的一个原子操作（atomic operation，类似的还有test-and-set, fetch-and-add, compare-and-swap等），操作过程是读一个内存位置（或IO端口），修改其值，再写回原位置。
+
+**比较并交换compare and swap, CAS**是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。
 
 ## 底层
 
-- 锁实际上能通过底层、操作系统和软件实现。
+锁实际上能通过底层、操作系统和软件实现。
 
 - 硬件层面：CPU提供atomic的指令（lock前缀）
-
 - 软件层面：[Peterson‘s Algorithm](https://en.wikipedia.org/wiki/Peterson's_algorithm)实现
-
 - 操作系统：spin lock或者futex
-
-### mutex底层
-
-### atomic底层
 
 ## 基础
 
