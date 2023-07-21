@@ -9,7 +9,7 @@
     - [PowerShell](#powershell)
     - [On-my-posh](#on-my-posh)
     - [PowerShell Themes](#powershell-themes)
-  - [Use Windows Terminal to Mange All Your Shells](#use-windows-terminal-to-mange-all-your-shells)
+  - [Use Windows Terminal to Manage All Your Shells](#use-windows-terminal-to-manage-all-your-shells)
     - [Introduction](#introduction)
     - [Simple Usage](#simple-usage)
   - [References](#references)
@@ -65,7 +65,7 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
 # 使用vscode编辑启动powershell脚本
 code .$PROFILE or notepad .$PROFILE
 # 打开后，在该脚本中添加以下指令
- oh-my-posh init pwsh | Invoke-Expression
+oh-my-posh init pwsh | Invoke-Expression
 # 接着保存退出，启用该脚本
 . $PROFILE
 # 注意：若PowerShell报错不允许执行任何脚本，则需要在管理员模式下执行以下命令后再次启用$PROFILE
@@ -92,7 +92,7 @@ oh-my-posh init pwsh --config 'C:\Users\[Your Name]\AppData\Local\Programs\oh-my
 
 安装完成后，在终端设置-默认值-外观-字体中选择新下载的字体，即可正常显示。
 
-## Use Windows Terminal to Mange All Your Shells
+## Use Windows Terminal to Manage All Your Shells
 
 ### Introduction
 
@@ -119,17 +119,17 @@ Microsoft商店中下载。
 
 ![windows_terminal](../img/windows_terminal.png)
 
-打开/关闭终端：Ctrl+Alt+T 或 Win+Shift+Enter
-创建新的标签页：Ctrl+Shift+T
-关闭标签页：Ctrl+Shift+W
-切换标签页：Ctrl+Tab 或 Ctrl+Shift+Tab
-切换全屏模式：F11
-缩放终端：Ctrl+鼠标滚轮 或 Ctrl++/-
-复制文本：Ctrl+Shift+C
-粘贴文本：Ctrl+Shift+V
-打开命令面板：Ctrl+Shift+P 或 F1
-改变字体大小：Ctrl+鼠标滚轮
-以管理员身份运行当前终端：Ctrl+Shift+Enter
+- 打开/关闭终端：Ctrl+Alt+T 或 Win+Shift+Enter
+- 创建新的标签页：Ctrl+Shift+T
+- 关闭标签页：Ctrl+Shift+W
+- 切换标签页：Ctrl+Tab 或 Ctrl+Shift+Tab
+- 切换全屏模式：F11
+- 缩放终端：Ctrl+鼠标滚轮 或 Ctrl++/-
+- 复制文本：Ctrl+Shift+C
+- 粘贴文本：Ctrl+Shift+V
+- 打开命令面板：Ctrl+Shift+P 或 F1
+- 改变字体大小：Ctrl+鼠标滚轮
+- 以管理员身份运行当前终端：Ctrl+Shift+Enter
 
 ## References
 
