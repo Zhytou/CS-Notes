@@ -249,12 +249,12 @@ class Singleton{
 private:
   static Singleton* singleton_;
   T val_;
-public:
   Singleton(T val) : val_(val) {
     if (singleton_ == nullptr) {
       singleton_ = this;
     }
   }
+public:
   Singleton(const Singleton& other) = delete;
   Singleton& operator=(const Singleton& other) = delete;
 
