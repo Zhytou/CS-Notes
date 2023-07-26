@@ -76,7 +76,7 @@ public:
             delete _refCount;
         }
 
-         *(other._refCount) += 1;
+        *(other._refCount) += 1;
         
         _pData = other._pData;
         _refCount = other._refCount;

@@ -302,8 +302,9 @@
 
 **综合**：
 
-- [github + CS+NOTES](https://github.com/Zhytou/CS+Notes)
-- [github system design](https://github.com/donnemartin/system-design-primer)
+- [github Cyc2018's CS-NOTES](https://github.com/CyC2018/CS-Notes)
+- [github Zhytou's CS-NOTES](https://github.com/Zhytou/CS-Notes)
+- [github system design primer](https://github.com/donnemartin/system-design-primer)
 - [phoenix framework](https://icyfenix.cn/)
 
 **Java**：
