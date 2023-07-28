@@ -14,6 +14,12 @@
 
 ![memory level](../img/operating_system_memory_level.png)
 
+**存储层级**：
+
+**廉价磁盘冗余阵列**：
+
+廉价磁盘冗余阵列（Redundant Array of Inexpensive Disks，RAID）指的是利用虚拟化存储技术把多个硬盘组成一个或多个硬盘阵列组的技术，它能使得磁盘整体可用性性提升。
+
 **逻辑地址和物理地址**：
 
 - 逻辑地址（Logical Address） 是指由程序产生的与段相关的偏移地址部分。
@@ -110,6 +116,8 @@
 **缺点**：
 
 但会产生内部碎片，即页内可能有无效内存。
+
+补充：分页和mmap函数的关系？
 
 ### 慢表 页表
 
