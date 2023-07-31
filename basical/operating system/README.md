@@ -41,10 +41,10 @@
   - Mutex/Spin Lock/Futex
   - Dead Lock
 - 条件变量
-  - Producer-Consumer
-- 信号
+  - 虚假唤醒
+  - 生产者-消费者
 - 信号量
-- 管程
+- 信号
 
 ## 持久化
 
