@@ -81,16 +81,15 @@ void unlock() { xchg(&locked, 0); }
 
 ### 快速用户空间互斥锁 Futex
 
-Futex（Fast Userspace Mutex）是一种基于用户空间的同步原语。实际上，就是Spinlock和Mutex的混合。
+快速用户空间互斥锁（Fast Userspace Mutex，Futex）是一种基于用户空间的同步原语。它综合了互斥锁和自旋锁优点，将阻塞和非阻塞的等待方式结合在一起，使用户空间互斥锁获得最高效率。
 
 **Futex的上锁过程**：
 
-- 先在用户空间自旋。
-  - 如果获得锁，直接进入；
-  - 未能获得锁，系统调用。
-- 解锁以后也需要系统调用。
+具体来说，对于一个尝试获取一个当前被占用锁的线程来说，短时间内，它自旋等待并不断检查锁的状态。如果足够快释放，则无需系统调用。若长时间锁未释放，则使用系统调用阻塞线程，避免占用过多CPU。
 
 ### 死锁 Deadlock
+
+死锁(deadlock)是多个竞争资源的进程因为顺序问题而陷入等待的状态，形成循环依赖。它的产生条件如下：
 
 - 互斥：一个资源每次只能被一个进程使用
 - 请求与保持：一个进程请求资阻塞时，不释放已获得的资源
@@ -99,9 +98,91 @@ Futex（Fast Userspace Mutex）是一种基于用户空间的同步原语。实�
 
 ## 条件变量
 
+在多线程程序中，一个线程等待某些条件是很常见的。简单的方案是该线程自旋等待，不断检查该共享变量，直到条件满足。这显然是极其低效的，因为CPU会浪费在不断检查共享变量上。
+
+条件变量（Condition Variable）为我们提供了一种高效机制来解决这个问题。条件变量维护着一个队列，当线程在执行条件不满足时，该线程会被阻塞并加入该队列。直到另外某个线程执行，使得条件成立后，条件变量便可以唤醒其队列中等待的一个或多个线程。
+
+根据上面的描述，条件变量主要有两种相关操作：阻塞线程使其等待和唤醒线程。以C++模板库中的条件变量为例，这两个操作分别对应着下面两个函数。
+
+```c++
+// 等待
+void wait( std::unique_lock<std::mutex>& lock );
+
+// 唤醒
+void notify_one() noexcept;
+```
+
+**虚假唤醒**：
+
+虚假唤醒(Spurious Wakeup)指的是条件变量在并没有满足其条件的情况下才唤醒等待线程。它主要是由于实现上的限制，难以避免。大多数操作系统实现的条件变量都是存在一定概率的虚假唤醒。因此在使用条件变量时，记得要在等待时添加一个While循环，具体如下：
+
+```c++
+while(condition) {
+  cv.wait(mtx);
+}
+```
+
+**生产者-消费者**：
+
+```c++
+#include <condition_variable>
+#include <iostream>
+#include <mutex>
+#include <queue>
+#include <thread>
+
+using namespace std;
+
+queue<int> q;
+mutex mu;
+condition_variable cond;
+
+void producer(int& num) {
+  while (num > 0) {
+    int data = num--;
+    unique_lock<mutex> locker(mu);
+    q.push(data);
+    cout << "producer sends " << data << endl;
+    locker.unlock();
+    cond.notify_one();
+    this_thread::sleep_for(chrono::seconds(1));
+  }
+}
+
+void consumer() {
+  int data = 0;
+  while (data != 1) {
+    unique_lock<mutex> locker(mu);
+    cond.wait(locker, []() { return !q.empty(); });
+    data = q.front();
+    q.pop();
+    cout << "consumer gets " << data << endl;
+  }
+}
+
+int main() {
+  int data_num = 5;
+  cout << "before the process, data num = " << data_num << endl;
+  thread t1(producer, ref(data_num)), t2(consumer);
+  t1.join();
+  t2.join();
+  cout << "after the process, data num = " << data_num << endl;
+  return 0;
+}
+```
+
 ## 信号量
 
-> 信号量和管程
+信号量（Semaphore）
+
+信号量具有一个整数计数器，它包含两个原子操作:
+
+P(信号量):将信号量的值减一。如果值减为负数，则进程将被阻塞，等待信号量的值增加。
+V(信号量):将信号量的值加一。如果有进程被阻塞等待信号量值，则唤醒其中一个。
+
+**互斥量和信号量**：
+
+**条件遍历和信号量**：
 
 ## 信号
 
