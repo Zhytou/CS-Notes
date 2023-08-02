@@ -8,6 +8,12 @@
   - [其他](#其他)
   - [参考](#参考)
 
+[FOLDOC](http://foldoc.org/)中关于操作系统的定义是`The low-level software which handles the interface to peripheral hardware, schedules tasks, allocates storage, and presents a default interface to the user when no application program is running.`简单点说，操作系统是一个管理和控制计算机硬件的底层软件。站在软件和用户的角度，操作系统提供了可操作的对象和可调用的API。比如：它将持久化设备抽象成文件，并提供了读写接口；它将CPU中的可执行流抽象成进程，并提供了执行、复制和终止接口。而站在硬件的角度，操作系统则仅仅是一些列C程序。
+
+> FOLDOC（Free Online Dictionary Of Computing）是互联网上最知名也最古老的计算机科学与相关主题词典之一。它收录了大量计算机科学、电子工程、通信技术等相关领域的名词、术语和概念的定义。
+
+尽管操作系统是一门更关注软件层面的学科，但学习它时，为了更好的理解其中部分设计原理，必然也会引入部分体系结构相关的知识，比如：指令集体系结构（ISA）、存储层级（Memory Hierachy）等。因此，本笔记参考[OSTEP](https://github.com/remzi-arpacidusseau/ostep-translations/tree/master/chinese)将操作系统的相关功能以及背后的原理分成并发、存储管理、同步、持久化和其他五部分。
+
 ## 并发
 
 - 进程：虚拟化的CPU
