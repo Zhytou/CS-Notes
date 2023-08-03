@@ -200,6 +200,25 @@ ssh -T git@github.com
 # see something like "Hi Zhytou! You've successfully authenticated, but GitHub does not provide shell access", then you're ready to go
 ```
 
+**remove existing git info**:
+
+When you clone a project on your local computer and want to push it to your own remote repository without the existing git information, here is how you can do it.
+
+```bash
+# clone the proj
+git clone https://github.com/xxx/proj.git
+
+# enter the proj directory and remove the .git subdirectory
+cd proj & rm -rf .git
+
+# reinitialize the git info and push it to the remote repo
+git init
+git add .
+git commit -m "init"
+git remote add origin https://github/Zhytou/proj.git
+git push -u origin main
+```
+
 ## References
 
 - [conneting to github with ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
