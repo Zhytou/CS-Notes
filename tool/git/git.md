@@ -59,6 +59,9 @@ git log
 
 # show differences between two files
 git diff [file name]
+
+# rename the current branch's name
+git branch -a [branch name]
 ```
 
 ### Advanced git commands
