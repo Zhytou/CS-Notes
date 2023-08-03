@@ -212,14 +212,33 @@ When you clone a project on your local computer and want to push it to your own 
 git clone https://github.com/xxx/proj.git
 
 # enter the proj directory and remove the .git subdirectory
-cd proj & rm -rf .git
+cd proj && rm -rf .git
 
 # reinitialize the git info and push it to the remote repo
 git init
+git branch -m main
 git add .
 git commit -m "init"
 git remote add origin https://github/Zhytou/proj.git
 git push -u origin main
+```
+
+**clone bare git repo and make it like a fork**:
+
+When you want to clone a git project and add it to your own remote repository(like a fork operation), you can clone a bare git project and push everything including all the branches and tags to your own remote repository.
+
+```bash
+# clone the bare git proj
+git clone --bare git@github.com:xxx/proj.git
+
+# cd the bare git directory and push everything to your own repo
+cd proj.git && git remote add mine git@github.com:Zhytou/proj.git
+git push --all mine
+git push --tags mine
+
+# remove the bare git directory and see your own repo
+rm -rf proj.git
+git clone git@github.com:Zhytou/proj.git
 ```
 
 ## References
