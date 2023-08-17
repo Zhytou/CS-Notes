@@ -41,9 +41,14 @@
 
 ``` c++
 struct A {
-    char a;
-    int b;
-}
+  char a;
+  int b;
+};
+
+struct B : A {
+  int b;
+  void func();
+};
 ```
 
 - 成员a自身对齐值为1，存放的起始地址为0x0000；
