@@ -1,31 +1,70 @@
 # Visual Studio
 
-> 记录一下我学习使用vs的经验
+> 记录一下我使用VS的经验
 
 - [Visual Studio](#visual-studio)
-  - [新建](#新建)
-  - [美化](#美化)
-  - [编码](#编码)
-  - [环境](#环境)
-  - [优化](#优化)
+  - [编辑](#编辑)
+    - [美化](#美化)
+    - [编码](#编码)
+  - [开发](#开发)
+    - [新建工程](#新建工程)
+    - [第三方库](#第三方库)
+    - [性能优化](#性能优化)
+    - [打包\&发布](#打包发布)
   - [其他](#其他)
     - [Qt](#qt)
     - [Vcpkg](#vcpkg)
   - [参考](#参考)
 
-## 新建
+## 编辑
 
-**项目**：项目是Visual Studio中的基本构建块，代表着一个单独的软件项目。一个项目可以包含一组相关的源代码文件、资源文件、配置文件等。项目定义了构建、编译、运行和管理代码的方式。在Visual Studio中，每个项目都有自己的设置、引用和构建选项。
+### 美化
 
-**解决方案**：解决方案是一个容器，用于组织和管理相关的项目。一个解决方案可以包含一个或多个项目。它提供了一个统一的环境，允许你同时打开、构建和调试多个项目。解决方案还可以包含解决方案级别的设置、配置和共享资源。
+对于程序员来说，拥有一个漂亮的格式会让人感到心情愉悦。所以学会设置代码风格格式化就非常有必要了。我们可以在工具-选项-文本编辑器-C/C++-代码样式中修改自己的个性化设置，并且下载Format On Save插件。
 
-**文件结构**：文件结构指的是项目中的文件组织方式和层次结构。在一个项目中，你可以按照需要创建文件夹和子文件夹来组织代码文件、资源文件、配置文件等。文件结构可以帮助你更好地组织和管理项目中的文件，使其更易于理解和维护。
+除此之外，此处在补充介绍一些VS中有关代码风格的其他工具。
 
-## 美化
+**IntelliSence**:
 
-设置Save With Formatting
+IntelliSense是VS中提供代码自动完成、参数提示、跳转定义等功能的组件。
 
-## 编码
+**Linter**:
+
+Linter则是一种代码检查工具，用于静态代码分析发现问题。类似clang-tidy，它能从语法错误、格式问题、安全隐患等多个维度提高代码质量。
+
+**Clang-Format**：
+
+clang-format是clang项目提供的一个代码格式化工具。它可以自动格式化C、C++和Objective-C代码,以统一代码风格。在VS中，我们也可以使用其来管理我们的代码风格。
+
+一个常见的clang-format配置文件如下：
+
+```clang-format
+---
+Language: Cpp
+BasedOnStyle: Mozilla
+ColumnLimit: 116
+SpacesInParentheses: true
+AlwaysBreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
+SpaceBeforeCpp11BracedList: true
+BreakBeforeBinaryOperators: All
+Cpp11BracedListStyle: true
+AllowShortBlocksOnASingleLine: Always
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: Never
+  AfterFunction: true
+  AfterStruct: true
+  AfterEnum: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+PackConstructorInitializers: NextLine
+...
+```
+
+### 编码
 
 **IDE编码方式**：
 
@@ -37,7 +76,17 @@
 
 除了将VS编辑的文件保存为UTF-8以外，还有一种情况也值得我们关注。那就是使用其他编辑器（如VSCode）写的Cpp文件，构建一个VS项目时，往往会出现一些莫名其妙的编译错误。这一点我也是深有感悟，当时在WSL写[SRE](https://github.com/Zhytou/SimpleRenderEngine)项目时，想将其迁移到Windows上做一个新[SRE-VS](https://github.com/Zhytou/SimpleRenderEngine-VS)的版本，结果明明在WSL上编译完全正常的文件，在MSVC编译死活不过。搞了半天，最后才发现要将其设置为UTF-8。具体操作可以参考这个链接[Microsoft Learn 将源字符集和执行字符集设置为 UTF-8](https://learn.microsoft.com/zh-cn/cpp/build/reference/utf-8-set-source-and-executable-character-sets-to-utf-8?view=msvc-170&redirectedfrom=MSDN)。
 
-## 环境
+## 开发
+
+### 新建工程
+
+**项目**：项目是Visual Studio中的基本构建块，代表着一个单独的软件项目。一个项目可以包含一组相关的源代码文件、资源文件、配置文件等。项目定义了构建、编译、运行和管理代码的方式。在Visual Studio中，每个项目都有自己的设置、引用和构建选项。
+
+**解决方案**：解决方案是一个容器，用于组织和管理相关的项目。一个解决方案可以包含一个或多个项目。它提供了一个统一的环境，允许你同时打开、构建和调试多个项目。解决方案还可以包含解决方案级别的设置、配置和共享资源。
+
+**文件结构**：文件结构指的是项目中的文件组织方式和层次结构。在一个项目中，你可以按照需要创建文件夹和子文件夹来组织代码文件、资源文件、配置文件等。文件结构可以帮助你更好地组织和管理项目中的文件，使其更易于理解和维护。
+
+### 第三方库
 
 在VS中使用第三方库时，我们往往需要修改项目的引用目录、库目录以及链接器输入，来帮助编译器和链接器找到对应文件。
 
@@ -86,11 +135,17 @@
 - $(TargetDir)：表示生成输出文件的目标目录路径。
 - $(TargetName)：表示生成输出文件的名称（不包括扩展名）。
 
-## 优化
+### 性能优化
 
 > [vs性能分析工具](https://blog.csdn.net/luoweifu/article/details/51470998)
 
 VS中自带了类似valgrind的性能分析工具，可以使用快捷键`F2 + Alt`开始使用。
+
+### 打包&发布
+
+为了让我们的项目显得高大上，我们常常需要为可执行程序添加一些精美的图标，并为其制作一个安装程序。
+
+而这些其实都有VS内置工具可以帮助我们完成，具体方法可以参考[这篇笔记](https://github.com/Zhytou/CS-Notes/blob/main/language/qt/other.md)。
 
 ## 其他
 
