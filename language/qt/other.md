@@ -41,3 +41,7 @@ windeployqt ~\workspace\proj\x64\Release\xxx.exe
 ```
 
 更详细的操作则可以参考这一篇CSDN博客[VS2019+QT5.13.2中生成Release模式下可执行的exe文件](https://blog.csdn.net/qq_45445740/article/details/119035433)。
+
+**vs installer projecets**：
+
+如果我们想要进一步让我们的项目变得高大上，还可以使用Microsoft Visual Studio Installer Projects这个插件来将项目打包成一个安装器。其具体操作可以参考这篇CSDN博客[使用vs将应用程序打包成安装包，并设置图标、卸载程序等](https://blog.csdn.net/qq_43153377/article/details/117232087)。
