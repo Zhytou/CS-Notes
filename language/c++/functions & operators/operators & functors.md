@@ -75,7 +75,6 @@ class StrCmp2 {
       return a.size() < sz;
     }
 }
-
 ```
 
 ### 标准库定义的函数对象
