@@ -6,6 +6,7 @@
     - [多线程与volatile](#多线程与volatile)
   - [const](#const)
     - [指针与const](#指针与const)
+    - [成员变量与const](#成员变量与const)
     - [成员函数与const](#成员函数与const)
   - [static](#static)
     - [局部变量与static](#局部变量与static)
@@ -43,11 +44,13 @@ char* volatile pchv;
 
 ## const
 
+const变量在声明时可以选择进行初始化也可以选择不进行初始化。值得注意的是，如果不进行初始化，则无法在后续的代码中给它赋值。
+
 ### 指针与const
 
 **顶层const**：
 
-用名词顶层`const`表示指针本身是个常量。
+顶层`const`表示指针本身是个常量。
 
 ``` c++
 int i  = 1;
@@ -56,11 +59,15 @@ int *const p = &i;//p将一直指向i，即顶层const
 
 **底层const**：
 
-用名词底层`const`表示指针所指对象是个常量。
+底层`const`表示指针所指对象是个常量。
 
 ``` c++
 const int *p = 1;//p是一个指向常量的指针，即底层const
 ```
+
+### 成员变量与const
+
+值得注意的是，初始化const成员变量只有一种方法，就是通过构造函数的初始化列表。而static成员变量则是在类外初始化。
 
 ### 成员函数与const
 
