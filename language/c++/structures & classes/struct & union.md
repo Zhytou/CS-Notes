@@ -1,12 +1,31 @@
-# 基础
+# 结构体 & 联合
 
-- [基础](#基础)
-  - [结构体 Struct](#结构体-struct)
+- [结构体 \& 联合](#结构体--联合)
+  - [结构体](#结构体)
+    - [C中的struct](#c中的struct)
+    - [C++中的struct](#c中的struct-1)
     - [计算结构体大小](#计算结构体大小)
-  - [联合 Union](#联合-union)
+  - [联合](#联合)
   - [参考](#参考)
 
-## 结构体 Struct
+## 结构体
+
+### C中的struct
+
+值得注意的是，C语言定义的结构体名字是struct+名称，想要使用这个新类型定义变量，必须加上struct，或使用typedef定义别名。比如：
+
+```c++
+struct list_node {
+  int val;
+  struct list_node* next;
+};
+
+struct list_node* head;
+```
+
+### C++中的struct
+
+struct类似class，也能定义成员变量和成员函数，但struct默认访问修饰符为public，而class为private。
 
 ### 计算结构体大小
 
@@ -37,7 +56,7 @@ struct B : A {
 
 编译器按照4字节对齐，是为了避免多次内存I/O。
 
-## 联合 Union
+## 联合
 
 一个`union`可以拥有多个数据成员，但在任意时刻只有一个数据成员可以有值。
 
