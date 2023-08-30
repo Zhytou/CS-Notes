@@ -60,6 +60,8 @@ fprintf(stderr, "打开文件错误: %s\n", strerror( errnum ));
 assert(divisor != 0);
 ```
 
+除此之外，C++ 还引入了static_assert关键字，它用于在编译时进行静态断言检查。
+
 ### 第三方异常处理
 
 ## C++语言异常处理
