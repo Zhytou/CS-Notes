@@ -8,6 +8,7 @@
     - [指针与const](#指针与const)
     - [成员变量与const](#成员变量与const)
     - [成员函数与const](#成员函数与const)
+  - [mutable](#mutable)
   - [static](#static)
     - [局部变量与static](#局部变量与static)
     - [全局变量与static](#全局变量与static)
@@ -72,6 +73,22 @@ const int *p = 1;//p是一个指向常量的指针，即底层const
 ### 成员函数与const
 
 可以将`const`放在参数列表之后来修饰`this`指针，从而保障`const`变量也能调用该成员函数。
+
+## mutable
+
+在C++中，mutable是一个关键字。它常用于在类中声明一个可变的成员变量，使其可以在const成员函数中被修改。比如：
+
+```c++
+class MyClass {
+public:
+  void incrementCounter() const {
+      ++counter_;  // 在常量成员函数中修改被声明为 mutable 的成员变量
+  }
+
+private:
+  mutable int counter_ = 0;
+};
+```
 
 ## static
 
