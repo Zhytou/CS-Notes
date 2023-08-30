@@ -45,7 +45,12 @@
 
 **枚举**：
 
-C++11引入了强类型枚举（Enum Class）。它可以定义一组具名的常量值，提供更好的类型安全性和代码可读性。
+C++11引入了强类型枚举（Enum Class）。它可以定义一组具名的常量值，提供更好的类型安全性和代码可读性。比如：
+
+```c++
+enum class Color { black, white, red, blue };
+Color c = Color::black; 
+```
 
 **常量表达式**：
 
