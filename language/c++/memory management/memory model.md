@@ -5,8 +5,11 @@
     - [用户空间](#用户空间)
     - [内核空间](#内核空间)
   - [对象生命周期](#对象生命周期)
+  - [对象内存模型](#对象内存模型)
   - [动态内存申请](#动态内存申请)
-    - [new 与 malloc 的区别](#new-与-malloc-的区别)
+    - [new与malloc 的区别](#new与malloc-的区别)
+    - [new与数组](#new与数组)
+    - [std::allocator](#stdallocator)
   - [参考](#参考)
 
 了解C/C++程序中变量和进程的内存模型对于理解程序的行为和性能优化非常重要。下面会分别介绍进程空间、对象声明周期和申请动态内存三部分知识。
@@ -66,9 +69,11 @@
 
 ## 对象生命周期
 
+## 对象内存模型
+
 ## 动态内存申请
 
-### new 与 malloc 的区别
+### new与malloc 的区别
 
 | Feature               | new/delete             | malloc/free                |
 | --------------------- | ---------------------- | -------------------------- |
@@ -78,6 +83,30 @@
 | Required size         | Calculated by compiler | Must be specified in bytes |
 
 > Technically, memory allocated by `new` comes from the 'Free Store' while memory allocated by `malloc` comes from the 'Heap'. Whether these two areas are the same is an implementation detail, which is another reason that `malloc` and `new` cannot be mixed.
+
+### new与数组
+
+为了让new分配一个对象数组，我们需要在类型名后跟一对方括号，并在其中指明需要分配的数目。例如：
+
+```c++
+// 在堆上申请了10个int
+int* p = new int[10];
+```
+
+值得注意的是，分配的数目为0时，编译也可以通过。此时得到的指针被称为尾后指针，类似标准库容器中end函数得到的迭代器。
+
+**释放动态数组**：
+
+为了释放动态数组，我们需要使用一种特殊形式的delete，即：在指针前加一个空的方括号。例如：
+
+```c++
+// 销毁p指向的第一个元素
+delete p;
+// 销毁p指向的动态数组
+delete [] p;
+```
+
+### std::allocator
 
 ## 参考
 
