@@ -69,7 +69,26 @@ int j; // 定义j
 
 **列表初始化**：
 
-使用花括号进行初始化的方法被称为列表初始化（List Initialization）
+使用花括号进行初始化的方法被称为列表初始化（List Initialization）。比如：
+
+```c++
+int sold_items = {0};
+int unsold_items{0};
+
+std::vector<int> nums = {0, 1, 2, 3};
+std::vector<std::string> names{"Tom", "Sam", "John"};
+```
+
+此外，C++标准库中的容器还可以使用容纳元素数量和所有元素的统一初始值来初始化。比如：
+
+```c++
+std::vector<int> in_degrees(10, 0);
+std::vector<std::string> file_names(3, "a.txt");
+```
+
+**值初始化**：
+
+对于上面这种方法，C++标准库中的容器还可以只提供元素数量而略去初始值。此时，库会创建一个值初始化（Value-Initialized）元素初值，并把他赋给所有元素。而这个初值由其中的元素类型决定。
 
 **默认初始化**：
 
