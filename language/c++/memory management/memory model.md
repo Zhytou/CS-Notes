@@ -108,6 +108,8 @@ delete [] p;
 
 ### std::allocator
 
+标准库allocator类定义在头文件memory中，它帮助我们将内存分配和对象构造分离开来。（因为调用new时，必须执行类的构造函数）std::allocator分配的内存是原始的、未构造的。
+
 ## 参考
 
 **new 与 malloc 的区别**:
