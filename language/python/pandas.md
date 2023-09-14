@@ -4,6 +4,8 @@
   - [Series](#series)
   - [DataFrame](#dataframe)
 
+Pandas是基于NumPy的数学分析工具，是为了解决数据分析任务而创建的。它的名称来自面板数据（Panel Data）和数据分析（Data Analysis）两个名称的缩写。
+
 ## Series
 
 尽管从一般意义上来讲，Series可以简单地被认为是一维的数组，但其实它更像是拥有序号作起默认键值的哈希表。这也是它和一维数组最主要的区别，即Series类型具有索引。

@@ -82,6 +82,12 @@ ctest -SP <script>           [-- <dashboard-options>...]
 
 ## Advanced Commands
 
+**设置包含目录**：
+
+```txt
+target_include_directories()
+```
+
 ## References
 
 - [CMake Official Tutorial](https://cmake.org/cmake/help/v3.27/guide/tutorial/index.html)
