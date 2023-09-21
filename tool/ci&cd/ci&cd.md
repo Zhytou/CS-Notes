@@ -4,6 +4,8 @@
   - [CI](#ci)
   - [CD](#cd)
   - [CI\\CD Tool](#cicd-tool)
+    - [CI\\CD Workflow](#cicd-workflow)
+    - [CI\\CD Config](#cicd-config)
 
 CI/CD 是一种通过在应用开发阶段引入自动化来频繁向客户交付应用的方法。CI/CD 的核心概念是持续集成、持续交付和持续部署。
 
@@ -24,7 +26,11 @@ CI/CD 是一种通过在应用开发阶段引入自动化来频繁向客户交�
 - Travis CI：Travis CI 是一个云托管的 CI/CD 平台，广泛用于开源项目。它提供了易于配置和集成的功能。
 - GitHub Actions：GitHub Actions 是 GitHub 提供的一种集成 CI/CD 功能的工具。它与 GitHub 仓库紧密集成，可以直接在仓库中编写和运行 CI/CD 流程。
 
-```yaml
+### CI\CD Workflow
+
+### CI\CD Config
+
+```yml
 stages:
   - build
   - test
