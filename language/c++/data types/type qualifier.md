@@ -1,6 +1,7 @@
 # 类型限定符
 
 - [类型限定符](#类型限定符)
+  - [mutable](#mutable)
   - [volatile](#volatile)
     - [指针与volatile](#指针与volatile)
     - [多线程与volatile](#多线程与volatile)
@@ -8,6 +9,25 @@
     - [指针与const](#指针与const)
     - [成员变量与const](#成员变量与const)
     - [成员函数与const](#成员函数与const)
+  - [参考](#参考)
+
+对于除了函数类型或引用类型以外的任何类型T（包括不完整类型），C++类型系统中有另外三个独立的类型：const-限定的T、volatile-限定的T及const-volatile-限定的T。
+
+## mutable
+
+在C++中，mutable是一个关键字。它常用于在类中声明一个可变的成员变量，使其可以在const成员函数中被修改。比如：
+
+```c++
+class MyClass {
+public:
+  void incrementCounter() const {
+      ++counter_;  // 在常量成员函数中修改被声明为 mutable 的成员变量
+  }
+
+private:
+  mutable int counter_ = 0;
+};
+```
 
 ## volatile
 
@@ -65,3 +85,7 @@ const int *p = 1;//p是一个指向常量的指针，即底层const
 ### 成员函数与const
 
 可以将`const`放在参数列表之后来修饰`this`指针，从而保障`const`变量也能调用该成员函数。
+
+## 参考
+
+[cppreference cv type qualifier](https://en.cppreference.com/w/cpp/language/cv)
