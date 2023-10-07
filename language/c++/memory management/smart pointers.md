@@ -1,32 +1,34 @@
-# 内存管理
+# 智能指针
 
-- [内存管理](#内存管理)
-  - [智能指针 Smart Pointer](#智能指针-smart-pointer)
-    - [shared\_ptr](#shared_ptr)
-    - [unique\_ptr](#unique_ptr)
-    - [weak\_ptr](#weak_ptr)
-  - [内存池 Memory Pool](#内存池-memory-pool)
-  - [RAII](#raii)
-  - [std::allocator类](#stdallocator类)
-  - [参考](#参考)
+- [智能指针](#智能指针)
+  - [shared\_ptr](#shared_ptr)
+    - [实现自己的shared\_ptr](#实现自己的shared_ptr)
+  - [unique\_ptr](#unique_ptr)
+  - [weak\_ptr](#weak_ptr)
 
-## 智能指针 Smart Pointer
+**原生指针的问题**：
 
-**特点——RAII**:
+原生指针是一款很强大的工具，但是依据进数十年的经验，可以确定的一点是:稍有不慎，这
+个工具就会反噬它的使用者。
+终于，来解决上述难题的智能指针出现了，智能指针表现起来很像原生指针，它相当于是原
+生指针的一层再包装(wrapper)，但是规避了许多使用原生指针带来的陷阱。你应该尽量使用
+智能指针，它几乎能做到原生指针能做到的所有功能，却很少给你犯错的机会。
 
-- 指针创建时，申请内存；指针销毁时，释放内存。
+在C++11标准中规定了四个智能指针:std::auto_ptr, std::unique_ptr, std::shared_ptr, 以及std::weak_ptr.它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。
 
-  > Smart pointers are used to make sure that an object is deleted if it is no longer used, which avoids the memory leakage in the process.
+指针创建时，申请内存；指针销毁时，释放内存。此外，`shared_ptr`和`unique_ptr`的构造函数都是`explicit`的，即：必须直接使用（new返回的）普通指针直接赋值。
 
-- 此外，`shared_ptr`和`unique_ptr`的构造函数都是`explicit`的，即：必须直接使用（new返回的）普通指针直接赋值。
+智能指针的API有着显著的区别，他们之间唯一共同的一点功能就是默认的构造方法。
 
-### shared_ptr
+## shared_ptr
 
-**描述**：
+`std::shared_ptr<T>`是一种智能指针，它能够记录多少个`std::shared_ptr<T>`共同指向一个对象，从而消除显式的调用delete，当引用计数变为零的时候就会将对象自动删除。
 
-- The `shared_ptr` is a reference counting smart pointer that can be used to store and pass a reference beyond the scope of a function.
+但还不够，因为使用`std::shared_ptr<T>`仍然需要使用new来调用，这使得代码出现了某种程度上的不对称。
 
-**实现**：
+`std::make_shared`就能够用来消除显式的使用new，所以`std::make_shared`会分配创建传入参数中的对象， 并返回这个对象类型的`std::shared_ptr<T>`指针。
+
+### 实现自己的shared_ptr
 
 ``` c++
 using namespace std;
@@ -84,88 +86,12 @@ private:
   - （*this）指针指向other指针，所以other指针的`_refCount`要自增。
 - 析构函数只有在`_refCount == 0`时，才执行。
 
-### unique_ptr
-
-**描述**：
+## unique_ptr
 
 - The `unique_ptr<>` template holds a pointer to an object and deletes this object when the `unique_ptr<>` object is deleted.
 - 由于`unique_ptr`拥有它指向的对象，因此`unique_ptr`不支持普通的拷贝或赋值操作。
 - 但不能拷贝`unique_ptr`的规则有一个例外：我们可以拷贝或赋值一个将要被消耗的`unique_ptr`。
 
-### weak_ptr
+## weak_ptr
 
-**描述**：
-
-- `std::weak_ptr` is a smart pointer that holds a non-owning ("weak") reference to an object that is managed by `std::shared_ptr`. It must be converted to `std::shared_ptr` in order to access the referenced object.
-
-## 内存池 Memory Pool
-
-**描述**:
-
-- **Memory pools**, also called fixed-size blocks allocation, is the use of pools for memory management that allows dynamic memory allocation comparable to malloc or C++'s operator new.
-
-## RAII
-
-**描述**:
-
-- **RAII**，全称**资源获取即初始化**（英语：**R**esource **A**cquisition **I**s **I**nitialization），它是在一些面向对象语言中的一种惯用法。
-
-**特点**:
-
-- RAII guarantees that the resource is available to any function that may access the object.
-- It also guarantees that all resources are released when the lifetime of their controlling object ends, in reverse order of acquisition.
-
-**作用**:
-
-- 有效避免内存泄露
-
-**实现**:
-
-- RAII在C++中的应用非常广泛，比如上面提到的智能指针。
-- 此外，C++标准库中的[lock_guard](http://en.cppreference.com/w/cpp/thread/lock_guard)也是用RAII方式来控制互斥量:
-
-``` c++
-template <class Mutex> class lock_guard {
-private:
-    Mutex& mutex_;
-
-public:
-    lock_guard(Mutex& mutex) : mutex_(mutex) { mutex_.lock(); }
-    ~lock_guard() { mutex_.unlock(); }
-    //= delete 禁用某函数
-    lock_guard(lock_guard const&) = delete;
-    lock_guard& operator=(lock_guard const&) = delete;
-};
-```
-
-- 程序员可以非常方便地使用lock_guard，而不用担心异常安全问题。
-
-``` c++
-using std::mutex;
-using std::lock_guard;
-
-mutex g_mutex;
-
-void access_critical_section()
-{
-    lock_guard<mutex> lock(g_mutex);
-    unsafe_code();
-}
-```
-
-## std::allocator类
-
-## 参考
-
-**new 与 malloc 的区别**:
-
-- [stackoverflow](https://stackoverflow.com/questions/240212/what-is-the-difference-between-new-delete-and-malloc-free)
-
-**智能指针**:
-
-- [cppreference](https://en.cppreference.com/book/intro/smart_pointers)
-
-**RAII**:
-
-- [wiki](https://zh.wikipedia.org/wiki/RAII)
-- [cppreference](https://en.cppreference.com/w/cpp/language/raii)
+`std::weak_ptr` is a smart pointer that holds a non-owning ("weak") reference to an object that is managed by `std::shared_ptr`. It must be converted to `std::shared_ptr` in order to access the referenced object.

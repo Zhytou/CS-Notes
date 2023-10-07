@@ -1,13 +1,12 @@
-# 杂项
+# 函数调用运算符
 
-- [杂项](#杂项)
+如果类重载了函数调用运算符，则我们可以像使用函数一样使用该类对象。由于这样的类也能同时存储状态，所以比普通函数更加灵活。
+
+- [函数调用运算符](#函数调用运算符)
   - [可调用对象](#可调用对象)
-  - [运行时类型识别 RTTI](#运行时类型识别-rtti)
-    - [typeid](#typeid)
-    - [dynamic\_cast](#dynamic_cast)
-  - [PIMPL 具体实现的指针](#pimpl-具体实现的指针)
-  - [CRTP 奇异递归模板模式](#crtp-奇异递归模板模式)
-  - [参考](#参考)
+  - [lambda时函数对象](#lambda时函数对象)
+    - [标准库定义的函数对象](#标准库定义的函数对象)
+    - [可调用对象与std::function](#可调用对象与stdfunction)
 
 ## 可调用对象
 
@@ -78,57 +77,74 @@ std::function是一个可变参类模板，是一个通用的函数包装器（P
 
 std::function中存储的可调用对象被称之为std::function的目标。若std::function中不含目标，调用不含目标的std::function会抛出std::bad_function_call 异常。
 
-## 运行时类型识别 RTTI
+## lambda时函数对象
 
-### typeid
-
-**功能**：查询类型的信息。
-
-### dynamic_cast
-
-**功能**：
-
-`dynamic_cast`主要用于将基类指针（或引用）转换为派生类指针（或引用）。
-
-其中，对指针进行`dynamic_cast`，失败返回null，成功返回派生类对象指针；
-
-对引用进行`dynamic_cast`，失败抛出一个异常，成功返回派生类对象引用。
-
-**使用**：
+当我们编写以一个`lambda`后，编译器将该表达式翻译成一个未命名类的未命名对象。例如：
 
 ``` c++
-dynamic_cast<type*>(expression);
-dynamic_cast<type&>(expression);
-dynamic_cast<type&&>(expression);
+
+auto cmp1 = [](const string& a, const string& b) {
+  return a.size() < b.size();
+}
+
+class StrCmp1 {
+  public:
+    bool operator() (const string& a, const string& b) {
+      return a.size() < b.size();
+    }
+}
+
+int sz;
+
+auto cmp2 = [&](const string& a) {
+  return a.size() < sz;
+}
+
+class StrCmp2 {
+  int sz;
+  StrCmp2(int n) : sz(n) {} 
+  public:
+    bool operator() (const string& a) {
+      return a.size() < sz;
+    }
+}
 ```
 
-由于`dynamic_cast`的功能，所以也要求目标类型`type`和源对象`expression`类型必须满足子父类关系。
+### 标准库定义的函数对象
 
-## PIMPL 具体实现的指针
+标准库定义了一组表示算数运算符、关系运算符和逻辑运算符的类。这些类都被定义成模板的形式存放在`functional`头文件中。
 
-Pimpl（Pointer to Implementation）是一项实现隐藏、降低耦合性和分离接口的C++技术。
+|                算术             |              关系           |    逻辑      |
+|---------------------------------|----------------------------|--------------|
+|`plus<Type>` `minus<Type>`           | `less<Type>` `greater<Type>`   |
 
-它通过一个私有的成员指针，将指针所指向的类的内部实现数据进行隐藏。
+### 可调用对象与std::function
 
-## CRTP 奇异递归模板模式
+C++语言中有几种可调用的对象：函数、函数指针、`lambda`表达式、`bind`创建的对象以及重载了函数调用运算符的类。
 
-CRTP（curiously recurring template pattern）是C++模板编程时的一种惯用法：把派生类作为基类的模板参数。
+和其他对象一样，可调用的对象也有类型。例如：每个`lambda`表达式有它自己唯一的类类型。然而两个不同类型的可调用对象可能共享一种`调用形式(call signature)`。
 
-## 参考
+`std::function`是一个类模板，一个特定类型的`function<T>`可以存储拥有这种调用形式的可调用对象。例如：
 
-**lambda**：
+``` c++
+int add(int a, int b) { return a + b; }
 
-- [stackoverflow - lambda vs functor](https://stackoverflow.com/questions/4686507/lambda-expression-vs-functor-in-c)
-- [all about lambda function in c++](http://www.vishalchovatiya.com/learn-lambda-function-in-cpp-with-example/)
+auto mod = [](int a, int b) { return a % b; };
 
-**functor**：
+class divide {
+  public:
+    int operator(int a, int b) {
+      return a / b;
+    }
+};
 
-- [stackoverflow - functor](https://stackoverflow.com/questions/356950/what-are-c-functors-and-their-uses)
+// 这里我们定义了一个可以接受两个int、返回一个int的可调用对象
+function<int(int, int)> f;
 
-**RTTI**：
+f = add;
+f = mod;
+f = divide;
 
-- [C++ Primer 19.2运行时类型识别](/)
-
-**PIMPL**：
-
-- [Pimpl技术——编译期封装](https://www.cnblogs.com/KillerAery/p/9539705.html)
+// 用2和3当作输入参数调用该对象
+f(2, 3);
+```
