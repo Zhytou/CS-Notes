@@ -7,15 +7,15 @@
     - [1. 分类](#1-分类)
     - [2. 子网划分](#2-子网划分)
     - [3. 无分类](#3-无分类)
+  - [VPN](#vpn)
   - [ARP](#arp)
   - [ICMP](#icmp)
-    - [1. Ping](#1-ping)
-    - [2. Traceroute](#2-traceroute)
+    - [Ping](#ping)
+    - [Traceroute](#traceroute)
   - [路由器](#路由器)
     - [路由器的结构](#路由器的结构)
     - [路由器分组转发流程](#路由器分组转发流程)
   - [DHCP](#dhcp)
-  - [VPN](#vpn)
   - [NAT](#nat)
 
 ## IP
@@ -24,7 +24,7 @@
 
 使用 IP 协议，可以把异构的物理网络连接起来，使得在网络层看起来好像是一个统一的网络。
 
-https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/8d779ab7-ffcc-47c6-90ec-ede8260b2368.png
+![网络结构](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/8d779ab7-ffcc-47c6-90ec-ede8260b2368.png)
 
 与 IP 协议配套使用的还有三个协议：
 
@@ -34,7 +34,7 @@ https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/8d779ab7-ffcc-47c6-90e
 
 ### IP数据报格式
 
-https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/85c05fb1-5546-4c50-9221-21f231cdc8c5.jpg
+![IP数据报格式](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/85c05fb1-5546-4c50-9221-21f231cdc8c5.jpg)
 
 - **版本**   : 有 4（IPv4）和 6（IPv6）两个值；
 
@@ -54,8 +54,6 @@ https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/85c05fb1-5546-4c50-922
 
 - **片偏移**   : 和标识符一起，用于发生分片的情况。片偏移的单位为 8 字节。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/23ba890e-e11c-45e2-a20c-64d217f83430.png" width="700"/> </div><br>
-
 ### IP地址
 
 IP 地址的编址方式经历了三个历史阶段：
@@ -70,7 +68,7 @@ IP 地址的编址方式经历了三个历史阶段：
 
 IP 地址 ::= {\< 网络号 \>, \< 主机号 \>}
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/cbf50eb8-22b4-4528-a2e7-d187143d57f7.png" width="500"/> </div><br>
+![IP地址分类](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/cbf50eb8-22b4-4528-a2e7-d187143d57f7.png)
 
 ### 2. 子网划分
 
@@ -104,45 +102,43 @@ CIDR 的地址掩码可以继续称为子网掩码，子网掩码首 1 长度为
 - 172.16.0.0 \~ 172.31.255.255
 - 192.168.0.0 \~ 192.168.255.255
 
+## VPN
+
 VPN 使用公用的互联网作为本机构各专用网之间的通信载体。专用指机构内的主机只与本机构内的其它主机通信；虚拟指好像是，而实际上并不是，它有经过公用的互联网。
 
 下图中，场所 A 和 B 的通信经过互联网，如果场所 A 的主机 X 要和另一个场所 B 的主机 Y 通信，IP 数据报的源地址是 10.1.0.1，目的地址是 10.2.0.3。数据报先发送到与互联网相连的路由器 R1，R1 对内部数据进行加密，然后重新加上数据报的首部，源地址是路由器 R1 的全球地址 125.1.2.3，目的地址是路由器 R2 的全球地址 194.4.5.6。路由器 R2 收到数据报后将数据部分进行解密，恢复原来的数据报，此时目的地址为 10.2.0.3，就交付给 Y。
 
-![](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/1556770b-8c01-4681-af10-46f1df69202c.jpg)
+![VPN](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/1556770b-8c01-4681-af10-46f1df69202c.jpg)
 
 ## ARP
 
 网络层实现主机之间的通信，而链路层实现具体每段链路之间的通信。因此在通信过程中，IP 数据报的源地址和目的地址始终不变，而 MAC 地址随着链路的改变而改变。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/66192382-558b-4b05-a35d-ac4a2b1a9811.jpg" width="700"/> </div><br>
+![ARP](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/66192382-558b-4b05-a35d-ac4a2b1a9811.jpg)
 
 ARP 实现由 IP 地址得到 MAC 地址。
-
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/b9d79a5a-e7af-499b-b989-f10483e71b8b.jpg" width="500"/> </div><br>
 
 每个主机都有一个 ARP 高速缓存，里面有本局域网上的各主机和路由器的 IP 地址到 MAC 地址的映射表。
 
 如果主机 A 知道主机 B 的 IP 地址，但是 ARP 高速缓存中没有该 IP 地址到 MAC 地址的映射，此时主机 A 通过广播的方式发送 ARP 请求分组，主机 B 收到该请求后会发送 ARP 响应分组给主机 A 告知其 MAC 地址，随后主机 A 向其高速缓存中写入主机 B 的 IP 地址到 MAC 地址的映射。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/8006a450-6c2f-498c-a928-c927f758b1d0.png" width="700"/> </div><br>
+![ARP广播](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/8006a450-6c2f-498c-a928-c927f758b1d0.png)
 
 ## ICMP
 
 ICMP 是为了更有效地转发 IP 数据报和提高交付成功的机会。它封装在 IP 数据报中，但是不属于高层协议。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/e3124763-f75e-46c3-ba82-341e6c98d862.jpg" width="500"/> </div><br>
+![ICMP数据报格式](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/e3124763-f75e-46c3-ba82-341e6c98d862.jpg)
 
 ICMP 报文分为差错报告报文和询问报文。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/aa29cc88-7256-4399-8c7f-3cf4a6489559.png" width="600"/> </div><br>
-
-### 1. Ping
+### Ping
 
 Ping 是 ICMP 的一个重要应用，主要用来测试两台主机之间的连通性。
 
 Ping 的原理是通过向目的主机发送 ICMP Echo 请求报文，目的主机收到之后会发送 Echo 回答报文。Ping 会根据时间和成功响应的次数估算出数据包往返时间以及丢包率。
 
-### 2. Traceroute
+### Traceroute
 
 Traceroute 是 ICMP 的另一个应用，用来跟踪一个分组从源点到终点的路径。
 
@@ -161,7 +157,7 @@ Traceroute 发送的 IP 数据报封装的是无法交付的 UDP 用户数据报
 
 分组转发结构由三个部分组成：交换结构、一组输入端口和一组输出端口。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/c3369072-c740-43b0-b276-202bd1d3960d.jpg" width="600"/> </div><br>
+![路由器结构](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/c3369072-c740-43b0-b276-202bd1d3960d.jpg)
 
 ### 路由器分组转发流程
 
@@ -172,13 +168,11 @@ Traceroute 发送的 IP 数据报封装的是无法交付的 UDP 用户数据报
 - 若路由表中有一个默认路由，则把数据报传送给路由表中所指明的默认路由器；
 - 报告转发分组出错。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/1ab49e39-012b-4383-8284-26570987e3c4.jpg" width="800"/> </div><br>
+![分组转发](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/1ab49e39-012b-4383-8284-26570987e3c4.jpg)
 
 ## DHCP
 
 动态主机配置协议DHCP（Dynamic Host Configuration Protocol）是一种网络管理协议，用于集中对用户IP地址进行动态管理和配置。
-
-## VPN
 
 ## NAT
 
@@ -186,4 +180,4 @@ Traceroute 发送的 IP 数据报封装的是无法交付的 UDP 用户数据报
 
 在以前，NAT 将本地 IP 和全球 IP 一一对应，这种方式下拥有 n 个全球 IP 地址的专用网内最多只可以同时有 n 台主机接入互联网。为了更有效地利用全球 IP 地址，现在常用的 NAT 转换表把传输层的端口号也用上了，使得多个专用网内部的主机共用一个全球 IP 地址。使用端口号的 NAT 也叫做网络地址与端口转换 NAPT。
 
-<div align="center"> <img src="https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/2719067e-b299-4639-9065-bed6729dbf0b.png" width=""/> </div><br>
+![NAT](https://cs-notes-1256109796.cos.ap-guangzhou.myqcloud.com/2719067e-b299-4639-9065-bed6729dbf0b.png)
