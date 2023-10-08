@@ -1,16 +1,13 @@
-# 函数调用运算符
+# 可调用对象
 
-如果类重载了函数调用运算符，则我们可以像使用函数一样使用该类对象。由于这样的类也能同时存储状态，所以比普通函数更加灵活。
-
-- [函数调用运算符](#函数调用运算符)
-  - [可调用对象](#可调用对象)
+- [可调用对象](#可调用对象)
+  - [Lambda表达式](#lambda表达式)
+  - [仿函数类 Functor class](#仿函数类-functor-class)
   - [lambda时函数对象](#lambda时函数对象)
-    - [标准库定义的函数对象](#标准库定义的函数对象)
-    - [可调用对象与std::function](#可调用对象与stdfunction)
+  - [标准库定义的函数对象](#标准库定义的函数对象)
+  - [可调用对象包装器——std::function](#可调用对象包装器stdfunction)
 
-## 可调用对象
-
-**Lambda表达式**:
+## Lambda表达式
 
 A lambda expression creates an nameless functor, it's syntactic sugar.
 
@@ -63,13 +60,15 @@ auto cmp5 = [this](const string& s) {
 
 此外，如果我们希望改变一个被捕获的变量的值，就必须在参数列表加上关键字`mutable`。
 
-**仿函数类 Functor class**:
+## 仿函数类 Functor class
 
 Functors are objects that can be treated as though they are a function or function pointer.
 
 A functor is pretty much just a class which defines the operator(). That lets you create objects which "look like" a function
 
 One nice thing about functors is that unlike regular functions, they can contain state which means that it can be customized.
+
+如果类重载了函数调用运算符，则我们可以像使用函数一样使用该类对象。由于这样的类也能同时存储状态，所以比普通函数更加灵活。
 
 **函数包装模板 std::function**:
 
@@ -110,7 +109,7 @@ class StrCmp2 {
 }
 ```
 
-### 标准库定义的函数对象
+## 标准库定义的函数对象
 
 标准库定义了一组表示算数运算符、关系运算符和逻辑运算符的类。这些类都被定义成模板的形式存放在`functional`头文件中。
 
@@ -118,7 +117,7 @@ class StrCmp2 {
 |---------------------------------|----------------------------|--------------|
 |`plus<Type>` `minus<Type>`           | `less<Type>` `greater<Type>`   |
 
-### 可调用对象与std::function
+## 可调用对象包装器——std::function
 
 C++语言中有几种可调用的对象：函数、函数指针、`lambda`表达式、`bind`创建的对象以及重载了函数调用运算符的类。
 
