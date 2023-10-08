@@ -5,6 +5,7 @@
   - [lambda表达式](#lambda表达式)
   - [标准库定义的函数对象](#标准库定义的函数对象)
   - [可调用对象包装器——std::function](#可调用对象包装器stdfunction)
+  - [std::bind绑定器](#stdbind绑定器)
 
 在C++中，可调用对象就是能够对其使用调用运算符的对象或表达式，其大致包括：
 
@@ -133,15 +134,13 @@ auto cmp = [sz](const string& s) mutable {
 
 ## 可调用对象包装器——std::function
 
-std::function是一个可变参类模板，是一个通用的函数包装器（Polymorphic function wrapper）。std::function的实例可以存储、复制和调用任何可复制构造的可调用目标，包括普通函数、成员函数、类对象（重载了operator()的类的对象）、Lambda表达式等。是对C++现有的可调用实体的一种类型安全的包裹（相比而言，函数指针这种可调用实体，是类型不安全的）。
+std::function是一个可变参类模板，是一个通用的函数包装器（Polymorphic Function Wrapper）。std::function的实例可以存储、复制和调用任何可复制构造的可调用目标，包括普通函数、成员函数、类对象（重载了operator()的类的对象）、lambda表达式等。是对C++现有的可调用实体的一种类型安全的包裹（相比而言，函数指针这种可调用实体，是类型不安全的）。
 
 std::function中存储的可调用对象被称之为std::function的目标。若std::function中不含目标，调用不含目标的std::function会抛出std::bad_function_call 异常。
 
-C++语言中有几种可调用的对象：函数、函数指针、lambda表达式、`bind`创建的对象以及重载了函数调用运算符的类。
+和其他对象一样，可调用的对象也有类型。例如：每个lambda表达式有它自己唯一的类类型。然而两个不同类型的可调用对象可能共享一种调用形式(Call Signature)。
 
-和其他对象一样，可调用的对象也有类型。例如：每个lambda表达式有它自己唯一的类类型。然而两个不同类型的可调用对象可能共享一种`调用形式(call signature)`。
-
-`std::function`是一个类模板，一个特定类型的`function<T>`可以存储拥有这种调用形式的可调用对象。例如：
+std::function是一个类模板，一个特定类型T的std::function可以存储拥有这种调用形式的可调用对象。例如：
 
 ``` c++
 int add(int a, int b) { return a + b; }
@@ -164,4 +163,22 @@ f = divide;
 
 // 用2和3当作输入参数调用该对象
 f(2, 3);
+```
+
+## std::bind绑定器
+
+std::bind用来将可调用对象与其参数一起进行绑定。绑定后的结果可以使用std::function进行保存，并延迟调用到任何我们需要的时候。准确来说，它包含两大作用：
+
+- 将可调用对象与其参数一起绑定成一个仿函数对象；
+- 将多元（参数个数为n）可调用对象转成一元或（n-1）元可调用对象，即只绑定部分参数。
+
+其具体使用方法如下：
+
+```c++
+int add(int x, int y) {
+  return x + y;
+}
+
+auto f = std::bind(add, 1, 2);
+int result = f(); // 调用加法函数并传入已绑定参数
 ```
