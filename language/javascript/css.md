@@ -1,12 +1,17 @@
 # CSS 入门
 
-> [Youtube - Learn CSS in 20 minutes](https://www.youtube.com/watch?v=1PnVor36_40)
+- [CSS 入门](#css-入门)
+  - [What is CSS?](#what-is-css)
+  - [CSS Syntax](#css-syntax)
+  - [CSS Selectors](#css-selectors)
+  - [Selector Combination](#selector-combination)
+  - [How to load CSS](#how-to-load-css)
 
 ## What is CSS?
 
-+ note a programming language
-+ styling language
-+ used for presentation
+- note a programming language
+- styling language
+- used for presentation
 
 ## CSS Syntax
 
@@ -19,7 +24,7 @@ selector {
 
 ## CSS Selectors
 
-+ element selector
+- element selector
 
 ```css
 h1 {
@@ -27,9 +32,9 @@ h1 {
 }
 ```
 
-+ class selector
+- class selector
 
-+ id selector
+- id selector
 
 ```css
 #id {
@@ -43,9 +48,9 @@ Among the three selectors, id selector has the highest priority. while the class
 
 ## How to load CSS
 
-+ inline: write css style in every element in html
-+ style element: write a style element in html header
-+ external css: use a link element to implement
+- inline: write css style in every element in html
+- style element: write a style element in html header
+- external css: use a link element to implement
 
 ```html
 <link rel="stylesheet" href="style.css"></link>
