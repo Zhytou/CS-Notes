@@ -176,3 +176,4 @@ btn.onclick = function() {
 
 + [stackoverflow - where is the best place to insert script tag](https://stackoverflow.com/questions/436411/where-should-i-put-script-tags-in-html-markup)
 + [stackoverflow - how to get event param in js addeventlistener](https://stackoverflow.com/questions/7394750/adding-event-as-parameter-within-function-using-addeventlistener-doesnt-work)
++ [javascript overview](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Language_Overview)
