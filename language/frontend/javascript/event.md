@@ -59,8 +59,6 @@ btn.addEventListener('click', bgChange);
 btn.removeEventListener('click', bgChange);
 ```
 
-## 其他
-
 ## 参考References
 
 + [MDN - 事件介绍](https://developer.mozilla.org/zh-CN/docs/Learn/JavaScript/Building_blocks/Events)

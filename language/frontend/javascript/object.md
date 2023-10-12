@@ -1,8 +1,11 @@
-# 对象Object
+# 对象
 
-## 概述
-
-### 定义
+- [对象](#对象)
+  - [方法](#方法)
+  - [使用](#使用)
+  - [构造函数](#构造函数)
+  - [对象原型](#对象原型)
+    - [修改原型](#修改原型)
 
 **概念**：
 
@@ -27,9 +30,7 @@ var person = {
 };
 ```
 
-#### 属性
-
-#### 方法
+## 方法
 
 在JavaScript中可以用`this`直接定义方法，也可以将方法定义在`prototype`属性中。
 
@@ -57,9 +58,9 @@ Ball.prototype.moveTo = function(dx, dy) {
 };
 ```
 
-### 使用
+## 使用
 
-#### 点表示法
+**点表示法**：
 
 JavaScript运行使用点表示法(dot notation)来访问对象的属性和方法。
 
@@ -69,7 +70,7 @@ person.interests[1]
 person.bio()
 ```
 
-#### 括号表示法
+**括号表示法**：
 
 另外一种访问属性的方式是使用括号表示法(bracket notation)来访问对象的属性和方法。
 
@@ -113,22 +114,6 @@ JavaScript 常被描述为一种**基于原型的语言 (prototype-based languag
 原型对象也可能拥有原型，并从中继承方法和属性，一层一层、以此类推。这种关系常被称为**原型链 (prototype chain)**，它解释了为何一个对象会拥有定义在其他对象中的属性和方法。
 
 ![对象原型](https://image-static.segmentfault.com/414/998/4149982343-58e5a767abec1_fix732)
-
-### 概念
-
-#### prototype
-
-对象（构造函数）中有`prototype`属性保存原型类。特别的，被继承的属性和方法也被定义在`prototype`属性中。
-
-#### \__proto__
-
-对象实例中有`__proto__`属性等于构造函数中`prototype`属性。
-
-#### constructor
-
-每个实例对象都从原型中继承了一个`constructor`属性，该属性指向了用于构造此实例对象的构造函数。
-
-### 原型与继承
 
 `prototype` 属性的值是一个对象，我们希望被原型链下游的对象继承的属性和方法，都被储存在其中。
 
@@ -177,68 +162,3 @@ rect.move(1, 1); // Outputs, 'Shape moved.'
 **在原型上定义方法**：
 
 在构造器（函数体）中定义属性、在 `prototype` 属性上定义方法。
-
-## 类
-
-## 继承
-
-### 构造函数中的继承
-
-```javascript
-// Shape - 父类(superclass)
-function Shape() {
-  this.x = 0;
-  this.y = 0;
-}
-
-// 父类的方法
-Shape.prototype.move = function(x, y) {
-  this.x += x;
-  this.y += y;
-  console.info('Shape moved.');
-};
-
-// Rectangle - 子类(subclass)
-function Rectangle() {
-  Shape.call(this); // call super constructor.
-}
-
-// 子类续承父类
-Rectangle.prototype = Object.create(Shape.prototype);
-Rectangle.prototype.constructor = Rectangle;
-
-var rect = new Rectangle();
-
-console.log('Is rect an instance of Rectangle?',
-  rect instanceof Rectangle); // true
-console.log('Is rect an instance of Shape?',
-  rect instanceof Shape); // true
-rect.move(1, 1); // Outputs, 'Shape moved.'
-```
-
-### 类中的继承
-
-## 其他
-
-In JavaScript, functions are called **Function Objects** because they are objects. Just like objects, functions have properties and methods, they can be stored in a variable or an array, and be passed as arguments to other functions.
-
-## 参考References
-
-+ [MDN - JavaScript对象入门](https://developer.mozilla.org/zh-CN/docs/Learn/JavaScript/Objects)
-+ [w3school - JavaScript Objects](https://www.w3schools.com/js/js_object_definition.asp)
-
-**构造函数**：
-
-+ [segmentfault - js实现继承的方法中为何总是要修正constructor方法的指向呢？](https://segmentfault.com/a/1190000016147953)
-
-**原型**：
-
-+ [stackoverflow - use of 'prototype' vs 'this' in javascript](https://stackoverflow.com/questions/310870/use-of-prototype-vs-this-in-javascript)
-
-+ [stackoverflow - __proto vs prototype in javascript](https://stackoverflow.com/questions/9959727/proto-vs-prototype-in-javascript)
-
-+ [stackoverflow - defining methods via prototype vs using consturctor](https://stackoverflow.com/questions/12180790/defining-methods-via-prototype-vs-using-this-in-the-constructor-really-a-perfo)
-
-**继承**：
-
-+ [MDN - 用object.create()来实现继承](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
