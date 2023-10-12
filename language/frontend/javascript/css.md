@@ -34,6 +34,12 @@ h1 {
 
 - class selector
 
+```css
+.classname {
+    property: value;
+}
+```
+
 - id selector
 
 ```css

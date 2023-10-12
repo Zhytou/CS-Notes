@@ -9,6 +9,10 @@
   - [Props](#props)
   - [State](#state)
   - [条件渲染](#条件渲染)
+  - [导入导出](#导入导出)
+    - [命名导入导出](#命名导入导出)
+    - [默认导入导出](#默认导入导出)
+    - [混合导入导出](#混合导入导出)
 
 React组件是React应用中可重用的UI元素。它可以分为类组件或函数组件。
 
@@ -124,8 +128,151 @@ function Avatar(props) {
 }
 ```
 
+此外，除了在jsx中使用props外，还可以在return语句之前使用props。此时不需要加额外的花括号。例如：
+
+```javascript
+export default function List({ items }) {
+    // 不需要额外加大括号
+    if (items.length === 0)  return null;    
+    return (
+        <ul role="lists">
+            {items.map((item) => ( <Item {...item} /> ))}
+        </ul>
+    );
+}
+```
+
 ## State
 
 ## 条件渲染
 
 条件渲染是一种根据条件来渲染不同内容的技术。在React中，我们可以使用条件语句（如 if 和 switch）或三元运算符来实现条件渲染。条件渲染使得我们可以根据不同的情况来显示不同的内容，从而使我们的应用程序更加灵活和可定制。
+
+## 导入导出
+
+### 命名导入导出
+
+```javascript
+// 👇️ named export
+export function BigButton() {
+  return (
+    <button
+      style={{padding: '2rem 1rem'}}
+      onClick={() => console.log('big button')}
+    >
+      Big button
+    </button>
+  );
+}
+
+// 👇️ named export
+export const SmallButton = () => {
+  return (
+    <button onClick={() => console.log('small button')}>Small button</button>
+  );
+};
+```
+
+```javascript
+// 👇️ named import
+import {BigButton, SmallButton} from './another-file';
+
+export default function App() {
+  return (
+    <div>
+      <BigButton />
+      <hr />
+      <SmallButton />
+    </div>
+  );
+}
+```
+
+### 默认导入导出
+
+```javascript
+// 👇️ default export
+export default function BigButton() {
+  return (
+    <button
+      style={{padding: '2rem 1rem'}}
+      onClick={() => console.log('big button')}
+    >
+      Big button
+    </button>
+  );
+}
+
+const BigButton = () =>  {
+  return (
+    <button
+      style={{padding: '2rem 1rem'}}
+      onClick={() => console.log('big button')}
+    >
+      Big button
+    </button>
+  );
+}
+
+// 👇️ default export
+export default BigButton;
+```
+
+如果你导出一个变量（或者箭头函数）作为默认导出，你必须先声明再导出。你不能在同一行内声明变量同时默认导出变量。
+
+```javascript
+/ 👇️ default import
+import BigButton from './another-file';
+
+export default function App() {
+  return (
+    <div>
+      <BigButton />
+    </div>
+  );
+}
+```
+
+此外，当导入组件时，我们也可以使用不同的名字。
+
+### 混合导入导出
+
+```javascript
+// 👇️ default export
+export default function BigButton() {
+  return (
+    <button
+      style={{padding: '2rem 1rem'}}
+      onClick={() => console.log('big button')}
+    >
+      Big button
+    </button>
+  );
+}
+
+// 👇️ named export
+export const SmallButton = () => {
+  return (
+    <button onClick={() => console.log('small button')}>Small button</button>
+  );
+};
+```
+
+```javascript
+// 👇️ default and named imports
+import BigButton, {SmallButton} from './another-file';
+
+export default function App() {
+  return (
+    <div>
+      <BigButton />
+
+      <hr />
+
+      <SmallButton />
+    </div>
+  );
+}
+```
+
+请注意，每个文件只能有一个默认导出，但可以根据需要定义多个命名导出。
