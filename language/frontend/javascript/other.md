@@ -11,7 +11,6 @@
     - [数组解构](#数组解构)
     - [对象解构](#对象解构)
   - [展开运算符](#展开运算符)
-  - [箭头函数](#箭头函数)
 
 ## 遍历
 
@@ -129,26 +128,3 @@ console.log(bar);//"Developer"
 ## 展开运算符
 
 展开运算符允许⼀个表达式在某处展开。展开运算符在多个参数（⽤于函数调⽤）或多个元素（⽤于数组字⾯量）或者多个变量（⽤于解构赋值）的地⽅可以使⽤。
-
-## 箭头函数
-
-```javascript
-(param1, param2, …, paramN) => { statements }
-(param1, param2, …, paramN) => expression
-//相当于：(param1, param2, …, paramN) =>{ return expression; }
-
-// 当只有一个参数时，圆括号是可选的：
-(singleParam) => { statements }
-singleParam => { statements }
-
-// 没有参数的函数应该写成一对圆括号。
-() => { statements }
-
-//加括号的函数体返回对象字面量表达式：
-params => ({foo: bar})
-
-//支持剩余参数和默认参数
-(param1, param2, ...rest) => { statements }
-(param1 = defaultValue1, param2, …, paramN = defaultValueN) => {
-statements }
-```
