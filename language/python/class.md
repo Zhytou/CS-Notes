@@ -5,6 +5,7 @@
   - [构造\&析构](#构造析构)
   - [方法](#方法)
   - [访问权限](#访问权限)
+  - [继承](#继承)
 
 和其它面向对象语言类似，Python中也允许用户定义自己的类型。比如：
 
@@ -64,3 +65,46 @@ init 是初始化方法，用于设置实例的相关属性。在创建类的实
 在Python中，属性的访问权限是通过命名约定来实现的，而不是通过严格的访问控制机制。Python使用一种命名约定来表示属性的可访问性，其中以下划线开头的属性被视为私有属性，没有下划线开头的属性被视为公开属性。
 
 需要注意的是，Python的访问控制约定是基于约定而不是强制的。私有属性仍然可以被访问和修改，但强烈建议不要在类的外部直接访问私有属性。这种约定是为了建议开发者遵循良好的编程实践，以便更好地组织和维护代码。
+
+## 继承
+
+事实上，Python的继承机制十分类似Javascript，它们都是基于原型链的继承(Prototype-Based Inheritance)。但不同的是，Python使用类定义对象模板，而Javascript则使用函数。或者换一句话说，Javascript的类模板就是函数，比如：下面这段Javascript代码定义了一个名为Shape的类，其中还有一个move成员函数。
+
+``` javascript
+function Shape() {}
+
+Shape.prototype.move = function() {
+  console.log('move');
+}
+
+let a = new Shape();
+a.move(); 
+```
+
+而当我有一个名为Rectangle类希望继承于Shape类时，
+
+``` javascript
+function Rectangle() {
+  Shape.call(this); // call super constructor.
+}
+Rectangle.prototype = Object.create(Shape.prototype);
+Rectangle.prototype.constructor = Rectangle;
+
+let b = new Rectangle();
+b.move();
+```
+
+同样的两个类使用Python实现如下：
+
+```python
+class Shape:
+  def __init__(self):
+    # ....
+
+  def move(self):
+    print('move')
+  
+class Rectangle(Shape):
+  def __init__(self):
+    super().__init__()
+```
