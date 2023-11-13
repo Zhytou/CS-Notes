@@ -112,4 +112,36 @@ class Rectangle(Shape):
 
 ## 装饰器
 
-Python装饰器是一种语法糖，它的本质是将被修饰的函数作为参数，传入另一个函数
+Python装饰器是一种语法糖。它的本质是将被修饰的函数作为参数，传入另一个函数，以达到在不修改被装饰函数内部代码的前提下，修改功能，进而提高代码的可读性和封装性。比如：
+
+``` python
+def use_logging(func):
+
+    def wrapper():
+        logging.warn("%s is running" % func.__name__)
+        return func()   # 把 foo 当做参数传递进来时，执行func()就相当于执行foo()
+    return wrapper
+
+def foo():
+    print('i am foo')
+
+foo = use_logging(foo)  # 因为装饰器 use_logging(foo) 返回的时函数对象 wrapper，这条语句相当于  foo = wrapper
+foo()
+```
+
+为了进一步减少代码重复性，我们可以使用@ 符号，来省去foo=use_logging(foo)，比如：
+
+``` python
+def use_logging(func):
+
+    def wrapper():
+        logging.warn("%s is running" % func.__name__)
+        return func()   # 把 foo 当做参数传递进来时，执行func()就相当于执行foo()
+    return wrapper
+
+@ use_logging
+def foo():
+    print('i am foo')
+
+foo()
+```
