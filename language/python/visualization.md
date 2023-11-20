@@ -1,6 +1,13 @@
 # 数据可视化
 
+- [数据可视化](#数据可视化)
+  - [Matplolib](#matplolib)
+  - [Seaborn](#seaborn)
+  - [Bokeh](#bokeh)
+
 ## Matplolib
+
+**Simpe Example**:
 
 ```python
 from matplotlib import pyplot as plt
@@ -16,6 +23,17 @@ plt.show()
 ```
 
 事实上，Pandas库中的Series和DataFrame是可以直接调用plot函数的，只不过它们的plot函数也都是基于matplotlib的。
+
+**Matplotlib Backend**:
+
+Matplotlib的绘图结果可以有各种输出形式，例如常见用的将绘图结果嵌入到wxpython、pygtk、Qt等GUI窗体中，或者将绘图结果输出为图片文件，或在Web应用程序中输出绘图结果。
+
+为了便于用户实现这些不同的输出，Matplotlib在设计上对用户编写的绘图代码和对不同输出形式的处理方法进行了隔离，因此出现了前端（frontend）和后端的概念（backend）。后端可以认为就是不同输出形式的处理功能，前端可以认为就是用户所要绘制的图像。
+
+``` python
+# 使用tkagg作为后端
+plt.switch_backend('tkagg')
+```
 
 ## Seaborn
 
@@ -36,4 +54,4 @@ Figure-level 和 Axes-level API 的区别在于，Axes-level 的函数可以实�
 
 ## Bokeh
 
-Bokeh是一款交互式可视化库，可以将Python使用处理得到数据结果放在在浏览器上进行展示。
+Bokeh是一款交互式可视化库，可以将Python使用处理得到数据结果放在在浏览器上进行展示。事实上，Bokeh是通过Bokeh-JS库来在浏览器中执行交互式地图、直观的用户界面元素等。此外，还有Pandas-Bokeh，它额外提供了一些功能来使Pandas DataFrame更容易地可视化到Bokeh中，即：提供了另一种matplotlib后端。
