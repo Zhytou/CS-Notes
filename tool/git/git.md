@@ -95,6 +95,26 @@ git reset --hard [commit number]
 # undo published commits with new commits
 ```
 
+**use git submodule**:
+
+``` bash
+# Submodules allow you to keep a Git repository as a subdirectory of another Git repository.
+# initialize local configuration file
+git submodule init
+# download the existing sub repo
+git submodule update --init
+```
+
+``` txt
+# local configuration 
+[submodule "themes/ink"]
+	path = themes/ink
+	url = https://github.com/knadh/hugo-ink.git
+[submodule "themes/vitae"]
+	path = themes/vitae
+	url = https://github.com/Zhytou/hugo-vitae
+```
+
 ### How to write a good git commit message
 
 **introduction to conventional commits**:
