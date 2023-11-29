@@ -23,6 +23,32 @@
 
 ### constexpr常量
 
+**constexpr vs const**：
+
+和const要求结果不可修改不同，constexpr变量必须能在编译期求值得到结果，而constexpr函数则要求函数体内所有计算必须能在编译期完成求值。
+
+换句话说，const只保证引用期不变，但不能保证编译期求值，而constexpr则可以在编译期计算和优化，获得更高效能。
+
+**constexpr lambda**：
+
+C++17起，lambda默认为constexpr，比如：
+
+```c++
+// constexpr int fibonacci(int n);
+auto fibonacci = [](int n) {
+    int a = 0, b = 1;
+    for (int c = 0; c < n; ++ c) {
+        int t = a + b;
+        a = b;
+        b = t;
+    }
+    return a;
+};
+
+constexpr auto v = fibonacci(10);
+static_assert(v == 55)
+```
+
 ### constexpr模板常量
 
 **常量别名**：
