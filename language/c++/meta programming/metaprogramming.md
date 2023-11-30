@@ -7,6 +7,7 @@
   - [编译期运算](#编译期运算)
     - [数值计算](#数值计算)
     - [类型运算](#类型运算)
+  - [参考](#参考)
 
 **元编程定义**：
 
@@ -145,3 +146,8 @@ auto to_string(T t)
         return t;
 }
 ```
+
+## 参考
+
+- [Modern C++模板元编程](https://netcan.github.io/presentation/metaprogramming/#/)
+- [Constexpr 从11到20](https://netcan.github.io/presentation/constexpr_from_11_20/#/)
