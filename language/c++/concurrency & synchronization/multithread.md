@@ -1,76 +1,19 @@
 # C++多线程编程
 
 - [C++多线程编程](#c多线程编程)
-  - [简介](#简介)
-    - [Unix process vs Unix thread](#unix-process-vs-unix-thread)
-    - [并发 concurrency vs 并行 parallelism](#并发-concurrency-vs-并行-parallelism)
-    - [POSIX threads vs std::threads](#posix-threads-vs-stdthreads)
-    - [Lock-free vs Lock-based Thread Synchronization](#lock-free-vs-lock-based-thread-synchronization)
-    - [volatile vs atomic](#volatile-vs-atomic)
-  - [概念](#概念)
-    - [同步原语 synchronization primitive](#同步原语-synchronization-primitive)
-      - [临界区 critical section](#临界区-critical-section)
-      - [锁 lock](#锁-lock)
-      - [信号量 semaphore](#信号量-semaphore)
-      - [管程 monitor](#管程-monitor)
-      - [条件变量 condition variable](#条件变量-condition-variable)
-    - [原子操作 atomic operation](#原子操作-atomic-operation)
-  - [底层](#底层)
-  - [基础](#基础)
-    - [线程管理 Thread Management](#线程管理-thread-management)
-    - [有锁编程 Lock-based Coding](#有锁编程-lock-based-coding)
-      - [使用mutex](#使用mutex)
-      - [使用condition\_variable](#使用condition_variable)
-    - [无锁编程 Lock-free Coding](#无锁编程-lock-free-coding)
-    - [异步编程 Async Coding](#异步编程-async-coding)
-  - [实战](#实战)
+  - [有锁编程 Lock-based vs 无锁编程 Lock-free](#有锁编程-lock-based-vs-无锁编程-lock-free)
+  - [线程管理 Thread Management](#线程管理-thread-management)
+  - [有锁编程 Lock-based Coding](#有锁编程-lock-based-coding)
+    - [使用mutex](#使用mutex)
+    - [使用condition\_variable](#使用condition_variable)
+  - [无锁编程 Lock-free Coding](#无锁编程-lock-free-coding)
+  - [异步编程 Async Coding](#异步编程-async-coding)
+  - [实际应用](#实际应用)
   - [参考](#参考)
 
-## 简介
+## 有锁编程 Lock-based vs 无锁编程 Lock-free
 
-### Unix process vs Unix thread
-
-**进程process**:
-
-- 进程是资源分配的基本单位。
-
-- 一个进程就是一个正在执行程序的实例。
-- 一个进程包含了：
-  - Process ID, process group ID, user ID, and group ID
-  - Environment
-  - Working directory
-  - Program instructions
-  - Registers
-  - Stack
-  - Heap
-  - File descriptors
-  - Signal actions
-  - Shared libraries
-  - Inter-process communication tools (such as message queues, pipes, semaphores, or shared memory).
-
-**线程thread**:
-
-- 线程是独立调度的基本单元。
-- 一个线程包含了
-  - Stack pointer
-  - Registers
-  - Scheduling properties (such as policy or priority)
-  - Set of pending and blocked signals
-  - Thread specific data.
-
-### 并发 concurrency vs 并行 parallelism
-
-Concurrency and parallelism often get mixed up, but it’s important to understand the difference. In parallelism, we run multiple copies of the same program simultaneously, but they are executed on different data.
-
-For example, you could use parallelism to send requests to different websites but give each copy of the program a different set of URLs. These copies are not necessarily in communication with each other, but they are running at the same time in parallel.
-
-As we explained above, concurrent programming involves a shared memory location, and the different threads actually “read” the information provided by the previous threads.
-
-### POSIX threads vs std::threads
-
-POSIX threads是在Unix/Linux系统中广泛使用的线程API，它是由IEEE POSIX标准化组织定义的，因此可以在符合POSIX标准的系统上使用。而std::threads是C++11标准定义的线程库，只能在支持C++11标准的编译器上使用。
-
-### Lock-free vs Lock-based Thread Synchronization
+> 进程之间无法直接使用锁来实现互斥，因为进程是独立运行的系统资源单元，不同进程间没有内存空间共享的概念。
 
 **Lock-based**:
 
@@ -86,75 +29,7 @@ As the name implies, the idea is to synchronize threads without the use of locks
 
 其中，C++中的std::atomic原子操作可能是由CPU提供的原子指令来支持，也可能是由操作系统中的spinlock来支持，具体可以根据std::atomic::is_lock_free()去判断。
 
-### volatile vs atomic
-
-如果一个基本变量被volatile修饰，编译器将不会把它保存到寄存器中，而是每一次都去访问内存中实际保存该变量的位置上。
-
-## 概念
-
-### 同步原语 synchronization primitive
-
-同步原语是一种计算机编程中的基本构造，用于实现多个线程或进程之间的同步和互斥。
-
-它们可以用于协调多个线程或进程的执行顺序和访问共享资源的方式，避免不同线程或进程之间的竞争和冲突。
-
-#### 临界区 critical section
-
-在同步的程序设计中，临界区段（Critical section）或称为关键区块 ，指的是一个访问共享资源（例如：共享设备或是共享存储器）的程序片段，而这些共享资源又无法同时被多个线程访问的特性。
-
-#### 锁 lock
-
-> 关于锁更细致的介绍可以阅读我的这篇博客[南大OS学习笔记——5 并发控制：互斥](https://zhytou.top/post/2023-6-19/nju-os/)
-
-**互斥量 mutex**:
-
-互斥锁（mutex）是一种基于操作系统的同步原语，它使用了操作系统提供的系统调用来实现线程同步和互斥。互斥锁的实现通常是基于一种叫做“睡眠-唤醒”机制的方式，当一个线程需要获取锁时，如果锁已经被占用，那么这个线程会被阻塞，直到锁被释放。当锁被释放时，操作系统会唤醒等待的线程，让它们竞争锁。
-
-**自旋锁 spin lock**:
-
-自旋锁（spinlock）是一种基于忙等待的锁，它不涉及系统调用，而是使用了一种忙等待的方式来实现线程同步和互斥。当一个线程需要获取自旋锁时，如果锁已经被占用，那么这个线程会一直忙等待，直到锁被释放。自旋锁的实现通常是基于原子操作的方式，当一个线程获取锁时，它会使用原子操作来修改锁的状态，以避免并发访问锁时的数据竞争问题。
-
-**快速用户空间锁 futex**:
-
-#### 信号量 semaphore
-
-信号量又称为信号标，是一个同步对象，用于保持在0至指定最大值之间的一个计数值。
-
-在系统中，给予每一个进程一个信号量，代表每个进程目前的状态。其中，信号量为0时进程休眠；信号量大于0时进程就绪或运行。
-
-#### 管程 monitor
-
-管程是由进程、变量及数据结构等组成的一个集合，它们组成一个特殊的模块或软件包。
-
-管程提供了一种机制，线程可以临时放弃互斥访问，等待某些条件得到满足后，重新获得执行权恢复它的互斥访问。
-
-#### 条件变量 condition variable
-
-管程中机制的实现方法。
-
-> C++只提供了两种同步原语——互斥量和条件变量。
-
-### 原子操作 atomic operation
-
-原子操作：顾名思义就是不可分割的操作，该操作只存在未开始和已完成两种状态，不存在中间状态；
-
-原子类型：原子库中定义的数据类型，对这些类型的所有操作都是原子的，包括通过原子类模板`std::atomic<T>`实例化的数据类型，也都是支持原子操作的。
-
-**读-修改-写read-modify-write**是计算机科学中的一个原子操作（atomic operation，类似的还有test-and-set, fetch-and-add, compare-and-swap等），操作过程是读一个内存位置（或IO端口），修改其值，再写回原位置。
-
-**比较并交换compare and swap, CAS**是原子操作的一种，可用于在多线程编程中实现不被打断的数据交换操作，从而避免多线程同时改写某一数据时由于执行顺序不确定性以及中断的不可预知性产生的数据不一致问题。 该操作通过将内存中的值与指定数据进行比较，当数值一样时将内存中的数据替换为新的值。
-
-## 底层
-
-锁实际上能通过底层、操作系统和软件实现。
-
-- 硬件层面：CPU提供atomic的指令（lock前缀）
-- 软件层面：[Peterson‘s Algorithm](https://en.wikipedia.org/wiki/Peterson's_algorithm)实现
-- 操作系统：spin lock或者futex
-
-## 基础
-
-### 线程管理 Thread Management
+## 线程管理 Thread Management
 
 - [Youtube - Bo Qian - C++ 11 Concurrent](https://www.youtube.com/watch?v=LL8wkskDlbs&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2)
 
@@ -226,9 +101,9 @@ cout << "after std::swap(t1, t2):" << '\n'
 t1 = move(t2);
 ```
 
-### 有锁编程 Lock-based Coding
+## 有锁编程 Lock-based Coding
 
-#### 使用mutex
+### 使用mutex
 
 **std::mutex::lock() vs std::lock()**:
 
@@ -308,7 +183,7 @@ std::lock(mtx1, mtx2);
 lock_guard<mutex> lk1(mtx1, adopt_lock), lk2(mtx2, adopt_lock);
 ```
 
-#### 使用condition_variable
+### 使用condition_variable
 
 **std::condition_variable**：
 
@@ -340,7 +215,7 @@ while(!pred()) {
 }
 ```
 
-### 无锁编程 Lock-free Coding
+## 无锁编程 Lock-free Coding
 
 > 一般来说，atomic都是不可拷贝的。这是因为有些不支持原子指令的硬件平台必须要通过锁来实现原子操作，而锁又是无法拷贝的。因此，atomic是无法拷贝的
 
@@ -363,13 +238,13 @@ typedef enum memory_order {
 
 返回该变量是否无锁。无锁变量不会导致其他线程访问阻塞。
 
-### 异步编程 Async Coding
+## 异步编程 Async Coding
 
 **std::async**：
 
 **std::future**：
 
-## 实战
+## 实际应用
 
 基本使用
 
@@ -397,14 +272,6 @@ typedef enum memory_order {
 
 ## 参考
 
-**thread pthread & process**:
-
-- [A tutorial on mdern multithreadiing and concurrency in C++](https://www.educative.io/blog/modern-multithreading-and-concurrency-in-cpp)
-- [POSIX Threads Programming](https://hpc-tutorials.llnl.gov/posix/)
-- [What is a Thread?](https://hpc-tutorials.llnl.gov/posix/what_is_a_thread/)
-- [c++11 std::threads vs posix threads](https://stackoverflow.com/questions/13134186/c11-stdthreads-vs-posix-threads)
-- [陈硕关于thread or pthread的回答](https://www.zhihu.com/question/24109413/answer/26777678)
-
 **Lock free vs Lock based**:
 
 - [Lock-based vs Lock-free Thread Synchronization](https://medium.com/geekculture/lock-based-vs-lock-free-thread-synchronization-cbae710a8ab9)
@@ -423,25 +290,10 @@ typedef enum memory_order {
 
 - [Test and set lock](https://zh.wikipedia.org/wiki/%E6%A3%80%E6%9F%A5%E5%B9%B6%E8%AE%BE%E7%BD%AE)
 
-**同步原语**:
-
-- [synchronization primitives](https://stackoverflow.com/questions/8017507/definition-of-synchronization-primitive)
-- [monitor vs condition variable](https://stackoverflow.com/questions/31331724/monitor-and-conditional-variable-are-they-the-same)
-- [现代操作系统 2.3 进程间的通信](file:///D:/ZhY/Workspace/Notes/repick_note/basical/operating%20system/%E7%8E%B0%E4%BB%A3%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%20%E5%8E%9F%E4%B9%A6%E7%AC%AC4%E7%89%88[%E9%AB%98%E6%B8%85%E6%89%AB%E6%8F%8F%E7%89%88].pdf)
-
-**spin lock vs sleep lock(mutex)**:
-
-- [Synchronization Primitives](https://www.usenix.org/legacy/publications/library/proceedings/bsdcon02/full_papers/baldwin/baldwin_html/node5.html)
-
 **mutex & atomic noncopyable**:
 
 - [stackoverflow- why is mutex noncopyable or movable?](https://stackoverflow.com/questions/62369119/why-is-stdmutex-neither-copyable-nor-movable)
 - [stackoverflow- why is atomic noncopybale?](https://stackoverflow.com/questions/15249998/why-are-stdatomic-objects-not-copyable)
-
-**底层**:
-
-- [stackoverflow-how are mutexes implemented](https://stackoverflow.com/questions/1485924/how-are-mutexes-implemented)
-- [知乎-互斥锁的底层原理是什么？](https://www.zhihu.com/question/332113890)
 
 **C++11 STL**:
 
@@ -452,10 +304,6 @@ typedef enum memory_order {
 - [stackoverlfow - locking multiple mutexes](https://stackoverflow.com/questions/13483767/locking-multiple-mutexes)
 - [cppreference 17 scoped_lock](https://en.cppreference.com/w/cpp/thread/scoped_lock/scoped_lock)
 - [stackoverflow - adopt_lock vs defer_lock](https://stackoverflow.com/questions/27089434/whats-the-difference-between-first-locking-and-creating-a-lock-guardadopt-lock)
-
-**实战**：
-
-- [muduo](https://github.com/chenshuo/muduo)
 
 **无锁队列**：
 
