@@ -3,7 +3,9 @@
 - [多进程编程](#多进程编程)
   - [进程 Process](#进程-process)
   - [进程的API](#进程的api)
-  - [进程间通信](#进程间通信)
+  - [进程间通信 IPC](#进程间通信-ipc)
+    - [管道](#管道)
+    - [套接字](#套接字)
 
 ## 进程 Process
 
@@ -54,34 +56,34 @@ waitpid函数让父进程进入阻塞状态，等待指定子进程结束，然�
 int main() {
     int pid = fork();
     if (pid == -1) {
-      // 子进程创建失败
-      fprintf(stderr, "fork error: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
-    } else if (pid == 0) {
-      // 子进程execve
-      char *exec_argv[] = {}
-      // ... 
-      execve("/usr/bin/xxx", exec_argv, NULL);
-      // execve()仅执行失败返回
-      perror("execve");   
-      exit(EXIT_FAILURE);
-    } else {
-      // 父进程等待子进程结束
-      int status;
-      if (waitpid(pid, &status, 0) == -1) {
-        fprintf(stderr, "waitpid error: %s\n", strerror(errno));
+        // 子进程创建失败
+        fprintf(stderr, "fork error: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
-      }
-      if (WEXITSTATUS(status) != 0) {
-        // 子进程执行失败
-        printf("sub process error\n");
-        continue;
-      }
+    } else if (pid == 0) {
+        // 子进程execve
+        char *exec_argv[] = {}
+        // ... 
+        execve("/usr/bin/xxx", exec_argv, NULL);
+        // execve()仅执行失败返回
+        perror("execve");   
+        exit(EXIT_FAILURE);
+    } else {
+        // 父进程等待子进程结束
+        int status;
+        if (waitpid(pid, &status, 0) == -1) {
+            fprintf(stderr, "waitpid error: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        if (WEXITSTATUS(status) != 0) {
+            // 子进程执行失败
+            printf("sub process error\n");
+            continue;
+        }
     }
 }
 ```
 
-## 进程间通信
+## 进程间通信 IPC
 
 在多进程程序中，各个程序的协作通常依靠`进程间通讯IPC(Interprocess Communication)`来完成。Linux系统中，IPC被分成三大类：
 
@@ -95,3 +97,66 @@ int main() {
 - 基于同步的IPC方法
   - 信号量
   - 互斥量（一种特殊的信号量，只有锁定和非锁定两种状态）
+
+下面我们分别介绍几种常用的IPC实现方法。
+
+### 管道
+
+**pipe()**：创建一个管道，用于在两个进程间传递数据。
+
+`int pipe(int pipefd[2]);`
+
+- pipefd:用来返回管道的两端文件描述符。其中，pipefd[0]为读端，pipefd[1]为写端。
+- 创建成功返回0，失败时返回-1。
+
+```c++
+int main() {
+    // 管道文件描述符
+    int fd[2];
+    if (pipe(fd) == -1) {
+        // 创建管道失败
+        exit(EXIT_FAILURE);
+    }
+
+    int pid = fork();
+    if (pid == -1) {
+        // 子进程创建失败
+        fprintf(stderr, "fork error: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        // 关闭管道读取端，并将管道写入端重定向到标准输出
+        close(fd[0]);
+        if (dup2(fd[1], STDERR_FILENO) == -1) {
+            // 重定向失败
+            close(fd[1]);
+            exit(EXIT_FAILURE);
+        }
+        // 子进程execve
+        char *exec_argv[] = {}
+        // ... 
+        execve("/usr/bin/xxx", exec_argv, NULL);
+        // execve()仅执行失败返回
+        perror("execve");   
+        exit(EXIT_FAILURE);
+    } else {
+        // 父进程等待子进程结束
+        int status;
+        if (waitpid(pid, &status, 0) == -1) {
+            fprintf(stderr, "waitpid error: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        if (WEXITSTATUS(status) != 0) {
+            // 子进程执行失败
+            printf("sub process error\n");
+            continue;
+        }
+
+        // 关闭管道写入端，并从管道中读取数据
+        close(fd[1]);
+        FILE *fp = fdopen(fd[0], "r");
+        // ...
+    }
+}
+```
+
+### 套接字
