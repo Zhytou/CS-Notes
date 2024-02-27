@@ -130,7 +130,7 @@ auto cmp = [sz](const string& s) mutable {
 
 |                算术             |              关系           |    逻辑      |
 |---------------------------------|----------------------------|--------------|
-|`plus<Type>` `minus<Type>`           | `less<Type>` `greater<Type>`   |
+|`plus<Type>` `minus<Type>`           | `less<Type>` `greater<Type>`   | |
 
 ## 可调用对象包装器——std::function
 
