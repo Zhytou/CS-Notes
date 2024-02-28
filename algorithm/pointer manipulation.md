@@ -42,34 +42,58 @@
 
 [876 链表的中间节点](https://leetcode-cn.com/problems/middle-of-the-linked-list/)
 
-- 思路：使用快慢双指针，避免遍历两次
-- 代码：
+思路：使用快慢双指针，避免遍历两次
 
-  ``` c++
-  class Solution {
-  public:
-      ListNode* middleNode(ListNode* head) {
-          ListNode* slow = head;
-          ListNode* fast = head;
-          while (fast != NULL && fast->next != NULL) {
-              slow = slow->next;
-              fast = fast->next->next;
-          }
-          return slow;
-      }
-  };
-  ```
+``` c++
+class Solution {
+public:
+    ListNode* middleNode(ListNode* head) {
+    ListNode* slow = head;
+        ListNode* fast = head;
+        while (fast != NULL && fast->next != NULL) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        return slow;
+    }
+};
+```
 
 ### 中等题
 
+[11 盛水最多的容器](https://leetcode.cn/problems/container-with-most-water/description/)
+
+很经典的一道双指针问题，核心思路是理解每次移动容器较短边才有可能获得更大的容积。
+
+```c++
+class Solution {
+public:
+    int maxArea(vector<int>& height) {
+        int l = 0, r = height.size() - 1;
+        int ret = 0;
+        while (l < r) {
+            int h = min(height[l], height[r]);
+            ret = max(ret, (r - l) * h);
+
+            if (height[l] < height[r]) {
+                l += 1;
+            } else {
+                r -= 1;
+            }
+        }
+        return ret;
+    }
+};
+```
+
 [15 三数之和](https://leetcode-cn.com/problems/3sum/)
 
-- 简介：
-  - 这道题很经典，我当时用暴力，回溯都没有做出来，做了很多遍，最后还是看的答案
-- 思路：排序 + 双指针
-  - 排序 + 每次选数与上次不同 保证不重复
-  - 在三重循环大框架不变的前提下，在确定第一个数之后，将后两个数的确定转化为双指针确定
-- 代码：
+简介：这道题很经典，我当时用暴力，回溯都没有做出来，做了很多遍，最后还是看的答案
+
+思路：排序 + 双指针
+  
+- 排序 + 每次选数与上次不同 保证不重复
+- 在三重循环大框架不变的前提下，在确定第一个数之后，将后两个数的确定转化为双指针确定
 
   ``` c++
   class Solution {
@@ -117,8 +141,7 @@
 
 [31 下一个排列](https://leetcode.cn/problems/next-permutation/description/)
 
-- 思路:![下一个排列思路](../img/code_pointer_manipulation.png)
-- 代码：
+思路:![下一个排列思路](./img/code_pointer_manipulation.png)
 
 ``` c++
 class Solution {
@@ -141,9 +164,6 @@ class Solution {
 ```
 
 [76 最小覆盖子串](https://leetcode-cn.com/problems/minimum-window-substring/)
-
-- 思路：滑动窗口
-- 代码：
 
   ``` c++
   class Solution {
