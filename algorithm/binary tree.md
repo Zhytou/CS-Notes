@@ -362,6 +362,39 @@ public:
   };
   ```
 
+[450 删除二叉搜索树中的节点](https://leetcode.cn/problems/delete-node-in-a-bst/description/)
+
+思路：递归 + Morris遍历的思想（当root节点值为待删除值时，需要找到继任节点，即：大于它的最小节点或小于他的最大节点，二者交换位置，递归删除，才不会破坏二叉树结构。其中，寻找继任节点使用了Morris遍历的思想）
+
+```c++
+class Solution {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if (root == nullptr) {
+            return nullptr;
+        }
+        if (root->val == key) {
+            if (root->left == nullptr) {
+                return root->right;
+            } else if (root->right == nullptr) {
+                return root->left;
+            }
+            auto max_left = root->left;
+            while (max_left->right != nullptr) {
+                max_left = max_left->right;
+            }
+            swap(max_left->val, root->val);
+            root->left = deleteNode(root->left, key);
+        } else if (root->val > key) {
+            root->left = deleteNode(root->left, key);
+        } else {
+            root->right = deleteNode(root->right, key);
+        }
+        return root;
+    }
+};
+```
+
 **难题**:
 
 [297 序列化与反序列化二叉树](https://leetcode-cn.com/problems/serialize-and-deserialize-binary-tree/)
