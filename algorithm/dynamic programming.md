@@ -8,6 +8,7 @@
     - [01背包问题](#01背包问题)
     - [完全背包问题](#完全背包问题)
     - [股票问题](#股票问题)
+    - [树形DP](#树形dp)
     - [子序列问题](#子序列问题)
     - [博弈策略问题](#博弈策略问题)
     - [其他](#其他)
@@ -84,6 +85,9 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
   - [309 买卖股票的最佳时机含冷冻期](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
   - [713 买卖股票的最佳时机含手续费](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/)
 - 打家劫舍问题
+- 树形dp/换根dp
+  - [834 树中距离之和](https://leetcode.cn/problems/sum-of-distances-in-tree/description/)
+  - [2581 统计可能的树根数目](https://leetcode.cn/problems/count-number-of-possible-root-nodes/description/)
 - 路线
   - [62 不同的路径](https://leetcode.cn/problems/unique-paths/description/)
   - [63 不同的路径Ⅱ](https://leetcode.cn/problems/unique-paths-ii/)
@@ -109,6 +113,7 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
 
 - 一维dp
 - 二维dp
+- 树形dp
 
 ## 经典例题
 
@@ -390,6 +395,71 @@ public:
 ```
 
 [188 买卖股票的最佳时机Ⅳ](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/)
+
+### 树形DP
+
+[2581 统计可能的树根数目](https://leetcode.cn/problems/count-number-of-possible-root-nodes/description/)
+
+本题如果只求以0为根时的猜对次数cnt0，把guesses转成哈希表，DFS一次这棵树就可以算出来。
+
+如果枚举0到n−1的每个点作为树根，就需要DFS n次，需要O(n2)的时间，怎么优化呢？
+
+注意到，如果节点x和节点y相邻，那么从「以x为根的树」变成「以y为根的树」，就只有x和y的父子关系改变了，其余相邻节点的父子关系没有变化。所以只有 [x,y]和[y,x]这两个猜测的正确性变了，其余猜测的正确性不变。
+
+因此，在计算出cnt0后，我们可以再次从0出发，DFS这棵树。从节点x递归到节点y时：
+
+如果有猜测 [x,y]，那么猜对次数减一。
+如果有猜测 [y,x]，那么猜对次数加一。
+
+DFS 的同时，统计猜对次数≥k 的节点个数，即为答案。
+
+```c++
+class Solution {
+public:
+    using ll = long long;
+    int rootCount(vector<vector<int>>& edges, vector<vector<int>>& guesses, int k) {
+        int n = edges.size() + 1;
+        vector<vector<int>> g(n);
+        unordered_set<ll> st;
+        for (auto &v : edges) {
+            g[v[0]].push_back(v[1]);
+            g[v[1]].push_back(v[0]);
+        }
+        auto h = [&](int x, int y) -> ll {
+            return (ll) x << 20 | y;
+        };
+        for (auto &v : guesses) {
+            st.insert(h(v[0], v[1]));
+        }
+
+        int cnt = 0, res = 0;
+        function<void(int, int)> dfs = [&](int x, int fat) -> void {
+            for (auto &y : g[x]) {
+                if (y == fat) {
+                    continue;
+                }
+                cnt += st.count(h(x, y));
+                dfs(y, x);
+            }
+        };
+        dfs(0, -1);
+
+        function<void(int, int, int)> redfs = [&](int x, int fat, int cnt) {
+            if (cnt >= k) {
+                res++;
+            }
+            for (auto &y : g[x]) {
+                if (y == fat) {
+                    continue;
+                }
+                redfs(y, x, cnt - st.count(h(x, y)) + st.count(h(y, x)));
+            }
+        };
+        redfs(0, -1, cnt);
+        return res;
+    }
+};
+```
 
 ### 子序列问题
 
