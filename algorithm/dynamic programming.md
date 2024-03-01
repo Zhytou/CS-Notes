@@ -1,27 +1,29 @@
 # 动态规划
 
 - [动态规划](#动态规划)
-  - [基础概念](#基础概念)
-    - [常用解法](#常用解法)
-    - [题型分类](#题型分类)
+  - [常用解法](#常用解法)
+    - [01背包](#01背包)
+    - [完全背包](#完全背包)
+  - [题型分类](#题型分类)
+    - [一维dp](#一维dp)
+    - [二维dp](#二维dp)
+    - [树形dp](#树形dp)
   - [经典例题](#经典例题)
     - [01背包问题](#01背包问题)
     - [完全背包问题](#完全背包问题)
     - [股票问题](#股票问题)
-    - [树形DP](#树形dp)
+    - [树形DP](#树形dp-1)
     - [子序列问题](#子序列问题)
     - [博弈策略问题](#博弈策略问题)
     - [其他](#其他)
-
-## 基础概念
 
 动态规划的题目分为两大类，一种是求最优解类，典型问题是背包问题，另一种就是计数类，比如典型的统计可行方案数量，它们都存在一定的递推性质。
 
 前者的递推性质还有一个名字，叫做 「最优子结构」 ——即当前问题的最优解取决于子问题的最优解，后者类似，当前问题的方案数取决于子问题的方案数。所以在遇到求方案数的问题时，我们可以往动态规划的方向考虑。
 
-### 常用解法
+## 常用解法
 
-01背包：
+### 01背包
 
 **问题描述**：
 
@@ -59,15 +61,15 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
 
 注意：使用压缩解法的时候，需要倒序遍历，否则小容量背包的dp值会被先覆盖。
 
-完全背包：
+### 完全背包
 
 完全背包和01背包问题唯一不同的地方就是，每种物品有无限件。
 
 完全背包问题需要注意先遍历物品还是背包，例子可以参考[518 零钱兑换Ⅱ](https://leetcode.cn/problems/coin-change-ii/description/)。
 
-### 题型分类
+## 题型分类
 
-按内容
+按**内容**，可以分为背包问题、子序列问题、股票问题、路线问题以及较为特殊的博弈和树形问题。
 
 - 01 背包问题
   - [416 分割等和的子集](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
@@ -99,9 +101,11 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
     - [1143 最长公共子序列](https://leetcode.cn/problems/longest-common-subsequence/description/)
   - 连续
     - [53 最大子序列和](https://leetcode.cn/problems/maximum-subarray/)
+    - [152 最大子数组乘积](https://leetcode.cn/problems/maximum-product-subarray/description/)
     - [674 最长连续递增序列](https://leetcode.cn/problems/longest-continuous-increasing-subsequence/description/)
     - [718 最长重复子数组](https://leetcode.cn/problems/maximum-length-of-repeated-subarray/description/)
-  - 编辑距离
+  - 其他
+    - [72 编辑距离](https://leetcode.cn/problems/edit-distance/description/)
 - 博弈策略问题
   - [486 预测赢家](https://leetcode.cn/problems/predict-the-winner/)
   - [877 石子游戏](https://leetcode.cn/problems/stone-game/description/)
@@ -109,11 +113,33 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
   - [96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
   - [1130 叶值的最小代价生成树](https://leetcode.cn/problems/minimum-cost-tree-from-leaf-values/description/)
 
-按解法
+按**解法**，可以分为一维dp、二维dp和树形dp等。
 
-- 一维dp
-- 二维dp
-- 树形dp
+### 一维dp
+
+最简单的一维dp，转移方程如下：
+
+```c++
+dp[i] = max(nums[i], dp[i-1]+nums[i]);
+```
+
+上述转移方程也是[53 最大子序列和](https://leetcode.cn/problems/maximum-subarray/)这道题的解答方法。其中最常见的变式，就是引入除了`dp[i-1]`之外的另一个状态，比如[152 最大子数组乘积](https://leetcode.cn/problems/maximum-product-subarray/description/)，就需要分别使用`dp[i][1]` 和`dp[i][0]`表示：以 nums[i] 结尾的连续子序列的乘积的最大值和最小值。
+
+### 二维dp
+  
+最常见的二维dp转移方程如下，这也是1035和1143这两道题的解法：
+
+```c++
+if (text1[i] == text[j]) {
+  dp[i][j] = dp[i - 1][j - 1] + 1;
+} else {
+  dp[i][j] = max(dp[i][j - 1], dp[i - 1][j]);
+}
+```
+
+### 树形dp
+
+树形dp，也称为换根dp，其详细介绍可以参考[这篇文章](https://leetcode.cn/problems/sum-of-distances-in-tree/solutions/2345592/tu-jie-yi-zhang-tu-miao-dong-huan-gen-dp-6bgb/)。
 
 ## 经典例题
 
@@ -463,9 +489,61 @@ public:
 
 ### 子序列问题
 
+[72 编辑距离](https://leetcode.cn/problems/edit-distance/description/)
+
+又一道非常经典的二维dp，主要难点需要理解其转移方程：
+
+- `dp[i][j]`表示word1 0到i的序列，转换到word2 0到j的序列需要的步数，比如：当word1 = "horse", word2 = "ros"，`dp[0][0]`就表示"h"到"r"的转移步数。
+- 当`word1[i]==word2[j]`时，`dp[i][j]=min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1[j-1]])`，反之，`dp[i][j]=min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1[j-1]]+1)`；
+- 其中，`dp[i-1][j]和dp[i][j-1]`始终需要加1是因为其和末尾是否相等无关。
+
+```c++
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        if (word2.empty()) {
+            return word1.size();
+        }
+        if (word1.empty()) {
+            return word2.size();
+        }
+        vector<vector<int>> dp(word1.size(), vector<int>(word2.size()));
+        for (int k = 0; k < word1.size() + word2.size() - 1; k++) {
+            for (int i = 0; i <= min(k, (int)word1.size() - 1); i++) {
+                int j = k - i;
+                if (j > word2.size() - 1) {
+                    continue;
+                }
+                if (i > 0 && j > 0) {
+                    dp[i][j] = min(dp[i - 1][j], dp[i][j - 1]) + 1;
+                    dp[i][j] = min(dp[i][j], dp[i-1][j-1] + (word1[i] == word2[j] ? 0 : 1));
+                } else if (i > 0) {
+                    dp[i][j] = min(dp[i-1][j]+1, word1[i] == word2[j] ? i : i+1);
+                } else if (j > 0) {
+                    dp[i][j] = min(dp[i][j-1]+1, word1[i] == word2[j] ? j : j+1);
+                } else {
+                    dp[i][j] = word1[i] == word2[j] ? 0 : 1;
+                }
+            }
+        }
+
+        // for (int i = 0; i < dp.size(); i++) {
+        //     for (int j = 0; j < dp[0].size(); j++)
+        //         cout << dp[i][j] << ' ';
+        //     cout << endl;
+        // }
+        return dp[word1.size()-1][word2.size()-1];
+    }
+};
+```
+
+[152 最大子数组乘积](https://leetcode.cn/problems/maximum-product-subarray/description/)
+
+
+
 [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
 
-代码：
+这道题非常经典，除了可以使用常规的动态规划之外，还能使用贪心+二分查找的方法进一步降低时间复杂度。
 
 ``` c++
 class Solution {
