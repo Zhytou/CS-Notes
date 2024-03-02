@@ -23,79 +23,112 @@
 
 ### 深度优先
 
-> 当然树的深度优先遍历也可以用stack加set的传统方式实现，不过一般都按照先序、中序和后序划分和实现
+当然树的深度优先遍历也可以用stack加set的传统方式实现，实现如下：
 
-- 分类
-  - 先序遍历
-    - 先根节点，后左右子树
-  - 中序遍历
-    - 先左子树，接着根节点，最后右子树
-  - 后序遍历
-    - 先左右子树，后根节点
+```c++
+void dfs(TreeNode* root) {
+  stack<TreeNode*> stk;
+  set<TreeNode*> visited;
 
-- 实现
-  - 递归型
-    - 代码：
-  
-    ``` c++
-    // 以中序遍历为例
-    void inorder(TreeNode* root, vector<int> seq){
-        if (root == nullptr)
-          return ;
-        
-        inorder(root->left);
-        seq.push_back(seq);
-        inorder(root->right);
-        return ;
+  visited.insert(nullptr);
+  stk.push(root);
+  while (!stk.empty()) {
+    auto node = stk.top();
+
+    if (!node) {
+      continue;
     }
-    ```
+
+    if (!visited.count(node->left)) {
+      stk.push(node->left);
+    } else if (!visited.count(node->right)) {
+      stk.push(node->right);
+    } else {
+      visited.insert(node);
+      stk.pop();
+    }
+  }
+}
+```
+
+有些时候，题目会使用描述图的方式来定义树节点之间的关系，比如：使用邻近矩阵描述树中每个节点之间的边情况，此时就更适合使用递归的方式来进行深度优先遍历，比如[2368 受限条件中可到达的节点数量](https://leetcode.cn/problems/reachable-nodes-with-restrictions/solutions/2662538/shu-shang-dfspythonjavacgojsrust-by-endl-0r3a/)就使用了这种方法遍历。其模板代码如下：
+
+```c++
+void dfs(int x, int father) {
+  for (auto y : adj[x]) {
+    if (y != father) {
+      dfs(y, x);
+    }
+  }
+}
+```
+
+除此之外，树的深度优先遍历还可以按照先序、中序和后序划分和实现，它们各自的含义如下：
+
+- 先序遍历：先根节点，后左右子树
+- 中序遍历：先左子树，接着根节点，最后右子树
+- 后序遍历：先左右子树，后根节点
+
+而其实现又可以分为递归遍历和Morris遍历，具体如下：
+
+**递归型**：
+
+``` c++
+// 以中序遍历为例
+void inorder(TreeNode* root, vector<int> seq){
+  if (root == nullptr)
+    return ;
+    
+  inorder(root->left);
+  seq.push_back(seq);
+  inorder(root->right);
+  return ;
+}
+```
+
+**非递归型**（Mirrors遍历：既不用递归调用，也不用栈——传统dfs遍历方法，极大的优化了空间复杂度）
   
-  - 非递归型（Mirrors遍历：既不用递归调用，也不用栈——传统dfs遍历方法，极大的优化了空间复杂度）
-    - 简介：
-      - Mirros遍历是一种节省空间复杂度的方法。
-      - 它将叶子节点上的空指针利用起来，指向父节点，当再次遍历到这个节点的时候再修改回来，这样最后二叉树的结构也没有发生改变
-    - 变量：
-      - curr：当前遍历指针；
-      - rightMost：curr节点左子树的最右边节点
-  
-    - 流程：
-      - 如果curr左子树为空，curr向右移
-      - 如果curr左子树不为空，找到rightMost
-        - 如果rightMost.right为空，那么令rightMost为curr，curr左移
-        - 否则，rightMost.right不为空说明rightMost曾被修改过，我们是第二次来到这个节点，那么令curr为rightMost.right，令rightMost.right为空
-  
-    - 图示：
-      ![非递归遍历](../img/code_binary_tree_mirrors_traversal.jpg)
-  
-    - 代码：
-  
-    ``` c++
-    //以中序遍历为例
-    void inorder(TreeNode* root, vector<int> seq) {
-        TreeNode* curr = root;
-        while(curr != null) {
-            TreeNode* rightMost = curr;
-            if (curr->left == nullptr) {
-                seq.push_back(curr->val);
-                curr = curr->right;
-            }
-            else {
-                rightMost = curr->left;
-                while (rightMost->right != nullptr && rightMost->right != curr) {
-                  rightMost = rightMost->right;
-                }
+Mirros遍历是一种节省空间复杂度的方法。它将叶子节点上的空指针利用起来，指向父节点，当再次遍历到这个节点的时候再修改回来，这样最后二叉树的结构也没有发生改变。其具体实现代码如下：
+
+``` c++
+//以中序遍历为例
+void inorder(TreeNode* root, vector<int> seq) {
+  TreeNode* curr = root;
+  while(curr != null) {
+    TreeNode* rightMost = curr;
+    if (curr->left == nullptr) {
+      seq.push_back(curr->val);
+      curr = curr->right;
+    } else {
+      rightMost = curr->left;
+      while (rightMost->right != nullptr && rightMost->right != curr) {
+        rightMost = rightMost->right;
+      }
                 
-                if (rightMost->right == nullptr) {
-                  rightMost->right = curr;
-                  curr = curr->left;
-                }
-                else {
-                  rightMost->left = nullptr;
-                }
-            }
-        }
+      if (rightMost->right == nullptr) {
+        rightMost->right = curr;
+        curr = curr->left;
+      } else {
+        rightMost->left = nullptr;
+      }
     }
-    ```
+  }
+}
+```
+
+变量：
+
+- curr：当前遍历指针；
+- rightMost：curr节点左子树的最右边节点
+  
+流程：
+
+- 如果curr左子树为空，curr向右移
+- 如果curr左子树不为空，找到rightMost
+- 如果rightMost.right为空，那么令rightMost为curr，curr左移
+- 否则，rightMost.right不为空说明rightMost曾被修改过，我们是第二次来到这个节点，那么令curr为rightMost.right，令rightMost.right为空
+  
+图示：![非递归遍历](./img/code_binary_tree_mirrors_traversal.jpg)
 
 ### 广度优先
 
@@ -398,3 +431,107 @@ public:
 **难题**:
 
 [297 序列化与反序列化二叉树](https://leetcode-cn.com/problems/serialize-and-deserialize-binary-tree/)
+
+```c++
+// DFS解法
+class Codec {
+public:
+    // Encodes a tree to a single string.
+    string serialize(TreeNode* root) {
+        if(root==nullptr){
+            return "#";
+        }
+        return to_string(root->val) + ' ' + serialize(root->left) + ' ' + serialize(root->right);
+    }
+
+    TreeNode* mydeserialize(istringstream &ss ){
+        string tmp;
+        ss>>tmp;
+        if(tmp=="#"){
+            return nullptr;
+        }
+        TreeNode* node = new TreeNode(stoi(tmp));
+        node->left = mydeserialize(ss);
+        node->right = mydeserialize(ss);
+        return node;
+    }
+
+    // Decodes your encoded data to tree.
+    TreeNode* deserialize(string data) {
+        istringstream ss(data);
+        return mydeserialize(ss);
+    }
+};
+
+// BFS解法
+class Codec {
+public:
+
+    // Encodes a tree to a single string.
+    string serialize(TreeNode* root) {
+        string seq;
+        queue<TreeNode*> q;
+        q.push(root);
+        while(!q.empty()) {
+            for (int k = q.size(); k > 0; k--) {
+                auto node = q.front();
+                q.pop();
+                if (node == nullptr) {
+                    seq.push_back('*');
+                    seq.push_back(' ');
+                    continue;
+                }
+                seq += to_string(node->val);
+                seq.push_back(' ');
+                q.push(node->left);
+                q.push(node->right);
+            }
+        }
+        return seq;
+    }
+
+    // Decodes your encoded data to tree.
+    TreeNode* deserialize(string data) {
+        // cout << data << endl;
+        if (data[0]=='*') {
+            return nullptr;
+        }
+        TreeNode* root = nullptr;
+        queue<TreeNode*> q;
+
+        int i = 0;
+        int two = 0;
+        while (i < data.size()) {
+            int j = i;
+            while (j < data.size() && data[j] != ' ') {
+                j += 1;
+            }    
+            TreeNode* node = nullptr;
+            if (j - i != 1 || data[i] != '*') {
+                int val = stoi(data.substr(i, j - i));
+                node = new TreeNode(val);
+                if (root == nullptr) {
+                    root = node;
+                }            
+            }
+            while (!q.empty() && q.front() == nullptr) {
+                q.pop();
+            }
+            if (!q.empty()) {
+                if (two == 0) {
+                    q.front()->left = node;
+                    two = 1;
+                } else {
+                    q.front()->right = node;
+                    q.pop();
+                    two = 0;
+                }
+            }
+            q.push(node);
+            
+            i = j + 1;
+        }
+        return root;
+    }
+};
+```
