@@ -424,6 +424,48 @@ public:
 
 ### 树形DP
 
+[834 树中距离之和](https://leetcode.cn/problems/sum-of-distances-in-tree/description/)
+
+一道很经典的换根dp问题，除了要知道使用换根dp之外，还要能够找出转移方程，尤其是问题中答案和每个子树大小的关系。
+
+```c++
+class Solution {
+public:
+    vector<int> sumOfDistancesInTree(int n, vector<vector<int>> &edges) {
+        vector<vector<int>> g(n); // g[x] 表示 x 的所有邻居
+        for (auto &e: edges) {
+            int x = e[0], y = e[1];
+            g[x].push_back(y);
+            g[y].push_back(x);
+        }
+
+        vector<int> ans(n);
+        vector<int> size(n, 1); // 注意这里初始化成 1 了，下面只需要累加儿子的子树大小
+        function<void(int, int, int)> dfs = [&](int x, int fa, int depth) {
+            ans[0] += depth; // depth 为 0 到 x 的距离
+            for (int y: g[x]) { // 遍历 x 的邻居 y
+                if (y != fa) { // 避免访问父节点
+                    dfs(y, x, depth + 1); // x 是 y 的父节点
+                    size[x] += size[y]; // 累加 x 的儿子 y 的子树大小
+                }
+            }
+        };
+        dfs(0, -1, 0); // 0 没有父节点
+
+        function<void(int, int)> reroot = [&](int x, int fa) {
+            for (int y: g[x]) { // 遍历 x 的邻居 y
+                if (y != fa) { // 避免访问父节点
+                    ans[y] = ans[x] + n - 2 * size[y];
+                    reroot(y, x); // x 是 y 的父节点
+                }
+            }
+        };
+        reroot(0, -1); // 0 没有父节点
+        return ans;
+    }
+};
+```
+
 [2581 统计可能的树根数目](https://leetcode.cn/problems/count-number-of-possible-root-nodes/description/)
 
 本题如果只求以0为根时的猜对次数cnt0，把guesses转成哈希表，DFS一次这棵树就可以算出来。
@@ -538,8 +580,6 @@ public:
 ```
 
 [152 最大子数组乘积](https://leetcode.cn/problems/maximum-product-subarray/description/)
-
-
 
 [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
 

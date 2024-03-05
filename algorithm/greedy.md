@@ -42,9 +42,13 @@
 
 ### 题型分类
 
+- 跳跃游戏
+  - [45 跳跃游戏Ⅱ](https://leetcode.cn/problems/jump-game-ii/description/)
+  - [55 跳跃游戏](https://leetcode.cn/problems/jump-game/)
 - 区间问题
   - [435 无重叠区间](https://leetcode.cn/problems/non-overlapping-intervals/)
   - [452 用最少的箭射爆气球](https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/)
+  - [763 划分字母区间](https://leetcode.cn/problems/partition-labels/description/)
   - [1326 灌溉花园的水龙头最少数目](https://leetcode.cn/problems/minimum-number-of-taps-to-open-to-water-a-garden/description/)
 - 最长子序列
   - [300 最长的递增序列](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
@@ -114,6 +118,29 @@ class Solution {
     }
     return step;
   }
+};
+```
+
+[55 跳跃游戏](https://leetcode.cn/problems/jump-game/)
+
+从右至左遍历，如果能跳到target位置即代表能跳到末尾，不断更新target的值即可。
+
+```c++
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        if (nums.empty() || nums.size() == 1) 
+            return true;
+        
+        int target = nums.size() - 1;
+        for (int i = nums.size()-2; i >= 0; i--) {
+            if (i+nums[i] >= target) {
+                target = i;
+            }
+        }
+
+        return target == 0;
+    }
 };
 ```
 
