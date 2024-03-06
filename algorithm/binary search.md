@@ -6,6 +6,7 @@
     - [算法](#算法)
     - [实现](#实现)
     - [注意](#注意)
+    - [常见问题](#常见问题)
   - [经典题目](#经典题目)
     - [基础题](#基础题)
     - [中等题](#中等题)
@@ -74,8 +75,36 @@ int binarySearch(const vector<int>& nums, int target) {
 - 跳出循环的条件同样也有两种：
   - `while (left < right)`，`right`初始化为`nums.size()`
   - `while (left <= right)`，`right`初始化为`nums.size()-1`
+  - 此外，为了避免特殊情况，上述两种跳出边界的方法，还需要分别进行特例晒出。前者只需检验=0时，后者则需要检验0和`nums.size()-1`
 
 时间复杂度为`O(logn)`
+
+### 常见问题
+
+- 最普通的：查找某个target是否存在于某个元素互不相同的有序数组中。
+  - 比如：[74 搜索二维矩阵](https://leetcode.cn/problems/search-a-2d-matrix/description/)
+- 重复变式：有序数组中元素可能相同。
+  - 比如：[34 在排序数组中查找元素的第一个位置和第二个位置](https://leetcode-cn.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
+- 排序变式：有序数组发生旋转，出现山峰。
+  - 比如：[33 搜索选择排序数组](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)、[153 寻找旋转排序数组中的最小值](https://leetcode.cn/problems/find-minimum-in-rotated-sorted-array/description/)
+  - 理解这一类型题目的关键在于：明白二分搜索必须发生在一个排序数组中，也就是说旋转排序中使用二分搜索，必须每次找出分割得到的两个区间，哪一个是完全升序的。
+  - 换句话说，每次使用left和right计算出mid，并用`nums[mid]`和`nums[0]`进行比较，即下面代码
+
+```c++
+        if (nums[0] <= nums[mid]) {
+            if (nums[0] <= target && target < nums[mid]) {
+                r = mid - 1;
+            } else {
+                l = mid + 1;
+            }
+        } else {
+            if (nums[mid] < target && target <= nums[n - 1]) {
+                l = mid + 1;
+            } else {
+                r = mid - 1;
+            }
+        }
+```
 
 ## 经典题目
 
@@ -189,8 +218,47 @@ int binarySearch(const vector<int>& nums, int target) {
 
 [33 搜索选择排序数组](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
 
-- 思路：
-- 代码：
+理解这道题的关键就是明白这几点：
+
+- 只有在顺序区间内才可以通过区间两端的数值判断target是否在其中。
+- 判断顺序区间还是乱序区间，只需要对比 left 和 right 是否是顺序对即可，left <= right，顺序区间，否则乱序区间。
+- 每次二分都会至少存在一个顺序区间。（感谢@Gifted VVilburgiX补充）
+
+通过不断的用Mid二分，根据定理二，将整个数组划分成顺序区间和乱序区间，然后利用定理一判断target是否在顺序区间，如果在顺序区间，下次循环就直接取顺序区间，如果不在，那么下次循环就取乱序区间。
+
+```c++
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        int n = (int)nums.size();
+        if (!n) {
+            return -1;
+        }
+        if (n == 1) {
+            return nums[0] == target ? 0 : -1;
+        }
+        int l = 0, r = n - 1;
+        while (l <= r) {
+            int mid = (l + r) / 2;
+            if (nums[mid] == target) return mid;
+            if (nums[0] <= nums[mid]) {
+                if (nums[0] <= target && target < nums[mid]) {
+                    r = mid - 1;
+                } else {
+                    l = mid + 1;
+                }
+            } else {
+                if (nums[mid] < target && target <= nums[n - 1]) {
+                    l = mid + 1;
+                } else {
+                    r = mid - 1;
+                }
+            }
+        }
+        return -1;
+    }
+};
+```
 
 [162 寻找峰值](https://leetcode-cn.com/problems/find-peak-element/)
 
