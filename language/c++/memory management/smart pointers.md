@@ -2,6 +2,7 @@
 
 - [智能指针](#智能指针)
   - [shared\_ptr](#shared_ptr)
+    - [make\_shared](#make_shared)
     - [实现自己的shared\_ptr](#实现自己的shared_ptr)
   - [unique\_ptr](#unique_ptr)
   - [weak\_ptr](#weak_ptr)
@@ -24,9 +25,20 @@
 
 `std::shared_ptr<T>`是一种智能指针，它能够记录多少个`std::shared_ptr<T>`共同指向一个对象，从而消除显式的调用delete，当引用计数变为零的时候就会将对象自动删除。
 
+### make_shared
+
 但还不够，因为使用`std::shared_ptr<T>`仍然需要使用new来调用，这使得代码出现了某种程度上的不对称。
 
 `std::make_shared`就能够用来消除显式的使用new，所以`std::make_shared`会分配创建传入参数中的对象， 并返回这个对象类型的`std::shared_ptr<T>`指针。
+
+```c++
+// 使用make_shared
+auto p = make_shared<type>(args); 
+
+// 等价于以下两步操作
+type *raw = new type(args);
+shared_ptr<type> p(raw); 
+```
 
 ### 实现自己的shared_ptr
 
