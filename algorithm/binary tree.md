@@ -132,33 +132,28 @@ void inorder(TreeNode* root, vector<int> seq) {
 
 ### 广度优先
 
-- 层序遍历
-  - 按层遍历
-  - 模板代码
+``` c++
+vector<vector<int>> levelTraversal (TreeNode* root) {
+  vector<vector<int>> levels;
+  queue<TreeNode*> trace;
 
-    ``` c++
-    vector<vector<int>> levelTraversal (TreeNode* root) {
-      vector<vector<int>> levels;
-      queue<TreeNode*> trace;
-
-      trace.push(root);
-      while(!trace.empty()) {
-        vector<int> level; 
-        for (int i = trace.size(); i > 0; i--) {
-          auto p = trace.front();
-          trace.pop();
-          if (p == nullptr)
-          continue;
-          level.push_back(p->val);
-          trace.push(p->left);
-          trace.push(p->right);
-        }
-        level.push_back(level);
-      }
-      return levels;
+  trace.push(root);
+  while(!trace.empty()) {
+    vector<int> level; 
+    for (int i = trace.size(); i > 0; i--) {
+      auto p = trace.front();
+      trace.pop();
+      if (p == nullptr)
+        continue;
+      level.push_back(p->val);
+      trace.push(p->left);
+      trace.push(p->right);
     }
-    
-    ```
+    level.push_back(level);
+  }
+  return levels;
+}    
+```
 
 ## 经典题目
 
@@ -287,7 +282,48 @@ public:
 };
 ```
 
-[129 求根节点到叶节点数字之和](https://leetcode-cn.com/problems/sum-root-to-leaf-numbers/)
+[117 填充每个节点的下一个右侧节点指针Ⅱ](https://leetcode.cn/problems/populating-next-right-pointers-in-each-node-ii/description/)
+
+除了显而易见的层序遍历解法之外，这道题还可以使用递归的方法解决。具体流程是，使用当前节点的next指针确认当前节点左右子树的右侧节点，接着递归右子树，再递归左子树即可。
+
+```c++
+class Solution {
+public:
+    Node* connect(Node* root) {
+        if (!root) {
+            return nullptr;
+        }
+
+        Node *right_next = nullptr, *left_next = nullptr;
+
+        auto parent_next = root->next;
+        while (parent_next && parent_next->left == nullptr && parent_next->right == nullptr) {
+            parent_next = parent_next->next;
+        }
+
+        if (root->right) {
+            left_next = root->right;
+            if (parent_next) {
+                right_next = parent_next->left ? parent_next->left : parent_next->right;
+            }
+        } else if (parent_next) {
+            left_next = parent_next->left ? parent_next->left : parent_next->right;
+        }
+
+        if (root->left) {
+            root->left->next = left_next;
+        }
+        if (root->right) {
+            root->right->next = right_next;
+        }
+        // 一定要先连右子树才可以，否则连接左子树时会使用未连接好的右子树next指针
+        connect(root->right);
+        connect(root->left);
+
+        return root;
+    }
+};
+```
 
 [173 二叉树迭代器](https://leetcode.cn/problems/binary-search-tree-iterator/description/)
 

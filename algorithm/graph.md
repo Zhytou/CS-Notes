@@ -39,9 +39,111 @@
 
 ### 遍历
 
-- 深度优先 Depth First Search
-- 广度优先 Breadth First Search
-  - 双向广度优先遍历 Bidirectional Breadth First Search（当起点和终点已知时，使用这种方法可以提高效率）
+**深度优先 Depth First Search**:
+
+```c++
+void dfs(const vector<vector<int>>& adj) {
+    stack<int> stk;
+    set<int> visited;
+
+    stk.push(0);
+    while (!stk.empty()) {
+        int i = stk.top();
+        visited.insert(i);
+        int j = -1;
+        for (auto ni : adj[i]) {
+            if (visited.count(ni) == 0){
+                j = ni;
+                break;
+            }
+        }
+        if (j == -1) {
+            stk.pop();
+        }
+    }   
+}
+```
+
+除了使用栈进行dfs遍历之外，更常见的方法是使用递归进行dfs遍历，比如：
+
+```c++
+void dfs(const vector<vector<int>>& adj, int x, int father) {
+  for (auto y : adj[x]) {
+    if (y != father) {
+      dfs(adj, y, x);
+    }
+  }
+}
+```
+
+**广度优先 Breadth First Search**:
+
+``` c++
+void bfs (const vector<vector<int>>& adj) {
+    set<int> visited;
+    queue<int> q;
+
+    q.push(0);
+    while(!q.empty()) {
+        for (int k = q.size(); k > 0; k--) {
+            int i = q.front();
+            visited.insert(i);
+            q.pop();
+            for (int j : adj[i]) {
+                if (visited.count(j) == 0) {
+                    q.push(j);
+                }
+            }
+        }
+    }
+}
+```
+
+**双向广度优先遍历Bidirectional Breadth First Search**：
+
+当起点和终点已知时，使用BBFS可以提高搜索效率，避免算法超时，比如这道题[752 打开转盘锁](https://leetcode.cn/problems/open-the-lock/description/)就使用了BBFS。
+
+```c++
+void bbfs(const vector<vector<int>>& adj, int s, int t) {
+    queue<int> q1, q2;
+    map<int, int> m1, m2;
+
+    // 只有两个队列都不空，才有必要继续往下搜索
+    // 如果其中一个队列空了，说明从某个方向搜到底都搜不到该方向的目标节点
+    // 例如，如果q1为空，说明从起点搜索到底都搜索不到终点，那么反向搜索也没必要进行了
+    q1.push(s);
+    q2.push(t);
+    m1[s] = 1;
+    m2[t] = 1;
+    while (!q1.empty() && q2.empty()) {
+        int ret = -1;
+        if (q1.size() <= q2.size()) {
+            ret = update(adj, q1, m1, m2);
+        } else {
+            ret = update(adj, q2, m2, m1);
+        }
+        if (ret != -1) {
+            return ret;
+        }
+    }
+    return ret;
+}
+
+int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const map<int,int>& mt) {
+    for (int k = q.size(); k > 0; k--) {
+        int i = q.front();
+        q.pop();
+        for (int j : adj[i]) {
+            if (mt.count(j)) {
+                return mt[j] + mt[i];
+            }
+            q.push(j);
+            ms[j] = ms[i]+1;
+        }
+    }
+    return -1;
+}
+```
 
 ### 拓扑排序
 
