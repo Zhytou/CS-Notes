@@ -7,6 +7,7 @@
   - [题型分类](#题型分类)
     - [一维dp](#一维dp)
     - [二维dp](#二维dp)
+    - [二维dp的优化——滚动数组](#二维dp的优化滚动数组)
     - [树形dp](#树形dp)
   - [经典例题](#经典例题)
     - [01背包问题](#01背包问题)
@@ -104,6 +105,7 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
     - [152 最大子数组乘积](https://leetcode.cn/problems/maximum-product-subarray/description/)
     - [674 最长连续递增序列](https://leetcode.cn/problems/longest-continuous-increasing-subsequence/description/)
     - [718 最长重复子数组](https://leetcode.cn/problems/maximum-length-of-repeated-subarray/description/)
+    - [918 环形子数组的最大和](https://leetcode.cn/problems/maximum-sum-circular-subarray/)
   - 其他
     - [72 编辑距离](https://leetcode.cn/problems/edit-distance/description/)
 - 博弈策略问题
@@ -111,6 +113,7 @@ for (int i = 0; i < weight.size(); i++) {         // 遍历物品
   - [877 石子游戏](https://leetcode.cn/problems/stone-game/description/)
 - 其他
   - [96 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/description/)
+  - [97 交错字符串](https://leetcode.cn/problems/interleaving-string/description/)
   - [1130 叶值的最小代价生成树](https://leetcode.cn/problems/minimum-cost-tree-from-leaf-values/description/)
 
 按**解法**，可以分为一维dp、二维dp和树形dp等。
@@ -136,6 +139,16 @@ if (text1[i] == text[j]) {
   dp[i][j] = max(dp[i][j - 1], dp[i - 1][j]);
 }
 ```
+
+### 二维dp的优化——滚动数组
+
+滚动数组思想是一种常见的动态规划空间优化方法。当动态规划的转移方程中只和某几个状态相关的时候，我们定义的状态在，就可以考虑这种优化方法，目的是给空间复杂度降维。比如：原状态转移方程为`dp[i][j] = dp[i-1][j]+dp[i][j-1]`，我们就可以使用滚动数组思想则可将其优化成`dp[j] += dp[j-1]`，因为`dp[j]`在修改前就存放着原本所需的`dp[i-1][j]`。
+
+更多例子包括：
+
+- [63 不同路径Ⅱ](https://leetcode.cn/problems/unique-paths-ii/description/)
+- [120 最短三角形路径](https://leetcode.cn/problems/triangle/description/)
+- [221 最大正方形](https://leetcode.cn/problems/maximal-square/description/)
 
 ### 树形dp
 
@@ -536,7 +549,7 @@ public:
 又一道非常经典的二维dp，主要难点需要理解其转移方程：
 
 - `dp[i][j]`表示word1 0到i的序列，转换到word2 0到j的序列需要的步数，比如：当word1 = "horse", word2 = "ros"，`dp[0][0]`就表示"h"到"r"的转移步数。
-- 当`word1[i]==word2[j]`时，`dp[i][j]=min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1[j-1]])`，反之，`dp[i][j]=min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1[j-1]]+1)`；
+- 当`word1[i]==word2[j]`时，`dp[i][j]=min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1])`，反之，`dp[i][j]=min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+1)`；
 - 其中，`dp[i-1][j]和dp[i][j-1]`始终需要加1是因为其和末尾是否相等无关。
 
 ```c++
@@ -569,11 +582,6 @@ public:
             }
         }
 
-        // for (int i = 0; i < dp.size(); i++) {
-        //     for (int j = 0; j < dp[0].size(); j++)
-        //         cout << dp[i][j] << ' ';
-        //     cout << endl;
-        // }
         return dp[word1.size()-1][word2.size()-1];
     }
 };
