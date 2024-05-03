@@ -101,7 +101,7 @@ void bfs (const vector<vector<int>>& adj) {
 
 **双向广度优先遍历Bidirectional Breadth First Search**：
 
-当起点和终点已知时，使用BBFS可以提高搜索效率，避免算法超时，比如这道题[752 打开转盘锁](https://leetcode.cn/problems/open-the-lock/description/)就使用了BBFS。
+当起点和终点已知时，使用BBFS可以提高搜索效率，避免算法超时，比如[127 单词接龙](https://leetcode.cn/problems/word-ladder/description)和[752 打开转盘锁](https://leetcode.cn/problems/open-the-lock/description/)都可以使用BBFS。
 
 ```c++
 void bbfs(const vector<vector<int>>& adj, int s, int t) {
@@ -151,7 +151,7 @@ int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const
 
 **卡恩 Kahn**:
 
-- 简介：一种基于==**广度优先搜索**==的拓扑排序算法
+- 简介：一种基于**广度优先搜索**的拓扑排序算法
 
   - 简单来说，就是在有向无环图中，找出入度为 0 的节点，并把这些从图中删除；
   - 接着，找出删除之后，入度为 0 的节点，并删除这些节点；
@@ -164,40 +164,40 @@ int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const
 
 - 实现：
 
-  ``` c++
-  //Kahn算法
-  vector<int> toposort_kahn(const vector<vector<bool>>& adj) {
-      int n = adj.size();
-      vector<int> res, indegrees(n, 0);
-      queue<int> q;
-      
-      for (int i = 0; i < n; i++) {
-          for (int j = 0; j < n; j++) {
+``` c++
+//Kahn算法
+vector<int> toposort_kahn(const vector<vector<bool>>& adj) {
+    int n = adj.size();
+    vector<int> res, indegrees(n, 0);
+    queue<int> q;
+    
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
             if (adj[i][j])
-                  indegrees[j] += 1;
-          }
-      }
-      
-      for (int i = 0; i < n; i++) {
+                indegrees[j] += 1;
+        }
+    }
+    
+    for (int i = 0; i < n; i++) {
         if (degrees[i] == 0)
-              q.push(i);
-      }
-      
-      while(!q.empty()) {
-        int idx = q.front();
-          q.pop();
-          for (int i = 0; i < n; i++) {
+            q.push(i);
+    }
+    
+    while(!q.empty()) {
+    int idx = q.front();
+        q.pop();
+        for (int i = 0; i < n; i++) {
             if (adj[idx][i]) {
-                  indegrees[i] -= 1;
-                  if (indegrees[i] == 0)
-                      q.push(i);
-              }
-          }
-          res.push_back(idx);
-      }
-      return res;
-  }
-  ```
+                indegrees[i] -= 1;
+                if (indegrees[i] == 0)
+                    q.push(i);
+            }
+        }
+        res.push_back(idx);
+    }
+    return res;
+}
+```
 
 **基于深度优先搜索的拓扑排序算法**:
 
@@ -214,8 +214,8 @@ int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const
 
 - 实现：
   
-  ``` c++
-  void dfs(vector<int>& res, const vector<vector<int>>& adj, vector<int>& visited, int idx, bool& valid) {
+``` c++
+void dfs(vector<int>& res, const vector<vector<int>>& adj, vector<int>& visited, int idx, bool& valid) {
     //将当前点标记未搜索中
     visited[idx] = 1;
     for (int i = 0; i < adj[idx].size(); i++) {
@@ -239,7 +239,7 @@ int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const
     int n = adj.size();
     vector<int> visited(n, false);
     vector<int> res;
-  
+
     for (int i = 0; i < n; i++) {
         // 不断的找未搜索的点进行dfs
         if (visited[i] == 0) {
@@ -250,8 +250,8 @@ int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const
         }
     }
     return res;
-    }
-  ```  
+}
+```  
 
 ### 最短路径
 
@@ -263,81 +263,78 @@ int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const
 
   - 输入：待求点序号 和 该图的邻接矩阵
   - 输出：某点到图中其余点距离数组
-  - 流程：
-
-- 图示：
 
 - 实现：
 
-  ``` c++
-  #include<stdio.h>
-  
-  #include<vector>
-  #include<queue>
-  
-  using std::vector;
-  using std::priority_queue;
-  using std::pair;
-  
-  //朴素算法，无堆优化
-  //参数依次为：点数、出发位置（根位置）、无向图带权重的邻接矩阵
-  vector<int> dijkstra_normal(int num,int start,const vector<vector<int>> &graph){
-      vector<int> dist(num,__INT_MAX__);
-      vector<bool> visited(num,false);
-      int curr_pos=start;
-      int visited_num=1;
-      while(visited_num<num){
-          //找出当前相邻顶点中到出发点最短的那个
-          int next_pos;
-          int min;
-          min=__INT_MAX__;
-          for(int i=0;i<graph[curr_pos].size();i++){
-              if(!visited[i] && dist[i]>dist[curr_pos]+graph[curr_pos][i]){
-                  dist[i]=dist[curr_pos]+graph[curr_pos][i];
-              }
-              if(!visited[i] && min>dist[i]){
-                  min=dist[i];
-                  next_pos=i;
-              }
-          }
-  
-          curr_pos=next_pos;
-          visited_num+=1;
-          visited[curr_pos]=true;
-      }
-      return dist;
-  }
-  
-  //堆优化
-  //参数依次为：点数、出发位置（根位置）、无向图带权重的邻接矩阵
-  vector<int> dijkstra_heap(int num,int start,const vector<vector<int>> &graph){
-      vector<int> dist(num,__INT_MAX__);
-      vector<bool> visited(num,false);
-      //小顶堆
-      auto cmp=[](pair<int,int> a,pair<int,int> b){
-          return a.second<b.second;
-      };
-      priority_queue<pair<int,int>,vector<pair<int,int>>,decltype(cmp)> pq(cmp);
-      
-      pq.push(std::make_pair(start,0));
-      while(!pq.empty()){
-          auto pos=pq.top().first;
-          auto len=pq.top().second;
-          pq.pop();
-          if(visited[pos])
-              continue;
-          else
-              visited[pos]=true;
-          for(int i=0;i<dist.size();i++){
-              if(dist[i]>graph[i][pos]+len){
-                  dist[i]=graph[i][pos]+len;
-                  pq.push(std::make_pair(i,dist[i]));
-              }
-          }
-      }
-      return dist;
-  }
-  ```
+``` c++
+#include<stdio.h>
+
+#include<vector>
+#include<queue>
+
+using std::vector;
+using std::priority_queue;
+using std::pair;
+
+//朴素算法，无堆优化
+//参数依次为：点数、出发位置（根位置）、无向图带权重的邻接矩阵
+vector<int> dijkstra_normal(int num,int start,const vector<vector<int>> &graph){
+    vector<int> dist(num,__INT_MAX__);
+    vector<bool> visited(num,false);
+    int curr_pos=start;
+    int visited_num=1;
+    while(visited_num<num){
+        //找出当前相邻顶点中到出发点最短的那个
+        int next_pos;
+        int min;
+        min=__INT_MAX__;
+        for(int i=0;i<graph[curr_pos].size();i++){
+            if(!visited[i] && dist[i]>dist[curr_pos]+graph[curr_pos][i]){
+                dist[i]=dist[curr_pos]+graph[curr_pos][i];
+            }
+            if(!visited[i] && min>dist[i]){
+                min=dist[i];
+                next_pos=i;
+            }
+        }
+
+        curr_pos=next_pos;
+        visited_num+=1;
+        visited[curr_pos]=true;
+    }
+    return dist;
+}
+
+//堆优化
+//参数依次为：点数、出发位置（根位置）、无向图带权重的邻接矩阵
+vector<int> dijkstra_heap(int num,int start,const vector<vector<int>> &graph){
+    vector<int> dist(num,__INT_MAX__);
+    vector<bool> visited(num,false);
+    //小顶堆
+    auto cmp=[](pair<int,int> a,pair<int,int> b){
+        return a.second<b.second;
+    };
+    priority_queue<pair<int,int>,vector<pair<int,int>>,decltype(cmp)> pq(cmp);
+    
+    pq.push(std::make_pair(start,0));
+    while(!pq.empty()){
+        auto pos=pq.top().first;
+        auto len=pq.top().second;
+        pq.pop();
+        if(visited[pos])
+            continue;
+        
+        visited[pos]=true;
+        for(int i=0;i<dist.size();i++){
+            if(dist[i]>graph[i][pos]+len){
+                dist[i]=graph[i][pos]+len;
+                pq.push(std::make_pair(i,dist[i]));
+            }
+        }
+    }
+    return dist;
+}
+```
 
 **弗洛依达 Floyd**：
 
@@ -345,65 +342,65 @@ int update(const vector<vector<int>>& adj, queue<int>&q, map<int,int>& ms, const
 
 **并查集 Unionset**：
 
-  ``` c++
-  #include<vector>
-  
-  using std::vector;
-  
-  class UnionSet{
-      vector<int> parent;
-      vector<int> rank;
-  public:
-      int count;
-      UnionSet();
-      UnionSet(int n);
-      ~UnionSet();
-  
-      int find(int index);
-      bool merge(int index1,int index2);
-  };
-  
-  UnionSet::UnionSet(){
-      count=0;
-  }
-  
-  UnionSet::~UnionSet(){
-      
-  }
-  
-  UnionSet::UnionSet(int n):count(n){
-      for(int i=0;i<n;i++){
-          rank.push_back(0);
-          parent.push_back(i);
-      }
-  }
-  
-  int UnionSet::find(int index){
-      if(parent[index]!=index){
-          parent[index]=find(parent[index]);
-      }
-      return parent[index];
-  }
-  
-  bool UnionSet::merge(int index1,int index2){
-      auto root1=find(index1);
-      auto root2=find(index2);
-      if(root1==root2)
-          return false;
-      if(rank[root2]>rank[root1]){
-          parent[root1]=root2;
-      }
-      else if(rank[root2]<rank[root1]){
-          parent[root2]=root1;
-      }
-      else{
-          parent[root2]=root1;
-          rank[root1]+=1;
-      }
-      count--;
-      return true;
-  }
-  ```
+``` c++
+#include<vector>
+
+using std::vector;
+
+class UnionSet{
+    vector<int> parent;
+    vector<int> rank;
+public:
+    int count;
+    UnionSet();
+    UnionSet(int n);
+    ~UnionSet();
+
+    int find(int index);
+    bool merge(int index1,int index2);
+};
+
+UnionSet::UnionSet(){
+    count=0;
+}
+
+UnionSet::~UnionSet(){
+    
+}
+
+UnionSet::UnionSet(int n):count(n){
+    for(int i=0;i<n;i++){
+        rank.push_back(0);
+        parent.push_back(i);
+    }
+}
+
+int UnionSet::find(int index){
+    if(parent[index]!=index){
+        parent[index]=find(parent[index]);
+    }
+    return parent[index];
+}
+
+bool UnionSet::merge(int index1,int index2){
+    auto root1=find(index1);
+    auto root2=find(index2);
+    if(root1==root2)
+        return false;
+    if(rank[root2]>rank[root1]){
+        parent[root1]=root2;
+    }
+    else if(rank[root2]<rank[root1]){
+        parent[root2]=root1;
+    }
+    else{
+        parent[root2]=root1;
+        rank[root1]+=1;
+    }
+    count--;
+    return true;
+}
+```
 
 ### 其他
 
