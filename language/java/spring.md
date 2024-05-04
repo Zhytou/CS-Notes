@@ -5,11 +5,11 @@
     - [Spring Framework](#spring-framework)
     - [Spring Boot](#spring-boot)
   - [控制反转 IoC](#控制反转-ioc)
+    - [依赖注入 DI](#依赖注入-di)
     - [IoC容器](#ioc容器)
-    - [IOC接口（BeanFactory）](#ioc接口beanfactory)
-    - [IOC操作Bean管理](#ioc操作bean管理)
-  - [AOP面向切面编程](#aop面向切面编程)
-    - [AOP的概念](#aop的概念)
+      - [IoC容器的原理](#ioc容器的原理)
+      - [IoC容器的使用](#ioc容器的使用)
+  - [面向切面编程 AOP](#面向切面编程-aop)
     - [AOP的术语](#aop的术语)
     - [Spring AOP（JDK动态代理）](#spring-aopjdk动态代理)
     - [AspectJ](#aspectj)
@@ -58,57 +58,50 @@ Spring Boot是Spring生态系统中的另一个重要项目，它建立在Spring
 
 IoC(Inversion of Control)，即控制反转是面向对象编程中的一种设计原则，可以用来减低计算机代码之间的耦合度。IoC的思想是将原本在程序中手动创建对象的控制权，交由调度框架或程序组件来管理。程序本身只需定义好具体的行为即可，至于行为的执行时机由管理外部对象施加控制。
 
-Spring通过提供一种名为IoC容器的类来帮助管理对象，使用者可以通过配置文件和注解的方式告诉容器要创建哪些对象，以及如何配置对象之间的依赖关系。
+Spring通过提供一种名为IoC容器的类来帮助管理对象，使用者可以通过配置文件和注解的方式告诉容器要创建哪些对象以及如何配置对象之间的依赖关系。配置完成之后，所有实例不再由应用程序自己创建和配置，而是由IoC容器负责。
+
+### 依赖注入 DI
+
+**IoC vs DI**：
+
+IoC是一种降低模块耦合、提高对象复用的思想，在Spring中它依靠依赖注入(Dependency Injection, DI)的方式实现，但并非所有支持IoC的框架都使用DI实现。因此，我们不能将二者等同。总之，控制反转是一种思想，而依赖注入则是一种设计模式。
+
+**什么是依赖**：
+
+如果在 Class A 中，有 Class B 的实例，则称 Class A 对 Class B 有一个依赖。因此，依赖注入也就是将实例变量传入到一个对象中去。
 
 ### IoC容器
 
-- IOC底层原理
-  - XML解析
-  - 工厂模式
-  - 反射
+IoC容器也就是Spring框架中提供给开发者用于实现反转控制的工具，而被管理的类则被称为Bean。具体来说，Spring提供了IOC容器实现的两种方式（两个接口）：BeanFactory和ApplicationContext。
 
-- IOC创建对象的过程
-  - XML解析，得到bean标签的class属性，即该对象所属类的包位置
+其中，BeanFactory是IoC容器所具有的最基本形式，也被称为IoC容器的最底层实现。它由org.springframework.beans.factory.BeanFactory接口定义,主要的功能是对Bean的实例化、配置、管理等。而ApplicationContext则是BeanFactory的子接口，它不仅提供BeanFactory所具有的功能，还提供了更多企业级功能，如解析自定义配置、启动和关闭回调、国际化消息、事件传播等。ApplicationContext有多个具体的实现类，比较常用的有：ClassPathXmlApplicationContext、FileSystemXmlApplicationContext和AnnotationConfigApplicationContext等。
 
-  - 反射创建，生成对应类的class类，并加载至内存，等待调用
+一般来说，开发人员更多地使用ApplicationContext，因为它支持更多功能和特性。而BeanFactory则被认为是底层容器，更多地在框架内部使用。
 
-    > --反射的概念--
-    >
-    > 反射就是程序在运行的过程中，可以通过类名称创建对象，并获取类中申明的成员变量和方法。
-    >
-    > --Class 类概念--
-    >
-    > Class 也是一个 Java 类，保存的是与之对应 Java 类的 meta信息（元信息），用来描述这个类的结构，比如描述一个类有哪些成员，有哪些方法等，一般在反射中使用。
-    >
-    > --详细解释：--Java 源程序（.java 文件）在经过 Java 编译器编译之后就被转换成 Java  字节代码（.class 文件）。类加载器负责读取 Java 字节代码，并转换成 java.lang.Class类的一个实例（Class  对象）。也就是说，在 Java 中，每个 java 类都有一个相应的 Class 对象，用于表示这个 java 类的类型信息。
-    >
-    > --类加载概念--
-    >
-    > 当使用一个类的时候（比如 new 一个类的实例），会检查此类是否被加载到内存，如果没有，则会执行加载操作。
-    >
-    > 读取类对应的 class 文件数据，解析此数据，构造一个此类对应的 Class 类的实例。此时JVM就可以使用该类了，比如实例化此类，或者调用此类的静态方法。
-    >
-    > Java 也提供了手动加载类的接口，class.forName()方法就是其中之一。（说来说去，其实就是生成这个类的 Class）
-    >
-    > --类加载器的概念--
-    >
-    > 顾名思义，类加载器（class loader）用来加载 Java 类到 Java 虚拟机中。一般来说，Java 虚拟机使用 Java  类的方式如下：Java 源程序（.java 文件）在经过 Java 编译器编译之后就被转换成 Java 字节代码（.class  文件）。类加载器负责读取 Java 字节代码，并转换成 java.lang.Class 类的一个实例。每个这样的实例用来表示一个 Java  类。通过此实例的 newInstance() 方法就可以创建出该类的一个对象。 基本上所有的类加载器都是 java.lang.ClassLoader 类的一个实例。
-    >
-    > --类初始化概念--
-    >
-    > 类被加载之后，jvm 已经获得了一个描述类结构的 Class 实例。但是还需要进行类初始化操作之后才能正常使用此类，类初始化操作就是执行一遍类的静态语句，包括静态变量的声明还有静态代码块。
+**BeanFactory和ApplicationContext的特点**：
 
-### IOC接口（BeanFactory）
+BeanFactory的特点是每次使用时都会创建一个新的Bean实例。因此，多次请求注入同一个Bean时实际得到的都是不同的实例。而ApplicationContext在初始化时，默认会创建并初始化所有的单例Bean。因此，我们可以认为ApplicationContext是以单例模式运行的容器。
 
-- IOC思想基于IOC容器完成，IOC容器底层就是对象工厂
-- Spring提供了IOC容器实现的两种方式（两个接口）：
-  - BeanFactory：IOC容器基本实现，是Spring内部使用的接口
-  - ApplicationContext：BeanFactory的子接口，提供了更多更强大的功能，一般由开发人员使用
-- ApplicationContext的两个实现类：
-  - FileSystemXmlApplicationContext
-  - ClassPathXmlApplicationContext
+#### IoC容器的原理
 
-### IOC操作Bean管理
+IoC容器可以动态地创建和管理对象，而其底层原理则涉及到反射和工厂模式。具体来说，使用它创建对象的过程如下：
+
+- XML配置/注解配置解析，得到需要管理类的class属性，即该对象所属类的包位置；
+- 反射创建，生成对应类的class类，并加载至内存，等待调用。
+
+**反射**：
+
+反射就是程序在运行的过程中，可以通过类名称创建对象，并获取类中申明的成员变量和方法。
+
+**Class类**：
+
+Class 也是一个 Java 类，保存的是与之对应 Java 类的元信息，用来描述这个类的结构，比如描述一个类有哪些成员，有哪些方法等，一般在反射中使用。实际上，Java 源程序在经过 Java 编译器编译之后就被转换成 Java  字节代码（.class 文件）。类加载器负责读取 Java 字节代码，并转换成 java.lang.Class类的一个实例。也就是说，在 Java 中，每个类都有一个相应的 Class 对象，用于表示这个类的类型信息。
+
+**Bean与工厂**：
+
+在Spring中，Bean是指一个由Spring容器管理的对象。因此，管理Bean的IoC容器本质上就是一个Bean Factory。
+
+#### IoC容器的使用
 
 - 什么是Bean管理
   - 创建对象
@@ -151,28 +144,20 @@ Spring通过提供一种名为IoC容器的类来帮助管理对象，使用者�
 
   其中，属性id是标识符；属性class指明包所在位置；标签property指明被赋值的变量名。
 
-
 - Bean管理的注解方式
-
   - 注解的概念
-
     - 注解是代码的特殊标记，格式：@注解名称
     - 特别注意：注解实际上是一类特殊的类
     - 使用注解的目的：简化XML配置
-
   - Spring针对Bean管理中对象创建提供的注解
-
     - @Component
     - @Service
     - @Controller
     - @Repository
-
   - 基于注解方式实现对象创建
-
     - 引入依赖（jar包）
     - 开启组件扫描（在配置文件中添加context标签）
     - 在类文件中加上注解
-
   - 扫描配置
 
     ``` xml
@@ -245,9 +230,7 @@ Spring通过提供一种名为IoC容器的类来帮助管理对象，使用者�
       ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
       ```
 
-## AOP面向切面编程
-
-### AOP的概念 
+## 面向切面编程 AOP
 
 - 什么是AOP
   - 面向切面编程，通过预编译方式和运行期动态代理实现程序功能的统一维护的一种技术。
@@ -256,8 +239,6 @@ Spring通过提供一种名为IoC容器的类来帮助管理对象，使用者�
   - 动态代理
     - JDK动态代理（有接口情况，创建实现类代理对象）
     - CGLIB动态代理（无接口情况，创建子类代理对象）
-
-<div align="right"><font size="4.5">7月20日</div>
 
 ### AOP的术语
 
