@@ -11,8 +11,7 @@
       - [IoC容器的原理](#ioc容器的原理)
       - [IoC容器的配置](#ioc容器的配置)
   - [面向切面编程 AOP](#面向切面编程-aop)
-    - [AOP的术语](#aop的术语)
-    - [Spring AOP（JDK动态代理）](#spring-aopjdk动态代理)
+    - [Spring AOP](#spring-aop)
     - [AspectJ](#aspectj)
   - [JdbcTemplate](#jdbctemplate)
     - [JdbcTemplate的概念](#jdbctemplate的概念)
@@ -319,168 +318,36 @@ ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig
 
 ## 面向切面编程 AOP
 
-- 什么是AOP
-  - 面向切面编程，通过预编译方式和运行期动态代理实现程序功能的统一维护的一种技术。
-  - 可以把业务逻辑各个部分相互隔离，降低耦合度
-- Spring AOP框架的底层原理
-  - 动态代理
-    - JDK动态代理（有接口情况，创建实现类代理对象）
-    - CGLIB动态代理（无接口情况，创建子类代理对象）
+AOP(Aspect Oriented Programming) 面向切面编程是一种编程范式，可以将遵循单一职责原则的代码进行解耦，把分布于多个模块中的与业务无关的代码重新集中到一个共同维护的模块中，从而提高代码复用性。这种与业务无关的横切代码被称为横切关注点，比如日志、事务管理、安全检查等。
 
-### AOP的术语
+传统的面向对象编程只关注对象，而AOP则关注横切多个对象的行为，将对象内的散乱完成多个特定行为的语句进行封装，从而让编程逻辑更加清晰简洁。
 
-- 连接点：类里面可以被增强的方法称为增强点
-- 切入点：类里面实际被增强的方法称为切入点
-- 通知（增强）：实际增强的逻辑部分称为通知（增强）
-  - 前置通知：在被增强方法之前添加逻辑
-  - 后置通知：在被增强方法之后添加逻辑
-  - 环绕通知：在被增强方法之前和之后添加逻辑
-  - 异常通知：当被增强方法出现异常时执行增强逻辑
-  - 最终通知：
-- 切面：把通知应用到切入点的过程
+**术语**：
 
-### Spring AOP（JDK动态代理）
+在AOP编程中，我们经常会遇到下面的概念：
 
-- 使用Proxy类里面的方法newProxyInstace创建代理对象
+- Aspect：切面，即一个横跨多个核心逻辑的功能，或者称之为系统关注点；
+- Joinpoint：连接点，即定义在应用程序流程的何处插入切面的执行；
+- Pointcut：切入点，即一组连接点的集合；
+- Advice：增强，指特定连接点上执行的动作；
+- Introduction：引介，指为一个已有的Java对象动态地增加新的接口；
+- Weaving：织入，指将切面整合到程序的执行流程中；
+- Interceptor：拦截器，是一种实现增强的方式；
+- Target Object：目标对象，即真正执行业务的核心逻辑对象；
+- AOP Proxy：AOP代理，是客户端持有的增强后的对象引用。
 
-  - 参数1，类加载器
-  - 参数2，增加方法的所在类实现的接口，支持多个接口
-  - 参数3（InvocationHandler），创建代理对象写增强的部分
+### Spring AOP
 
-- 实现JDK动态代理的代码
+Spring框架对AOP的概念提供了支持，称为Spring AOP。Spring AOP为程序提供了面向切面增强的编程能力，允许程序员定义方法执行的拦截规则，甚至可以新增增强处理，从而实现功能上的织入。Spring AOP使用动态代理机制实现，有两种实现方式:
 
-  ``` java
-  //需要被代理的对象
-  Object targetobject;
-  //调用newProxyInstance方法创建代理对象，其中Jdkproxy类实现了InvocationHandler，具体代码如下
-  Object proxy = Proxy.newProxyInstance(targetObject.getClass().getClassLoader(),targetObject.getClass().getInterfaces(),new JdkProxy(targetobject));
-  //通过代理调用被增强过的方法method
-  proxy.method();
-  ```
-
-  ``` java
-  // 实现InvocationHandler的类
-  class JdkProxy implents InvocationHandler {
-    //需要代理的对象
-    private Object target;
-    public JdkProxy (Object target) {
-      this.target = target;
-    }
-    
-    @override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      //需要被增强方法method执行之前的逻辑
-      //TODO
-      
-      //需要被增强方法method执行
-      Obejct result = method.invoke(target, args);
-      
-      //需要被增强方法method执行之后的逻辑
-  		//TODO
-  
-    }
-  }
-  ```
+- 基于 JDK 动态代理，为接口创建代理对象
+- 基于 CGLib 动态代理，为指定类创建子类的代理对象
 
 ### AspectJ
 
-- AspectJ 是一个基于 Java 语言的 AOP 框架，它扩展了 Java 语言，提供了强大的 AOP 功能。
+AspectJ是一个基于Java语言的 AOP 实现，它扩展了 Java 语言本身，使其包含 AOP 的概念构造，如切面、切入点、通知等。AspectJ 定义了 AOP 语法，可直接编写代码进行AOP开发。
 
-  > AspectJ和Spring AOP是目前最流行的两种框架，但不同与Spring AOP，AspectJ本身不是Spring的一部分。直到 Spring 2.0 开始，Spring AOP才引入了对 AspectJ 的支持。
-  >
-  > 在新版本的 Spring 框架中，建议使用 AspectJ 方式开发 AOP。
-
-- 基于AspectJ实现AOP操作的两种方式
-
-  - 基于XML配置文件实现
-  - 基于注解方式实现
-
-- 切入点表达式
-
-  - 目的：知道对哪个类型里面的哪个方法进行增强
-
-  - 语法：execution([权限修饰符]\[返回类型][类全路径]\[方法名称]\[参数列表])  
-
-    > 注意：1、参数列表常常用两个点表示；2、返回类型可以省略
-
-- 基于XML配置文件方式
-
-  - 创建两个类，增强类和被增强类
-  - 在Spring配置文件中创建两个类的对象
-  - 在Spring配置文件中配置切入点
-
-- 基于AspectJ注解方式
-
-  - 创建待增强类
-
-  - 创建增强类
-
-  - 进行通知的配置
-
-    - 在Spring配置文件中，开启注解扫描（或用配置类，具体方法类似IOC控制）
-
-      ``` xml
-      <beans xmlns="http://www.springframework.org/schema/beans"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xmlns:aop="http://www.springframework.org/schema/aop"
-          xsi:schemaLocation="http://www.springframework.org/schema/beans
-          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-          http://www.springframework.org/schema/aop
-          http://www.springframework.org/schema/aop/spring-aop-3.0.xsd ">
-        
-        <bean>
-        	...
-        </bean>
-      </beans>
-      ```
-
-
-
-    - 使用注解生成待增强对象和增强对象
-
-    - 在增强类上添加注解@Aspect
-
-    - 在Spring配置文件中开启生成代理对象
-
-      ``` xml
-      <aop:aspectj-autoproxy></aop:aspectj-autoproxy>
-      ```
-
-    - 配置不同类型的通知：在增强类中，在作为通知的方法上添加通知类型注解，使用切入点表达式进行配置
-
-      ``` java
-      @Before(value = "excution(-.com.atguigu.spring5.aopanno.User.add(..))")
-      public void before(){
-        //TODO
-      }
-      ```
-
-      
-
-  - 两点注意：
-
-    - 相同切入点抽取（代码重用）
-
-      ``` java
-      @Pointcut(value = "excution(-.com.atguigu.spring5.aopanno.User.add(..))")
-      public void pointFunc(){
-        //TODO
-      }
-      
-      //通过直接调用pointFunc而避免重写切入表达式
-      @before(value = "pointFunc")
-      public void before(){
-        //TODO
-      }
-      
-      //通过直接调用pointFunc而避免重写切入表达式
-      @after(value = "pointFunc")
-      public void after(){
-        //TODO
-      }
-      ```
-
-    - 设置优先级：多个增强类，可以设置增强类执行的优先级（具体方法：添加@order（数字）注解，order中数字小的先执行）
+但不同与Spring AOP，AspectJ本身不是Spring的一部分。直到 Spring 2.0 开始，Spring AOP才引入了对 AspectJ 的支持。在新版本的 Spring 框架中，建议使用 AspectJ 方式开发 AOP。类似IoC容器，基于AspectJ实现AOP操作也可以通过XML和注解的两种方式。
 
 ## JdbcTemplate
 
