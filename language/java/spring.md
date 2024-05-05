@@ -211,7 +211,12 @@ XML配置是Spring早期使用的配置方式，也是最传统的方式。开�
 </beans>
 ```
 
-其中，属性id是标识符；属性class指明包所在位置；标签property指明被赋值的变量名。
+其中，配置文件的含义解释如下：
+
+- xmlns是XML NameSpace的缩写，因为XML文件的标签名称都是自定义的，自己写的和其他人定义的标签很有可能会重复命名，而功能却不一样，所以需要加上一个namespace来区分这个xml文件和其他的xml文件，类似于java中的package。
+- xmlns:xsi指出了XML文件遵守XML规范，其中xsi全称是xml schema instance。
+- xsi:schemaLocation是指本文档里的XML元素所遵守的规范，这些规范都是由Spring官方制定的。
+- bean则是IoC容器的具体配置。其中，属性id是标识符；属性class指明包所在位置；标签property指明被赋值的变量名。
 
 **注解方式**：
 
@@ -258,6 +263,40 @@ public class AppConfig {
 - @Service 服务层组件
 - @Controller 表现层组件
 - @Repository 持久层组件
+
+换句话说，一旦某个类被上面这些注解标注之后，那么它的对象创建和管理都将交由Spring框架负责。此外，还有另一类注解用于说明依赖注入关系，它们往往用在类的成员变量、构造方法和方法上。比如：
+
+- @Autowired 自动装配Bean：根据Bean的类型自动注入，可注入到构造器、方法、属性上
+- @Resource 注入Bean：@Resource与@Autowired功能相似，支持根据类型和名称自动装配
+- @Qualifier 限定描述Bean：配合@Autowired使用，当有多个同类型Bean时，指定注入哪个Bean
+- @Value 注入常量：常用于注入基本类型/String的属性值
+
+下面是一个使用这些注解的一个例子。
+
+``` java
+@Component("fooFormatter")
+public class FooFormatter implements Formatter {
+    public String format() {
+        return "foo";
+    }
+}
+
+@Component("barFormatter")
+public class BarFormatter implements Formatter {
+    public String format() {
+        return "bar";
+    }
+}
+
+@Component
+public class FooService {
+    @Autowired
+    @Qualifier("barFormatter")
+    private Formatter formatter;
+    
+    //todo 
+}
+```
 
 **完全注解方式**：
 
@@ -395,16 +434,7 @@ ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig
       </beans>
       ```
 
-      > ``` xml
-      > xmlns="http://www.springframework.org/schema/beans"
-      > xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      > ```
-      >
-      > 这个是每个配置文件必须的部分，也就是spring的根本。
-      >
-      > 第一句话声明xml文件默认的命名空间，表示未使用其他命名空间的所有标签的默认命名空间。
-      >
-      > 第二句话声明XML Schema 实例，声明后就可以使用 schemaLocation 属性了。
+
 
     - 使用注解生成待增强对象和增强对象
 
@@ -565,8 +595,6 @@ ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig
       	jdbcTemplate.queryForObject(sql,args);
       }
       ```
-
-<div align="right"><font size="4.5">7月21日</div>
 
 ## Spring事务管理
 
