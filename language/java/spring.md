@@ -7,8 +7,9 @@
   - [控制反转 IoC](#控制反转-ioc)
     - [依赖注入 DI](#依赖注入-di)
     - [IoC容器](#ioc容器)
+      - [Bean](#bean)
       - [IoC容器的原理](#ioc容器的原理)
-      - [IoC容器的使用](#ioc容器的使用)
+      - [IoC容器的配置](#ioc容器的配置)
   - [面向切面编程 AOP](#面向切面编程-aop)
     - [AOP的术语](#aop的术语)
     - [Spring AOP（JDK动态代理）](#spring-aopjdk动态代理)
@@ -82,6 +83,92 @@ IoC容器也就是Spring框架中提供给开发者用于实现反转控制的�
 
 BeanFactory的特点是每次使用时都会创建一个新的Bean实例。因此，多次请求注入同一个Bean时实际得到的都是不同的实例。而ApplicationContext在初始化时，默认会创建并初始化所有的单例Bean。因此，我们可以认为ApplicationContext是以单例模式运行的容器。
 
+**一个基于XML配置的IoC容器使用例子**：
+
+首先定义两个简单的类，一个作为被注入的依赖对象，另一个作为需要依赖注入的类:
+
+``` java
+// 依赖对象
+public class MessageService {
+    public String getMessage() {
+        return "Hello from MessageService";
+    }
+}
+
+// 需要依赖注入的类
+public class MessageRenderer {
+    private MessageService messageService;
+
+    // 需要通过构造器注入依赖对象
+    public MessageRenderer(MessageService messageService) {
+        this.messageService = messageService;
+    }
+
+    public void renderMessage() {
+        System.out.println(messageService.getMessage());
+    }
+}
+```
+
+接下来创建Spring配置文件applicationContext.xml:
+
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 定义 MessageService Bean -->
+    <bean id="messageService" class="com.example.MessageService"/>
+
+    <!-- 定义 MessageRenderer Bean, 并注入 MessageService 依赖 -->
+    <bean id="renderer" class="com.example.MessageRenderer">
+        <constructor-arg ref="messageService"/>
+    </bean>
+
+</beans>
+```
+
+最后在主程序中使用ApplicationContext获取Bean实例:
+
+```java
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Main {
+    public static void main(String[] args) {
+        // 创建 ApplicationContext 容器
+        ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+        // 从容器中获取 MessageRenderer 实例
+        MessageRenderer renderer = context.getBean("renderer", MessageRenderer.class);
+
+        // 调用渲染方法
+        renderer.renderMessage();
+    }
+}
+```
+
+#### Bean
+
+在Spring中，Bean是指一个由IoC容器创建、组装和管理的对象。
+
+**Bean的作用域**是指Bean在Spring整个框架中的某种行为模式。常见的作用域类型包括：
+
+- singleton：单例作用域
+- prototype：原型作用域（多例作用域）
+- request：请求作用域
+- session：会话作用域
+- application：全局作用域
+
+**Bean的生命周期**：
+
+- 实例化 Instantiation
+- 属性赋值 Populate
+- 初始化 Initialization
+- 销毁 Destruction
+
 #### IoC容器的原理
 
 IoC容器可以动态地创建和管理对象，而其底层原理则涉及到反射和工厂模式。具体来说，使用它创建对象的过程如下：
@@ -97,138 +184,99 @@ IoC容器可以动态地创建和管理对象，而其底层原理则涉及到�
 
 Class 也是一个 Java 类，保存的是与之对应 Java 类的元信息，用来描述这个类的结构，比如描述一个类有哪些成员，有哪些方法等，一般在反射中使用。实际上，Java 源程序在经过 Java 编译器编译之后就被转换成 Java  字节代码（.class 文件）。类加载器负责读取 Java 字节代码，并转换成 java.lang.Class类的一个实例。也就是说，在 Java 中，每个类都有一个相应的 Class 对象，用于表示这个类的类型信息。
 
-**Bean与工厂**：
+**工厂模式**：
 
-在Spring中，Bean是指一个由Spring容器管理的对象。因此，管理Bean的IoC容器本质上就是一个Bean Factory。
+能够创建和管理Bean对象的IoC容器本质上就是一个Bean Factory。
 
-#### IoC容器的使用
+#### IoC容器的配置
 
-- 什么是Bean管理
-  - 创建对象
-  - 属性注入
+Spring框架支持两种IoC容器配置方式:XML配置和注解配置。
 
-- 两种Bean
-  - 普通Bean：在Spring配置文件中，定义的类型就是返回的类型
-  - 工厂Bean：在Spring配置文件中，定义的类型可以和返回的类型不同（具体实现方法：这个类要实现FactoryBean这个接口，其中有三个方法能够达到这个目的）
+**XML方式**：
 
-- Bean的作用域
-  - 在Spring中创建的对象是多实例还是单实例
-  - 默认情况下，Spring是单实例
-  - 可以修改配置中scope属性来更改Bean的作用域
-    - 默认值，singleton，表示单实例，在加载配置文件时就创建对象
-    - protytpe，表示多实例，在调用getBean函数获取对象时才创建对象
-    - request
-    - session
+XML配置是Spring早期使用的配置方式，也是最传统的方式。开发人员需要在一个或多个XML文件中定义Bean及其依赖关系。下面是一个简单的XML配置示例:
 
-- Bean的生命周期
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-  - 通过构造函数创建Bean实例（无参构造）
+    <bean id="messageService" class="com.example.MessageService"/>
 
-  - 为Bean属性设置值（调用set方法）
+    <bean id="renderer" class="com.example.MessageRenderer">
+        <property name="messageService" ref="messageService"/>
+    </bean>
+</beans>
+```
 
-  - 调用Bean的初始化方法（配置文件中的init-method属性——类似触发器）
+其中，属性id是标识符；属性class指明包所在位置；标签property指明被赋值的变量名。
 
-  - Bean可以使用了
+**注解方式**：
 
-  - 当容器关闭时，调用Bean的销毁方法（配置文件中的destroy-method属性——类似触发器）
+注解是代码的特殊标记，其格式格式一般如下@注解名称。注意：注解实际上是一类特殊的类
 
-    > 在第三步前后都还有传入后置处理器的步骤。具体来说，后置处理器就是Spring中定义的BeanPostProcessor 接口，通过该接口可以自定义调用初始化前后执行的操作方法。
+随着Spring版本的不断迭代，注解配置已经成为了主流的配置方式。使用注解可以很大程度上简化XML配置。下面是一个使用注解配置的示例:
 
-- Bean管理的XML方式
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-  ``` xml
-  <bean id="helloWorld" class="net.biancheng.HelloWorld">
-          <property name="message" value="Hello World!" />
-  </bean>
-  ```
+@Configuration
+public class AppConfig {
+    @Bean
+    public MessageService messageService() {
+        return new MessageService();
+    }
 
-  其中，属性id是标识符；属性class指明包所在位置；标签property指明被赋值的变量名。
+    @Bean
+    public MessageRenderer renderer() {
+        MessageRenderer renderer = new MessageRenderer();
+        renderer.setMessageService(messageService());
+        return renderer;
+    }
+}
+```
 
-- Bean管理的注解方式
-  - 注解的概念
-    - 注解是代码的特殊标记，格式：@注解名称
-    - 特别注意：注解实际上是一类特殊的类
-    - 使用注解的目的：简化XML配置
-  - Spring针对Bean管理中对象创建提供的注解
-    - @Component
-    - @Service
-    - @Controller
-    - @Repository
-  - 基于注解方式实现对象创建
-    - 引入依赖（jar包）
-    - 开启组件扫描（在配置文件中添加context标签）
-    - 在类文件中加上注解
-  - 扫描配置
+事实上，使用注解的方式配置IoC容器除了在类文件中加上注解之外，还需要引入依赖和开启组件扫描。其中，前者引入org.springframework.context.annotation.Bean等jar包使注解可用；后者启用自动扫描机制，并为符合条件的类创建 Bean 对象。这样就避免了在配置文件中一个一个的使用`<bean>`标签显式定义Bean。下面就是两个组件扫描配置的例子，它们有不同的扫描范围。
 
-    ``` xml
-    <!--使用context命名空间，通知spring扫描指定目录，进行注解的解析 -->
-    <context:component-scan base-package="net.biancheng" />
-    ```
+``` xml
+<!--扫描范围——net/biancheng/文件夹下的所有文件 -->
+<context:component-scan base-package="net.biancheng" />
 
-    扫描范围——net/biancheng/文件夹下的所有文件
 
-    ``` xml
-    <context:component-scan base-package="net.biancheng" user-default-filters="false">
-    	<context:include-filter type="annotation" expression="org.springframework.sterotype.Controller">
-    </context:component-scan>
-    ```
+<!--扫描范围——只扫描net/biancheng/文件夹下Controller注解 -->
+<context:component-scan base-package="net.biancheng" user-default-filters="false">
+  <context:include-filter type="annotation" expression="org.springframework.sterotype.Controller">
+</context:component-scan>
+```
 
-    扫描范围——只扫描net/biancheng/文件夹下Controller注解
+最后来具体介绍一下，Spring提供的注解。它们可以按对象创建和属性注入分两类。以下这些注解都是用于标记Spring管理的Bean组件，只是分别对应不同的应用层:
 
-  - Spring针对Bean管理中属性注入提供的注解
+- @Component 通用组件
+- @Service 服务层组件
+- @Controller 表现层组件
+- @Repository 持久层组件
 
-    - @AutoWired：根据属性类型进行自动装配
+**完全注解方式**：
 
-      ``` java
-      class UserService {
-        @Autowired
-      	private UserDao userDao;
-      }
-      ```
+除了XML和注解这两种方式之外，Spring还支持的另一种配置方式，即：只使用注解配置。
 
-    - @Qualifier：根据属性名称进行注入（当一个接口有多个实现类时，必须用Qualifier指明用哪个子类实现）
+通过创建一个配置类 SpringConfig并使用 @Configuration 注解标记，该类就成为了 Spring 的配置类，相当于以前的 XML 配置文件。@ComponentScan 注解指定需要扫描的包路径，Spring 将自动发现这些包及子包下标注了 @Component、@Service、@Repository、@Controller 等注解的类，并自动将它们注册为 Bean。这个功能类似于 XML 配置中的 <context:component-scan> 元素。
 
-      ``` java
-      class UserService {
-        @Autowired
-      	@Qualifier(value = "userDaoImp1")
-      	private UserDao userDao;
-      }
-      ```
+``` java
+@Configuration
+@ComponentScan(basePackages = {"net.bianchen"})
+public class SpringConfig{
+}
+```
 
-    - @Resource：可以根据属性类型注入，也可以根据属性名称注入
+通过使用 AnnotationConfigApplicationContext 并将配置类 SpringConfig.class 作为参数传入,即可创建一个基于注解配置的 Spring 应用上下文环境。
 
-      ``` java
-      class UserService {
-        @Resource
-      	@Resource(value = "userDaoImp1")
-      	private UserDao userDao;
-      }
-      ```
-
-    - @Value：注入普通属性（上面三个都是注入对象的属性）
-
-      ``` java
-      @Value(value = "abc")
-      private String str;
-      ```
-
-  - 完全注解开发
-
-    - 创建配置类替代XML配置文件
-
-      ``` java
-      @Configuration
-      @ComponentScan(basePackages = {"net.bianchen"})
-      public class SpringConfig{
-      }
-      ```
-
-    - 加载配置类
-
-      ``` java
-      ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
-      ```
+``` java
+ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+```
 
 ## 面向切面编程 AOP
 
