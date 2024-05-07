@@ -6,6 +6,7 @@
     - [HelloServlet：A simple servlet example](#helloservleta-simple-servlet-example)
   - [Listener/Filter](#listenerfilter)
   - [JSP](#jsp)
+    - [Welcome.jsp: a simple example](#welcomejsp-a-simple-example)
   - [Tomcat](#tomcat)
     - [Standalone Tomcat](#standalone-tomcat)
     - [Embedded Tomcat](#embedded-tomcat)
@@ -109,7 +110,38 @@ Servlet程序并没有main函数，需要部署在Servlet容器(如Tomcat)中运
 
 ![图3 Tomcat调用](https://picx.zhimg.com/v2-ce6e39bb02e3c6a2f4eb1e5afaa6e4e6_r.jpg?source=2c26e567)
 
+使用servlet容器的原因有：
+
+通信支持：利用容器提供的方法，你能轻松的让servlet与web服务器对话，而不用自己建立serversocket、监听某个端口、创建流等 等。容器知道自己与web服务器之间的协议，所以你的servlet不用担心web服务器（如Apache）和你自己的web代码之间的API，只需要考 虑如何在servlet中实现业务逻辑（如处理一个订单）。
+生命周期管理：servlet容器控制着servlet的生与死，它负责加载类、实例化和初始化servlet，调用servlet方法，以及使servlet实例被垃圾回收，有了servlet容器，你不需要太多的考虑资源管理。
+多线程支持：容器会自动为它所接收的每个servlet请求创建一个新的java线程。针对用户的请求，如果servlet已经运行完相应的http服务方法，这个线程就会结束。这并不是说你不需要考虑线程安全性，其实你还会遇到同步问题，不过这样能使你少做很多工作。
+声明方式实现安全：利用servlet容器，你可以使用xml部署描述文件来配置和修改安全性，而不必将其硬编码写到servlet类代码中。
+JSP支持：servlet容器负责将jsp代码翻译为真正的java代码。
+
 **Servlet Lifecycle**:
+
+查看JDK中提供的Servlet接口我们发现，其中最核心的就是三个函数init、service和destroy，这也正好对应了一个Servlet对象的生命周期。
+
+```java
+public interface Servlet {
+    void init(ServletConfig var1) throws ServletException;
+
+    ServletConfig getServletConfig();
+
+    void service(ServletRequest var1, ServletResponse var2) throws ServletException, IOException;
+
+    String getServletInfo();
+
+    void destroy();
+}
+```
+
+以下是 Servlet 遵循的过程：
+
+Servlet 初始化后调用 init () 方法。
+Servlet 调用 service() 方法来处理客户端的请求。
+Servlet 销毁前调用 destroy() 方法。
+最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。
 
 ## Listener/Filter
 
@@ -118,6 +150,28 @@ Listener用于监听Web应用中的事件，以实现一些全局操作。如监
 Filter是一种实现了Filter接口的Web资源对象，可以对Web资源的请求和响应进行过滤和预处理。通常用于编码转换、数据压缩、日志记录等。
 
 ## JSP
+
+### Welcome.jsp: a simple example
+
+有一个简单的Welcome.jsp内容如下，我们将其放置在Tomcat的webapps目录下。
+
+```java
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Welcome</title>
+</head>
+<body>
+    <h1><%
+        out.println("Hello "+request.getParameter("name")+"!");
+    %></h1>
+</body>
+</html>
+```
+
+接着，访问[http://localhost:9090/welcome.jsp?name=Zhytou](http://localhost:9090/welcome.jsp?name=Zhytou)这个链接，即可得到如图4所示效果。
+
+![图4 Welcome.jsp](../img/welcome_jsp.png)
 
 ![JSP/Servlet](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWM0LnpoaW1nLmNvbS8yMjljZjlmZjViMTcyOWVhZjQwOGZhYzU2MjM4ZWViM19iLnBuZw)
 
