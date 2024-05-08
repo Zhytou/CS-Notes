@@ -23,7 +23,7 @@
 
 ![图1 CGI工作流程](https://lushunjian.github.io/blog/2019/01/21/web%E5%BC%80%E5%8F%91%E6%8A%80%E6%9C%AF%E7%9A%84%E6%BC%94%E5%8F%98/CGI.png)
 
-相比之下，尽管两者的整体工作架构类似，但Servlet把服务器中接收请求和返回响应的部分封装起来了，免去了开发者重复造轮子的工作，使得人们只需要根据JDK中Servlet API实现业务逻辑即可。换句话说，开发者编写的Servlet程序其实就类似CGI模式下的外部程序。此外，Servlet因为JVM拥有更好的可移植性此时，且拥有更高的运行效率，因为CGI每次请求都需要启动一个新的系统进程来执行外部程序。
+相比之下，尽管两者的整体工作架构类似，但Servlet模式把服务器中接收请求和返回响应的部分封装起来了，免去了开发者重复造轮子的工作。开发者只需要根据JDK中Servlet API实现业务逻辑即可。换句话说，开发者编写的Servlet程序其实就类似CGI模式下的外部程序。此外，Servlet拥有更好的可移植性和更高的运行效率，因为Servlet对象运行在JVM上且由Servlet容器管理，可以持久驻留在内存中为多个请求服务，而不需要像CGI一样每次请求都启动一个新进程来执行外部程序。
 
 **JSP：HTML Template**：
 
@@ -35,9 +35,25 @@
 
 其中，JSP(JavaServer Pages)是一种基于Java的Web开发技术，它使HTML页面具备动态内容生成能力。JSP本质上也是一种Servlet，它将Java代码和HTML标签混合编写，然后由Web容器将其转译为一个Servlet类并执行。
 
-**AJAX：Frontend Backend Split**：
+**MVC: J2EE vs ASP.NET**:
 
-随着 AJAX(Asynchronous JavaScript and XML)的提出，Web 应用程序架构发生了变化。AJAX 通过在前端和后端之间使用 XML(后来是 JSON)异步通信来更新局部页面内容，不需要重新加载整个网页，提高了用户体验，前端界面开发和后端业务逻辑开发也因此分离。Spring框架的核心组件DispatcherServlet就是基于这种模式设计的。
+随着网络应用复杂度不断提高，尤其是在构造大型应用是在可扩展性、容错性等方面的需求催生了J2EE和ASP.NET的平台。事实上，前文所提到的Java Servlet和JSP正是J2EE中的核心组件。
+
+这个时期，人们开始考虑将Servlet和JSP的优势结合起来，分别使用Servlet和JSP实现各种复杂的业务逻辑和编写HTML，也就是后续在Web开发中广泛应用的MVC模式。MVC模式最早由Trygve Reenskaug在1978年提出。它是软件工程中的一种软件架构模式，把软件系统分为三个基本部分：
+
+- 模型（Model）：负责数据访问和算法实现；
+- 视图（View）：负责界面显示；
+- 控制器（Controller）：负责处理请求。
+
+在J2EE Web应用的体系中，Servlet和JSP分别承担了Controller和View的职责，而Model则是由J2EE的另一个重要组件EJB（Enterprise Java Bean）负责。类似的，由微软推出的ASP.NET平台也同样采用了MVC架构模式。
+
+**JavaScript Popularity And AJAX Occurrence ：Frontend Backend Split**：
+
+随着JavaScript在浏览器的流行和AJAX(Asynchronous JavaScript and XML)的提出，Web应用程序架构发生了进一步的变化。AJAX通过在前端和后端之间使用XML(后来是JSON)异步通信来更新局部页面内容，不需要重新加载整个网页，提高了用户体验，前端界面开发和后端业务逻辑开发也因此分离。
+
+**More Framework**:
+
+Spring框架的核心组件DispatcherServlet就是基于这种模式设计的。
 
 因此，了解Servlet工作原理是学习Java Web是绕不开的话题。
 
@@ -233,8 +249,7 @@ public final class welcome_jsp extends org.apache.jasper.runtime.HttpJspBase
 
     try {
       response.setContentType("text/html;charset=UTF-8");
-      pageContext = _jspxFactory.getPageContext(this, request, response,
-      			null, true, 8192, true);
+      pageContext = _jspxFactory.getPageContext(this, request, response, null, true, 8192, true);
       _jspx_page_context = pageContext;
       application = pageContext.getServletContext();
       config = pageContext.getServletConfig();
