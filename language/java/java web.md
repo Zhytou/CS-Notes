@@ -4,16 +4,21 @@
   - [History](#history)
   - [Servlet](#servlet)
     - [HelloServlet：A simple servlet example](#helloservleta-simple-servlet-example)
-  - [Listener/Filter](#listenerfilter)
+    - [Servlet Basis](#servlet-basis)
+    - [Filter](#filter)
+    - [Listener](#listener)
   - [JSP](#jsp)
-    - [Welcome.jsp: a simple example](#welcomejsp-a-simple-example)
+    - [Welcome.jsp: A simple JSP example](#welcomejsp-a-simple-jsp-example)
     - [JSP Workflow](#jsp-workflow)
+  - [JPA](#jpa)
+    - [ORM](#orm)
+  - [MVC](#mvc)
+    - [J2EE](#j2ee)
+    - [Spring MVC](#spring-mvc)
   - [Tomcat](#tomcat)
     - [Standalone Tomcat](#standalone-tomcat)
     - [Embedded Tomcat](#embedded-tomcat)
     - [Maven Tomcat Plugin](#maven-tomcat-plugin)
-  - [MVC](#mvc)
-    - [Java Web Framework](#java-web-framework)
 
 ## History
 
@@ -49,17 +54,19 @@
 
 **JavaScript Popularity And AJAX Occurrence ：Frontend Backend Split**：
 
-随着JavaScript在浏览器的流行和AJAX(Asynchronous JavaScript and XML)的提出，Web应用程序架构发生了进一步的变化。AJAX通过在前端和后端之间使用XML(后来是JSON)异步通信来更新局部页面内容，不需要重新加载整个网页，提高了用户体验，前端界面开发和后端业务逻辑开发也因此分离。
+随着JavaScript在浏览器中的广泛应用以及AJAX(Asynchronous JavaScript and XML)技术的出现，Web应用程序架构发生了重大转变。因为JavaScript能够直接操作DOM局部更新页面内容，而AJAX技术又使得其能与服务器进行异步通信获取所需数据。这种新模式逐渐取代了传统的JSP技术，改善了服务端大包大揽的状况，使得交互和显示的任务从服务端被剥离出来，进一步形成了前端负责界面显示和用户交互而后端专注于业务逻辑处理的现代Web应用架构。
 
 **More Framework**:
 
-Spring框架的核心组件DispatcherServlet就是基于这种模式设计的。
+此后，前后端分离的格局形成，大量Web框架涌现。在前端领域，Vue和React等现代JavaScript框架应运而生，提供了更高效、组件化的方式构建用户界面。与此同时，Node.js的出现使JavaScript可以运行在服务器端，开发人员能够使用同一种语言编写前后端代码，提高了开发效率，也催生了以MERN（MongoDB+Express+Node+React）等为代表的全栈工程师。
 
-因此，了解Servlet工作原理是学习Java Web是绕不开的话题。
+在后端领域，各种语言的框架百花齐放。其中，Python有Flask和Django，JavaScript有Express，而在Java阵营中，Spring框架则凭借其轻量、模块化的设计，成为了最主要和流行的企业级Web应用开发框架之一。
 
 ## Servlet
 
-Java Servlet的全称是Java Server Applet，也就是Java服务器小程序。它是使用JDK中Servlet API编写的程序。利用它开发者能根据业务逻辑动态生成内容返回给客户端。因此，Servlet技术成为了2000年代重要的动态网页技术之一，直至今天也仍然作为大型Java Web框架的中重要组成部分而存在。
+Java Servlet的全称是Java Server Applet，也就是Java服务器小程序。利用它开发者能根据业务逻辑动态生成内容返回给客户端。
+
+Servlet技术是2000年代重要的动态网页技术之一，直至今天也仍然作为大型Java Web框架的中重要组成部分而存在（Spring的核心组件DispatcherServlet）。因此，了解Servlet工作原理是学习Java Web是绕不开的话题。
 
 ### HelloServlet：A simple servlet example
 
@@ -108,11 +115,13 @@ public class HelloServlet extends HttpServlet {
 
 ![图2 HelloServlet效果](../img/hello_servlet.png)
 
+### Servlet Basis
+
 **Servlet API**:
 
 在这个示例中，HelloServlet类继承于HttpServlet类，并实现了doGet方法来处理HTTP GET请求。而HttpServlet正是一个重要的Servlet接口类，可见Servlet程序就是使用JDK中Servlet API根据业务逻辑实现的一个类。
 
-Servlet API由javax.servlet和javax.servlet.http两个核心包组成，定义了Servlet组件的生命周期方法和客户端请求响应处理等规范。常用的Servlet接口和类包括:
+Java Servlet API是一套用于在服务器上实现响应请求的标准。它由javax.servlet和javax.servlet.http两个核心包组成，定义了Servlet组件的生命周期方法和客户端请求响应处理等规范。常用的Servlet接口和类包括:
 
 - GenericServlet类
 - HttpServlet类
@@ -127,13 +136,7 @@ Servlet程序并没有main函数，需要部署在Servlet容器(如Tomcat)中运
 
 ![图3 Tomcat调用](https://picx.zhimg.com/v2-ce6e39bb02e3c6a2f4eb1e5afaa6e4e6_r.jpg?source=2c26e567)
 
-使用servlet容器的原因有：
-
-通信支持：利用容器提供的方法，你能轻松的让servlet与web服务器对话，而不用自己建立serversocket、监听某个端口、创建流等 等。容器知道自己与web服务器之间的协议，所以你的servlet不用担心web服务器（如Apache）和你自己的web代码之间的API，只需要考 虑如何在servlet中实现业务逻辑（如处理一个订单）。
-生命周期管理：servlet容器控制着servlet的生与死，它负责加载类、实例化和初始化servlet，调用servlet方法，以及使servlet实例被垃圾回收，有了servlet容器，你不需要太多的考虑资源管理。
-多线程支持：容器会自动为它所接收的每个servlet请求创建一个新的java线程。针对用户的请求，如果servlet已经运行完相应的http服务方法，这个线程就会结束。这并不是说你不需要考虑线程安全性，其实你还会遇到同步问题，不过这样能使你少做很多工作。
-声明方式实现安全：利用servlet容器，你可以使用xml部署描述文件来配置和修改安全性，而不必将其硬编码写到servlet类代码中。
-JSP支持：servlet容器负责将jsp代码翻译为真正的java代码。
+除了提供通信支持和资源管理之外，使用Servlet容器还提供多线程支持。容器会自动为它所接收的每个Servlet请求创建一个新的线程，并且当运行完相应的http服务方法，这个线程就会自动结束。当然，这并不是说开发者就不再不需要考虑线程安全性，只不过这样能减少做很多重复的工作。
 
 **Servlet Lifecycle**:
 
@@ -160,17 +163,38 @@ Servlet 调用 service() 方法来处理客户端的请求。
 Servlet 销毁前调用 destroy() 方法。
 最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。
 
-## Listener/Filter
+### Filter
 
-Listener用于监听Web应用中的事件，以实现一些全局操作。如监听Web应用的启动和停止，会话对象的创建和销毁等。
+在一个比较复杂的Web应用程序中，通常都有很多URL映射，对应的，也会有多个Servlet来处理URL。假设现在有一个论坛Web 应用，它有5个Servlet。其中，ProfileServlet、PostServlet和ReplyServlet都需要用户登录后才能操作，否则，应当直接跳转到登录页面。我们可以直接把判断登录的逻辑写到这3个Servlet中，但是，同样的逻辑重复3次没有必要，并且，如果后续继续加Servlet并且也需要验证登录时，还需要继续重复这个检查逻辑。
 
-Filter是一种实现了Filter接口的Web资源对象，可以对Web资源的请求和响应进行过滤和预处理。通常用于编码转换、数据压缩、日志记录等。
+为了把一些公用逻辑从各个Servlet中抽离出来，JavaEE的Servlet规范还提供了一种Filter组件，即过滤器，它的作用是，在HTTP请求到达Servlet之前，可以被一个或多个Filter预处理，类似打印日志、登录检查等逻辑，完全可以放到Filter中。
+
+### Listener
+
+除了Servlet和Filter外，JavaEE的Servlet规范还提供了第三种组件：Listener。Listener顾名思义就是监听器，用于监听Web应用中的事件，以实现一些全局操作。如监听Web应用的启动和停止，会话对象的创建和销毁等。比如，下面这个例子就实现了一个ServletContextListener接口的类。
+
+```java
+@WebListener
+public class AppListener implements ServletContextListener {
+    // 在此初始化WebApp,例如打开数据库连接池等:
+    public void contextInitialized(ServletContextEvent sce) {
+        System.out.println("WebApp initialized.");
+    }
+
+    // 在此清理WebApp,例如关闭数据库连接池等:
+    public void contextDestroyed(ServletContextEvent sce) {
+        System.out.println("WebApp destroyed.");
+    }
+}
+```
+
+任何标注为@WebListener，且实现了特定接口的类会被Web服务器自动初始化。上述AppListener实现了ServletContextListener接口，它会在整个Web应用程序初始化完成后，以及Web应用程序关闭后获得回调通知。我们可以把初始化数据库连接池等工作放到contextInitialized()回调方法中，把清理资源的工作放到contextDestroyed()回调方法中，因为Web服务器保证在contextInitialized()执行后，才会接受用户的HTTP请求。
 
 ## JSP
 
 正如前面历史介绍中所提到的那样，JSP（Java服务端网页，Java Server Page）是一种基于HTML模板的动态网页技术。早期Servlet程序是将HTML语句拆成一行一行嵌入Java源文件，并用ServletResponse中PrintWriter写入返回响应之中，而JSP则是在需要动态输出的地方使用JSP标签将Java代码嵌入HTML文件中。
 
-### Welcome.jsp: a simple example
+### Welcome.jsp: A simple JSP example
 
 有一个简单的Welcome.jsp内容如下，将其放置在Tomcat的webapps目录下。其中，out是JSP内置的变量，表示当前HttpServletResponse的PrintWriter。
 
@@ -287,7 +311,35 @@ public final class welcome_jsp extends org.apache.jasper.runtime.HttpJspBase
 
 ```
 
-可见，JSP程序的工作原理和Servlet程序没有任何区别，因为JSP在执行前首先被编译成一个Servlet。
+可见JSP文件会在执行前首先被编译成一个Servlet程序，所以我们访问welcome.jsp时其实是在访问welcome_jsp.java中的Servlet。
+
+## JPA
+
+JPA(Java Persistence API)是一种Java规范，旨在简化Java对象与关系数据库之间的持久化操作。它提供了一种对象关系映射(Object-Relational Mapping，ORM)的标准规范，使开发者能够以面向对象的方式操作关系数据库中的数据，而不必直接编写冗长且易出错的SQL语句。JPA定义了一组注解和接口，用于描述对象与数据库表之间的映射关系，以及执行持久化操作(如创建、查询、更新和删除)所需的API。它为Java应用程序提供了一层抽象，屏蔽了底层数据库系统的差异，提高了代码的可移植性和可维护性。
+
+### ORM
+
+对象关系映射（ORM）是一种通过将对象状态映射到数据库列来开发和维护对象与关系数据库之间的关系的功能。 它能够轻松处理各种数据库操作，例如插入、更新、删除等。
+
+## MVC
+
+MVC(模型-视图-控制器)是一种软件架构模式，将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。Java Web开发中常采用这种模式，比如JavaBean充当模型，JSP充当视图，Servlet充当控制器。
+
+### J2EE
+
+**Java vs J2EE**:
+
+![图5 J2EE架构](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWM0LnpoaW1nLmNvbS8yMjljZjlmZjViMTcyOWVhZjQwOGZhYzU2MjM4ZWViM19iLnBuZw)
+
+### Spring MVC
+
+基于Servlet/JSP规范，Java界出现了众多优秀的Web框架，提供更高层次的抽象，降低开发难度，如:
+
+Struts - 老牌Web框架，支持MVC模式
+WebWork - 经典的MVC框架
+Spring MVC - 目前最流行的MVC框架
+JSF - 基于组件的MVC框架
+这些框架在Servlet/JSP技术之上，提供更多高级功能，扩展性更好，开发效率更高，架构更清晰。在企业级应用中被广泛采用。
 
 ## Tomcat
 
@@ -304,19 +356,3 @@ Maven 有一个 tomcat 插件，可以让我们运行嵌入式 tomcat 实例，�
 ### Maven Tomcat Plugin
 
 **Maven plugin config**：
-
-## MVC
-
-MVC(模型-视图-控制器)是一种软件架构模式，将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。Java Web开发中常采用这种模式，比如JavaBean充当模型，JSP充当视图，Servlet充当控制器。
-
-![JSP/Servlet](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWM0LnpoaW1nLmNvbS8yMjljZjlmZjViMTcyOWVhZjQwOGZhYzU2MjM4ZWViM19iLnBuZw)
-
-### Java Web Framework
-
-基于Servlet/JSP规范，Java界出现了众多优秀的Web框架，提供更高层次的抽象，降低开发难度，如:
-
-Struts - 老牌Web框架，支持MVC模式
-WebWork - 经典的MVC框架
-Spring MVC - 目前最流行的MVC框架
-JSF - 基于组件的MVC框架
-这些框架在Servlet/JSP技术之上，提供更多高级功能，扩展性更好，开发效率更高，架构更清晰。在企业级应用中被广泛采用。
