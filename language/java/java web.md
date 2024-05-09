@@ -10,8 +10,13 @@
   - [JSP](#jsp)
     - [Welcome.jsp: A simple JSP example](#welcomejsp-a-simple-jsp-example)
     - [JSP Workflow](#jsp-workflow)
-  - [JPA](#jpa)
+  - [Data Access](#data-access)
+    - [JDBC](#jdbc)
+    - [JPA](#jpa)
+      - [Entity](#entity)
+      - [Entity Manager](#entity-manager)
     - [ORM](#orm)
+  - [EJB](#ejb)
   - [MVC](#mvc)
     - [J2EE](#j2ee)
     - [Spring MVC](#spring-mvc)
@@ -313,33 +318,101 @@ public final class welcome_jsp extends org.apache.jasper.runtime.HttpJspBase
 
 可见JSP文件会在执行前首先被编译成一个Servlet程序，所以我们访问welcome.jsp时其实是在访问welcome_jsp.java中的Servlet。
 
-## JPA
+## Data Access
 
-JPA(Java Persistence API)是一种Java规范，旨在简化Java对象与关系数据库之间的持久化操作。它提供了一种对象关系映射(Object-Relational Mapping，ORM)的标准规范，使开发者能够以面向对象的方式操作关系数据库中的数据，而不必直接编写冗长且易出错的SQL语句。JPA定义了一组注解和接口，用于描述对象与数据库表之间的映射关系，以及执行持久化操作(如创建、查询、更新和删除)所需的API。它为Java应用程序提供了一层抽象，屏蔽了底层数据库系统的差异，提高了代码的可移植性和可维护性。
+在Web应用开发中，除了页面显示和URL请求处理外，数据存储和访问也是非常重要的一个环节。Java为开发者提供了多种数据访问方式，从低层次到高层次，从底层API到高级框架。
+
+### JDBC
+
+JDBC(Java Database Connectivity)是一套Java应用访问数据库的接口规范，主要由java.sql和javax.sql两个包组成。当Java程序尝试访问数据库时，实际上是通过使用该数据库公司提供的JDBC驱动进行访问的，其流程如图5所示。换句话说，第三方提供的JDBC驱动实现了JDBC接口，向上层Java应用隐藏了访问逻辑，从而简化了Java程序员的工作量。
+
+![图5 JDBC工作流程](../img/jdbc_workflow.png)
+
+**JDBC Driver**：
+
+想要使用JDBC驱动，我们只需要在工程中添加一个Maven依赖即可，比如使用MySQL的JDBC驱动：
+
+```xml
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>5.1.47</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
+**JDBC Connection**:
+
+**JDBC Query**:
+
+建立连接后，可以通过执行SQL语句来查询数据。JDBC提供了 Statement 和 PreparedStatement 两种方式执行SQL语句。比如：
+
+```java
+java Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery("SELECT * FROM users");
+```
+
+**JDBC CURD**:
+
+除了查询，JDBC还可以执行增删改操作。
+
+```java
+// 插入
+PreparedStatement pstmt = conn.prepareStatement("INSERT INTO users(name, age) VALUES(?, ?)");
+pstmt.setString(1, "John");
+pstmt.setInt(2, 30);
+pstmt.executeUpdate();
+
+// 更新
+pstmt = conn.prepareStatement("UPDATE users SET age = ? WHERE id = ?");
+pstmt.setInt(1, 31);
+pstmt.setInt(2, 1);
+pstmt.executeUpdate();
+
+// 删除
+pstmt = conn.prepareStatement("DELETE FROM users WHERE id = ?");
+pstmt.setInt(1, 1);
+pstmt.executeUpdate();
+```
+
+**JDBC Transcation**:
+
+数据库事务（Transaction）是由若干个SQL语句构成的一个操作序列，有点类似于Java的synchronized同步。数据库系统保证在一个事务中的所有SQL要么全部执行成功，要么全部不执行，即数据库事务具有ACID特性：
+
+- Atomicity：原子性
+- Consistency：一致性
+- Isolation：隔离性
+- Durability：持久性
+
+要在JDBC中执行事务，本质上就是如何把多条SQL包裹在一个数据库事务中执行。
+
+### JPA
+
+JPA(Java Persistence API，Java持久层API)是一种对象关系映射(Object-Relational Mapping，ORM)的标准规范，旨在简化Java对象与关系数据库之间的持久化操作。它提供了，使开发者能够以面向对象的方式操作关系数据库中的数据，而不必直接编写冗长且易出错的SQL语句。JPA定义了一组注解和接口，用于描述对象与数据库表之间的映射关系，以及执行持久化操作(如创建、查询、更新和删除)所需的API。它为Java应用程序提供了一层抽象，屏蔽了底层数据库系统的差异，提高了代码的可移植性和可维护性。
+
+#### Entity
+
+#### Entity Manager
+
+**JPQL**：
 
 ### ORM
 
-对象关系映射（ORM）是一种通过将对象状态映射到数据库列来开发和维护对象与关系数据库之间的关系的功能。 它能够轻松处理各种数据库操作，例如插入、更新、删除等。
+对象关系映射（Object-Relational Mapping，ORM）是一种通过将对象状态映射到数据库列来开发和维护对象与关系数据库之间的关系的功能。 它能够轻松处理各种数据库操作，例如插入、更新、删除等。
+
+## EJB
 
 ## MVC
 
-MVC(模型-视图-控制器)是一种软件架构模式，将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。Java Web开发中常采用这种模式，比如JavaBean充当模型，JSP充当视图，Servlet充当控制器。
+MVC(模型-视图-控制器)是一种软件架构模式，将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。
 
 ### J2EE
 
-**Java vs J2EE**:
+Java Web开发中常采用这种模式，比如JavaBean充当模型，JSP充当视图，Servlet充当控制器。
 
 ![图5 J2EE架构](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWM0LnpoaW1nLmNvbS8yMjljZjlmZjViMTcyOWVhZjQwOGZhYzU2MjM4ZWViM19iLnBuZw)
 
 ### Spring MVC
-
-基于Servlet/JSP规范，Java界出现了众多优秀的Web框架，提供更高层次的抽象，降低开发难度，如:
-
-Struts - 老牌Web框架，支持MVC模式
-WebWork - 经典的MVC框架
-Spring MVC - 目前最流行的MVC框架
-JSF - 基于组件的MVC框架
-这些框架在Servlet/JSP技术之上，提供更多高级功能，扩展性更好，开发效率更高，架构更清晰。在企业级应用中被广泛采用。
 
 ## Tomcat
 
