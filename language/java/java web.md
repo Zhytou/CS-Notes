@@ -13,13 +13,13 @@
   - [Data Access](#data-access)
     - [JDBC](#jdbc)
     - [JPA](#jpa)
-      - [Entity](#entity)
-      - [Entity Manager](#entity-manager)
     - [ORM](#orm)
   - [EJB](#ejb)
+  - [JAX-RS](#jax-rs)
   - [MVC](#mvc)
-    - [J2EE](#j2ee)
+    - [J2EE Web Application](#j2ee-web-application)
     - [Spring MVC](#spring-mvc)
+  - [Design Style](#design-style)
   - [Tomcat](#tomcat)
     - [Standalone Tomcat](#standalone-tomcat)
     - [Embedded Tomcat](#embedded-tomcat)
@@ -343,6 +343,20 @@ JDBC(Java Database Connectivity)是一套Java应用访问数据库的接口规�
 
 **JDBC Connection**:
 
+使用JDBC时，首先需要加载驱动并建立与数据库的连接。连接过程中需要提供数据库URL、用户名和密码等信息。
+
+```java
+// JDBC连接的URL, 不同数据库有不同的格式:
+String JDBC_URL = "jdbc:mysql://localhost:3306/test";
+String JDBC_USER = "root";
+String JDBC_PASSWORD = "password";
+// 获取连接:
+Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+// TODO: 访问数据库...
+// 关闭连接:
+conn.close();
+```
+
 **JDBC Query**:
 
 建立连接后，可以通过执行SQL语句来查询数据。JDBC提供了 Statement 和 PreparedStatement 两种方式执行SQL语句。比如：
@@ -351,6 +365,8 @@ JDBC(Java Database Connectivity)是一套Java应用访问数据库的接口规�
 java Statement stmt = conn.createStatement();
 ResultSet rs = stmt.executeQuery("SELECT * FROM users");
 ```
+
+相比Statement，PreparedStatement会对SQL语句进行预编译处理，而这条预编译的SQL查询语句能在将来的查询中重用，这样一来，在重复查询时，它将比Statement对象生成的查询速度快很多。
 
 **JDBC CURD**:
 
@@ -388,13 +404,56 @@ pstmt.executeUpdate();
 
 ### JPA
 
-JPA(Java Persistence API，Java持久层API)是一种对象关系映射(Object-Relational Mapping，ORM)的标准规范，旨在简化Java对象与关系数据库之间的持久化操作。它提供了，使开发者能够以面向对象的方式操作关系数据库中的数据，而不必直接编写冗长且易出错的SQL语句。JPA定义了一组注解和接口，用于描述对象与数据库表之间的映射关系，以及执行持久化操作(如创建、查询、更新和删除)所需的API。它为Java应用程序提供了一层抽象，屏蔽了底层数据库系统的差异，提高了代码的可移植性和可维护性。
+JPA(Java Persistence API，Java持久层API)是一种对象关系映射(Object-Relational Mapping，ORM)的标准规范，旨在简化Java对象与关系数据库之间的持久化操作。它定义了一组注解和接口，用于描述对象与数据库表之间的映射关系，以及执行持久化操作(如创建、查询、更新和删除)所需的API。
 
-#### Entity
+2006，JPA1.0首次作为EJB3.0规范的一部分提出。从J2EE6开始，JPA2.0已发展成单独的规范。值得注意的是，JPA是只针对RDBMS的，对于NoSQL没有作用。
 
-#### Entity Manager
+**Entity**:
+
+一个关系型数据库可以使用[E-R图](https://en.wikipedia.org/wiki/Entity%E2%80%93relationship_model)进行描述，即由实体、属性和关系组成。其中，实体可以是有形的、实际存在的事物(如每个员工)，也可以是抽象的、概念上的事物(如一个部门)。
+
+实体在实际Java开发中往往是一个POJO（Plain Old Java Object），比如：
+
+```java
+import javax.persistence.*;  
+@Entity  
+public class Student {  
+    @Id  
+    private int id;  
+    private String name;  
+    public Student() {}  
+    public Student(int id)   
+    {  
+      this.id = id;  
+    }  
+    public int getId()   
+    {  
+      return id;  
+    }  
+    public void setId(int id)   
+    {  
+      this.id = id;  
+    }  
+    public String getName()  
+    {  
+      return name;   
+    }  
+    public void setName(String name)   
+    {  
+      this.name = name;  
+    }  
+}  
+```
+
+**Entity Manager**:
+
+在 JPA 规范中, EntityManager 是完成持久化操作的核心对象。
 
 **JPQL**：
+
+Java持久化查询语言（Java Persistence query language，简称 JPQL）定义实体及其持久状态的查询。 查询语言允许您编写可用的查询语句，而不用管底层数据是如何实现存储的。
+
+查询语言使用实体的抽象持久化模式（包括其关系）作为其数据模型，并基于此数据模型定义运算符和表达式。查询的范围跨越包装在同一持久单元中的相关实体的抽象模式。查询语言使用类似SQL的语法来基于实体抽象模式类型和它们之间的关系来选择对象或值。
 
 ### ORM
 
@@ -402,17 +461,27 @@ JPA(Java Persistence API，Java持久层API)是一种对象关系映射(Object-R
 
 ## EJB
 
+## JAX-RS
+
 ## MVC
 
 MVC(模型-视图-控制器)是一种软件架构模式，将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。
 
-### J2EE
+### J2EE Web Application
 
-Java Web开发中常采用这种模式，比如JavaBean充当模型，JSP充当视图，Servlet充当控制器。
+Java Web开发中常采用这种模式，比如EJB充当模型，JSP充当视图，而Servlet则充当控制器。换句话说，Servlet程序中不再包含写入html的流了，而完完全全充当一个请求转发器，hua'z
 
 ![图5 J2EE架构](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWM0LnpoaW1nLmNvbS8yMjljZjlmZjViMTcyOWVhZjQwOGZhYzU2MjM4ZWViM19iLnBuZw)
 
 ### Spring MVC
+
+但是，直接把MVC搭在Servlet和JSP之上还是不太好，原因如下：
+
+Servlet提供的接口仍然偏底层，需要实现Servlet调用相关接口；
+JSP对页面开发不友好，更好的替代品是模板引擎；
+业务逻辑最好由纯粹的Java类实现，而不是强迫继承自Servlet。
+
+## Design Style
 
 ## Tomcat
 
