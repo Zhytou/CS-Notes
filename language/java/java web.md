@@ -13,7 +13,7 @@
   - [Data Access](#data-access)
     - [JDBC](#jdbc)
     - [JPA](#jpa)
-    - [ORM](#orm)
+    - [ORM Framework](#orm-framework)
   - [EJB](#ejb)
   - [JAX-RS](#jax-rs)
   - [MVC](#mvc)
@@ -410,9 +410,9 @@ JPA(Java Persistence API，Java持久层API)是一种对象关系映射(Object-R
 
 **Entity**:
 
-一个关系型数据库可以使用[E-R图](https://en.wikipedia.org/wiki/Entity%E2%80%93relationship_model)进行描述，即由实体、属性和关系组成。其中，实体可以是有形的、实际存在的事物(如每个员工)，也可以是抽象的、概念上的事物(如一个部门)。
+JPA基于[E-R模型](https://en.wikipedia.org/wiki/Entity%E2%80%93relationship_model)，即一个关系型数据库可以使用实体、属性和关系进行描述。其中，实体可以是有形的、实际存在的事物(如每个员工)，也可以是抽象的、概念上的事物(如一个部门)。
 
-实体在实际Java开发中往往是一个POJO（Plain Old Java Object），比如：
+在实际开发中，实体类往往是一个POJO（Plain Old Java Object），比如：
 
 ```java
 import javax.persistence.*;  
@@ -455,11 +455,19 @@ Java持久化查询语言（Java Persistence query language，简称 JPQL）定�
 
 查询语言使用实体的抽象持久化模式（包括其关系）作为其数据模型，并基于此数据模型定义运算符和表达式。查询的范围跨越包装在同一持久单元中的相关实体的抽象模式。查询语言使用类似SQL的语法来基于实体抽象模式类型和它们之间的关系来选择对象或值。
 
-### ORM
+### ORM Framework
 
-对象关系映射（Object-Relational Mapping，ORM）是一种通过将对象状态映射到数据库列来开发和维护对象与关系数据库之间的关系的功能。 它能够轻松处理各种数据库操作，例如插入、更新、删除等。
+ORM 框架是一种对象关系映射技术，它提供了一种将面向对象的对象模型与关系型数据库中的数据模型相互映射的机制。ORM 框架的主要目标是简化数据持久化操作，使开发人员可以像操作对象一样操作数据库中的数据，而无需直接编写 SQL 语句。常见的 ORM 框架有 Hibernate、MyBatis、EclipseLink 等。
 
 ## EJB
+
+Enterprise JavaBean(EJB)是用于执行应用程序业务逻辑的服务器端组件。EJB是业务层的一部分，通常与Servlet和JSP结合使用。
+
+EJB由容器加载和管理，容器提供事务管理、安全性和线程等服务。EJB通常使用javax.ejb包来实现，该包提供了三种类型的EJB，包括：
+
+- 会话Bean：会话Bean用于为客户端执行特定任务。
+- 实体Bean：实体Bean用于表示持久数据并存储在数据库中。
+- 消息驱动Bean：消息驱动Bean用于异步处理消息。
 
 ## JAX-RS
 
