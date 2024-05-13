@@ -488,25 +488,33 @@ EJB由容器加载和管理，容器提供事务管理、安全性和线程等�
 
 ## MVC
 
-MVC(模型-视图-控制器)是一种软件架构模式，将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。
+MVC(模型-视图-控制器)是一种软件架构模式。它将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。
 
 ### J2EE Web Application
 
-Java Web开发中常采用这种模式，比如EJB充当模型，JSP充当视图，而Servlet则充当控制器。换句话说，Servlet程序中不再包含写入html的流了，而完完全全充当一个请求转发器。
+在传统的J2EE架构中，EJB扮演模型的角色，负责业务逻辑和数据访问；JSP扮演视图的角色，负责呈现页面内容；而Servlet则扮演控制器的角色，接收请求，调用模型进行业务处理，并选择合适的视图进行响应。在这种结构下，一个请求首先根据映射规则到达相应的Servlet，接着该Servlet执行业务逻辑(通常委托给EJB)，最后根据返回值，将相应的JSP文件渲染并返回给客户端。
 
 ![图5 J2EE架构](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWM0LnpoaW1nLmNvbS8yMjljZjlmZjViMTcyOWVhZjQwOGZhYzU2MjM4ZWViM19iLnBuZw)
 
 ### SSM
 
-但是，直接把MVC搭在Servlet和JSP之上还是不太好，原因如下：
+使用Servlet/JSP/EJB开发Web应用仍有缺点，比如：
 
 - Servlet提供的接口仍然偏底层，需要实现Servlet调用相关接口；
 - JSP对页面开发不友好，更好的替代品是模板引擎；
 - 业务逻辑最好由纯粹的Java类实现，而不是强迫继承自Servlet。
 
-因此，出现了一款优秀的MVC框架:Spring MVC。它提供了更高层次的抽象，使得开发人员可以专注于业务逻辑的实现，而不必过多关注底层的Web容器细节。和大多数MVC框架类似，Spring MVC也是请求驱动，并围绕一个DispatcherServlet设计的。它负责接收HTTP请求并将其分发到合适的控制器(Controller)进行处理。
+这些缺陷也催生了大量优秀的MVC框架。它们能提供更高层次的抽象，使得开发人员可以专注于业务逻辑的实现，而不必过多关注底层的Web容器细节。其中，最流行的正是Spring MVC框架。和大多数MVC框架类似，Spring MVC也是请求驱动并围绕一个DispatcherServlet设计的。这个DispatcherServlet负责接收HTTP请求并将其分发到合适的控制器(Controller)进行处理。对于一个使用Spring MVC开发的Web应用来说，用户的请求按如下顺序处理:
 
-随着前后端分离架构的兴起，Web应用开发模式也发生了变化。传统的JSP视图已经被淘汰，取而代之的是前端框架(如React、Vue、Angular)构建的单页面应用(SPA)。此时，Web应用后端的架构通常采用Controller+Service+DAO的模式，控制器(Controller)负责接收请求和响应，服务层(Service)负责实现业务逻辑，数据访问层(DAO)负责与数据库交互。这也正是目前流行的SSM(Spring+Spring MVC+MyBatis)框架所体现的架构模式。
+- 前端控制器DispatcherServlet接收到请求后，根据请求映射信息，找到对应处理该请求的控制器方法；
+- 执行该方法，得到一个视图名称；
+- 根据配置的视图解析器，将控制器返回的视图名称解析为实际的视图对象，比如JSP文件；
+- 视图解析器将模型数据渲染到视图对象中；
+- 将渲染后的视图内容返回给客户端进行展示。
+
+![图6 Spring MVC Workflow](https://docs.spring.io/spring-framework/docs/3.2.x/spring-framework-reference/html/images/mvc.png)
+
+随着前后端分离架构的兴起，Web应用开发模式也发生了变化。传统的JSP视图已经被淘汰，取而代之的是前端框架(如React、Vue、Angular)构建的单页面应用(SPA)。此时，Web应用后端的架构通常采用Controller+Service+DAL的模式，控制器(Controller)负责接收请求和响应，服务层(Service)负责实现业务逻辑，数据访问层(Data Access Layer，DAL)负责与数据库交互。这也正是目前流行的SSM(Spring+Spring MVC+MyBatis)框架所体现的架构模式。
 
 ## Design Style
 
