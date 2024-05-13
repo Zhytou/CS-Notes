@@ -4,6 +4,7 @@
   - [框架概述](#框架概述)
     - [Spring Framework](#spring-framework)
     - [Spring Boot](#spring-boot)
+    - [Spring Cloud](#spring-cloud)
   - [控制反转 IoC](#控制反转-ioc)
     - [依赖注入 DI](#依赖注入-di)
     - [IoC容器](#ioc容器)
@@ -13,32 +14,25 @@
   - [面向切面编程 AOP](#面向切面编程-aop)
     - [Spring AOP](#spring-aop)
     - [AspectJ](#aspectj)
-  - [JdbcTemplate](#jdbctemplate)
-    - [JdbcTemplate的概念](#jdbctemplate的概念)
-    - [JdbcTemplate的配置](#jdbctemplate的配置)
-    - [JdbcTemplate实现增删改查](#jdbctemplate实现增删改查)
-  - [Spring事务管理](#spring事务管理)
-    - [事务](#事务)
-    - [准备工作](#准备工作)
-    - [事务管理](#事务管理)
-    - [XML声明式事务管理](#xml声明式事务管理)
-    - [注解声明式事务管理](#注解声明式事务管理)
-    - [完全注解声明式事务管理](#完全注解声明式事务管理)
-  - [Spring日志](#spring日志)
-    - [log4j日志框架整合](#log4j日志框架整合)
+  - [Web开发 Spring MVC](#web开发-spring-mvc)
+  - [数据访问 Data Access](#数据访问-data-access)
+  - [参考 Reference](#参考-reference)
 
 ## 框架概述
 
-Spring是一个生态系统，其中包含了Spring Framework、Spring Boot、Spring Cloud等等，也即Spring全家桶。
+Spring是一款开源的轻量级Java开发框架，旨在提高开发人员的开发效率以及系统的可维护性。它包含了Spring Framework、Spring Boot、Spring Cloud等等模块。
 
 ### Spring Framework
 
 其中，Spring Framework就是我们平时说的Spring框架。它Spring的基石，提供了许多核心特性和功能，比如：
 
-- 依赖注入(DI)和控制反转(IoC)
-- 面向切面编程(AOP)
-- 数据访问抽象层
-- 事务管理
+- 核心机制
+  - 依赖注入(DI)和控制反转(IoC)
+  - 面向切面编程(AOP)
+- 数据访问
+  - DAO
+  - ORM
+  - 事务管理
 - Web编程模块(如Spring MVC)
 - 测试支持
 
@@ -53,6 +47,19 @@ Spring Framework体系结构如下图：
 Spring Boot是Spring生态系统中的另一个重要项目，它建立在Spring Framework的基础之上。Spring Boot的目的是简化Spring应用的配置和部署。它提供的功能包括：提供自动配置的开箱即用体验、内嵌Tomcat/Jetty等Servlet容器、提供生产级监控和管理功能和集成大量开源中间件等等。通过Spring Boot，开发人员可以更快速地构建基于Spring的应用程序，省去大量样板配置代码。
 
 此外，相比于SSM框架在DAO层限制只能使用MyBatis，Spring Boot更灵活。它没有和任何MVC框架绑定，也没有和任何持久层框架绑定，同样也没有和任何其他业务领域的框架绑定。
+
+### Spring Cloud
+
+Spring Cloud是Spring官方支持的微服务全家桶，主要目标是简化分布式系统的开发。它基于Spring Boot，并整合了众多开源组件:
+
+- 服务发现和注册(如Eureka)
+- 智能路由(如Zuul)
+- 客户端负载均衡(如Ribbon)
+- 断路器模式(如Hystrix)
+- 配置中心
+- 分布式跟踪
+
+Spring Cloud提供了一整套微服务架构的解决方案，帮助开发人员快速构建分布式、高可用、高扩展的微服务系统。
 
 ## 控制反转 IoC
 
@@ -349,310 +356,10 @@ AspectJ是一个基于Java语言的 AOP 实现，它扩展了 Java 语言本身�
 
 但不同与Spring AOP，AspectJ本身不是Spring的一部分。直到 Spring 2.0 开始，Spring AOP才引入了对 AspectJ 的支持。在新版本的 Spring 框架中，建议使用 AspectJ 方式开发 AOP。类似IoC容器，基于AspectJ实现AOP操作也可以通过XML和注解的两种方式。
 
-## JdbcTemplate
+## Web开发 Spring MVC
 
-### JdbcTemplate的概念
+## 数据访问 Data Access
 
-- 定义：Spring框架对JDBC进行了封装，也就是JdbcTemplate
+## 参考 Reference
 
-### JdbcTemplate的配置
-
-- 引入jar包依赖
-
-- 添加数据源
-
-  ``` xml
-  <!-- 配置数据源 --> 
-  <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-    <!--数据库驱动-->
-    <property name="driverClassName" value="com.mysql.jdbc.Driver" /> 
-    <!--连接数据库的url-->
-    <property name= "url" value="jdbc:mysql://localhost/xx" />
-    <!--连接数据库的用户名-->
-    <property name="username" value="root" />
-    <!--连接数据库的密码-->
-    <property name="password" value="root" />
-  </bean>
-  ```
-
-  
-
-- 创建JdbcTemplate对象，注入DataSource
-
-  ``` xml
-  <!--配置JDBC模板-->
-  <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-  	<!--默认必须使用数据源-->
-    <property name="dataSource" ref="dataSource"/>
-  </bean>
-  ```
-
-- 引用JdbcTemplate对象（一般在dao层使用）
-
-### JdbcTemplate实现增删改查
-
-- 创建表（关系集和实体集）
-
-- 编写service和dao
-
-  - 在dao层类中注入JdbcTemplate
-
-  - 通过JdbcTemplate实现数据库的增删改查
-
-    - update函数
-
-      ``` java
-      //dao层函数
-      public void deleteBook(String id) {
-        String sql = "delete from book where id = ?";
-        //jdbcTemplate是dao层类内变量
-        jdbcTemplate.update(sql, id)
-      }
-      ```
-
-    - queryForObject函数
-
-      查询返回值
-
-      ``` java
-      //dao层函数
-      public int selectCount() {
-        String sql = "select count(-) from book";
-        //jdbcTemplate是dao层类内变量
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class);
-        return count;
-      }
-      ```
-
-      查询返回对象
-
-      ``` java
-      //dao层函数
-      public Book findBook(String id) {
-        String sql = "select - from book where id = ?";
-        //jdbcTemplate是dao层类内变量
-        Book book = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<Book>(Book.class), id);
-        return book;
-      }
-      ```
-
-    - query函数
-
-      查询返回集合
-
-      ``` java
-      //dao层函数
-      public List<Book> findAllBook() {
-        String sql = "select - from book";
-        //jdbcTemplate是dao层类内变量
-        List<Book> bookList = jdbcTemplate.query(sql, new BeanPropertyRowMapper<Book>(Book.class));
-        return bookList;
-      }
-      ```
-
-  - JdbcTemplate实现数据库的批量操作
-
-    - batchUpdate函数
-
-      ``` java
-      //dao层函数
-      public void batchAddBook(List<Object[]> args) {
-        String sql = "insert into book values(?,?,?)";
-        //jdbcTemplate是dao层类内变量
-      	jdbcTemplate.queryForObject(sql,args);
-      }
-      ```
-
-## Spring事务管理
-
-### 事务
-
-- 概念：数据库操作的基本单元
-- 特性（ACID）
-  - 原子性
-  - 一致性
-  - 隔离性
-  - 持久性
-
-### 准备工作
-
-- 搭建service和dao层：将dao层注入service层，将JdbcTemplate注入dao层，将DataSource注入JdbTemplate
-- 事务逻辑常常加到JavaEE三层结构里的service层
-
-### 事务管理
-
-- 有两种方式：编程式事务管理和声明式事务管理
-
-- 编程式事务管理
-
-  ``` java
-  try {
-    //开启事务
-    //TODO
-    
-    //业务逻辑
-    //TODO
-  
-    //事务提交
-    //TODO
-  
-  }
-  catch(Exception e) {
-    //事务回滚
-    //TODO
-  }
-  ```
-
-- 声明式事物管理（底层原理：AOP）
-
-  - 基于XML配置文件方式
-  - 基于注解方式
-
-### XML声明式事务管理
-
-- 在配置文件中创建事务管理器，并添加事务的命名空间
-
-  ``` xml
-  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransationManager">
-  	<property name="dataSource" ref="dataSource"/>
-  </bean>
-  ```
-
-- 配置通知
-
-  ``` xml
-  <tx:advice id="txadvice">
-    <!-- 配置事务参数-->
-    <tx:attributs>
-      <!-- 指定在哪个方法上添加类-->
-      <tx:method name="fun" propagation="REQUIRED"/>
-    </tx:attributs>
-  </tx:advice>
-  ```
-
-- 配置切入点和切面
-
-  ``` xml
-  <aop:config>
-    <!--配置切入点-->
-    <aop:pointcut id="pt" expression="excution(- com.atguigu.spring5.service.Service)">
-    <!--配置切入面-->
-    <aop:advisor advice-ref="txadvice" point-ref="pt"/>
-  </aop:config>
-  ```
-
-### 注解声明式事务管理
-
-- 在配置文件中创建事务管理器
-
-  ``` xml
-  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransationManager">
-  	<property name="dataSource" ref="dataSource"/>
-  </bean>
-  ```
-
-- 在配置文件中开启事务注解
-
-  - 添加命名空间
-
-    ``` xml
-    <beans xmlns="http://www.springframework.org/schema/beans"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:tx="http://www.springframework.org/schema/tx"
-        xmlns:aop="http://www.springframework.org/schema/aop"
-        xsi:schemaLocation="http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-           http://www.springframework.org/schema/tx
-           http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
-           http://www.springframework.org/schema/aop
-           http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
-      <!-- 其他配置：数据源配置、JdbcTemplate类配置以及事务管理器配置 -->
-      
-    </beans>
-    ```
-
-  - 开启事务注解
-
-    ``` xml
-    <tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>
-    ```
-
-- 在service的类或方法中添加注解@Transactional
-
-  - 添加到类上：这个类中所有方法都添加了事务
-  - 添加到方法上：这个方法添加类事务
-
-- @Transactional的参数设置
-
-  - propagation：事务传播行为
-  - isolation：事务隔离级别
-  - timeout：超时时间
-    - 事务需要在一定时间内进行提交，超时则会回滚
-    - 默认是-1
-  - readOnly：是否只读
-    - 读：查询操作
-    - readOnly默认值为false
-  - rollbackFor：回滚
-    - 可以设置出现哪些异常进行事务回滚
-  - noRollbackFor：不回滚
-    - 可以设置出现哪些异常不进行事务回滚
-
-### 完全注解声明式事务管理
-
-- 创建配置类
-
-  ``` java
-  @Configuration
-  @ComponentScan(basePackages="")
-  @EnableTransactionManger
-  class TxConfig {
-    //创建数据库连接池
-    @Bean
-    public DruidDataSource getDruidDataSource() {
-      DruidDataSource dataSource = new DruidDataSource();
-      dataSource.setDriverClassName("xxx.xxx.xxx");
-      dataSource.setUrl("jdbc:mysql://user_db");
-      dataSource.setUsername("root");
-      dataSource.setPassword("root");
-      return dataSource;
-    }
-    
-    //创建JdbcTemplate对象
-    @Bean
-    public JdbcTemplate getJdbcTemplate(DataSource dataSource) {
-    	JdbcTemplate jdbcTemplate = new JdbcTemplate();
-      jdbcTemplate.setDataSource(dataSource);
-      return jdbcTemplate;
-    }
-    
-    //创建事务管理器
-    public DataSourceTransactionManager getDataSource
-  }
-  ```
-
-## Spring日志
-
-> 日志是应用软件中不可缺少的部分，Apache 的开源项目 Log4J 是一个功能强大的日志组件。
-在 Spring 中使用 Log4J 是非常容易的。
-
-### log4j日志框架整合
-
-- 引入jar包依赖
-
-- 创建配置文件（log4jx.xml）
-
-  ``` xml
-  <?xml version="1.0" encoding="UTF-8"?>
-   <Configuration status="WARN">
-     <Appenders>
-       <Console name="Console" target="SYSTEM_OUT">
-         <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-       </Console>
-     </Appenders>
-     <Loggers>
-       <Root level="error">
-         <AppenderRef ref="Console"/>
-       </Root>
-     </Loggers>
-   </Configuration>
-  ```
+[Spring Framework文档](https://docs.spring.io/spring-framework/reference/)
