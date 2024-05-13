@@ -10,20 +10,21 @@
   - [JSP](#jsp)
     - [Welcome.jsp: A simple JSP example](#welcomejsp-a-simple-jsp-example)
     - [JSP Workflow](#jsp-workflow)
+  - [Tomcat](#tomcat)
+    - [Standalone Tomcat](#standalone-tomcat)
+    - [Embedded Tomcat](#embedded-tomcat)
+    - [Maven Tomcat Plugin](#maven-tomcat-plugin)
   - [Data Access](#data-access)
     - [JDBC](#jdbc)
     - [JPA](#jpa)
     - [ORM Framework](#orm-framework)
   - [EJB](#ejb)
-  - [JAX-RS](#jax-rs)
   - [MVC](#mvc)
     - [J2EE Web Application](#j2ee-web-application)
-    - [Spring MVC](#spring-mvc)
+    - [SSM](#ssm)
   - [Design Style](#design-style)
-  - [Tomcat](#tomcat)
-    - [Standalone Tomcat](#standalone-tomcat)
-    - [Embedded Tomcat](#embedded-tomcat)
-    - [Maven Tomcat Plugin](#maven-tomcat-plugin)
+    - [Event Driven Design](#event-driven-design)
+    - [Domain Driven Design](#domain-driven-design)
 
 ## History
 
@@ -318,6 +319,22 @@ public final class welcome_jsp extends org.apache.jasper.runtime.HttpJspBase
 
 可见JSP文件会在执行前首先被编译成一个Servlet程序，所以我们访问welcome.jsp时其实是在访问welcome_jsp.java中的Servlet。
 
+## Tomcat
+
+Tomcat是一种轻量级的Web应用服务器，也是Servlet/JSP规范的参考实现。它不只是一个静态资源服务器，更是一个动态资源处理容器，能够管理Servlet/JSP应用程序的生命周期。
+
+### Standalone Tomcat
+
+### Embedded Tomcat
+
+Java Web应用程序总是需要一个可以运行这些应用程序的Tomcat，但是在每台开发机器上都安装和配置一个本地Tomcat会非常耗时。此外，开发人员如果想要运行 Web 应用程序，则需要手动管理依赖项。
+
+Maven 有一个 tomcat 插件，可以让我们运行嵌入式 tomcat 实例，而无需安装本地 tomcat 服务器。
+
+### Maven Tomcat Plugin
+
+**Maven plugin config**：
+
 ## Data Access
 
 在Web应用开发中，除了页面显示和URL请求处理外，数据存储和访问也是非常重要的一个环节。Java为开发者提供了多种数据访问方式，从低层次到高层次，从底层API到高级框架。
@@ -469,40 +486,36 @@ EJB由容器加载和管理，容器提供事务管理、安全性和线程等�
 - 实体Bean：实体Bean用于表示持久数据并存储在数据库中。
 - 消息驱动Bean：消息驱动Bean用于异步处理消息。
 
-## JAX-RS
-
 ## MVC
 
 MVC(模型-视图-控制器)是一种软件架构模式，将应用程序划分为模型(Model)、视图(View)和控制器(Controller)三个部分，各自负责不同的功能。
 
 ### J2EE Web Application
 
-Java Web开发中常采用这种模式，比如EJB充当模型，JSP充当视图，而Servlet则充当控制器。换句话说，Servlet程序中不再包含写入html的流了，而完完全全充当一个请求转发器，hua'z
+Java Web开发中常采用这种模式，比如EJB充当模型，JSP充当视图，而Servlet则充当控制器。换句话说，Servlet程序中不再包含写入html的流了，而完完全全充当一个请求转发器。
 
 ![图5 J2EE架构](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWM0LnpoaW1nLmNvbS8yMjljZjlmZjViMTcyOWVhZjQwOGZhYzU2MjM4ZWViM19iLnBuZw)
 
-### Spring MVC
+### SSM
 
 但是，直接把MVC搭在Servlet和JSP之上还是不太好，原因如下：
 
-Servlet提供的接口仍然偏底层，需要实现Servlet调用相关接口；
-JSP对页面开发不友好，更好的替代品是模板引擎；
-业务逻辑最好由纯粹的Java类实现，而不是强迫继承自Servlet。
+- Servlet提供的接口仍然偏底层，需要实现Servlet调用相关接口；
+- JSP对页面开发不友好，更好的替代品是模板引擎；
+- 业务逻辑最好由纯粹的Java类实现，而不是强迫继承自Servlet。
+
+因此，出现了一款优秀的MVC框架:Spring MVC。它提供了更高层次的抽象，使得开发人员可以专注于业务逻辑的实现，而不必过多关注底层的Web容器细节。和大多数MVC框架类似，Spring MVC也是请求驱动，并围绕一个DispatcherServlet设计的。它负责接收HTTP请求并将其分发到合适的控制器(Controller)进行处理。
+
+随着前后端分离架构的兴起，Web应用开发模式也发生了变化。传统的JSP视图已经被淘汰，取而代之的是前端框架(如React、Vue、Angular)构建的单页面应用(SPA)。此时，Web应用后端的架构通常采用Controller+Service+DAO的模式，控制器(Controller)负责接收请求和响应，服务层(Service)负责实现业务逻辑，数据访问层(DAO)负责与数据库交互。这也正是目前流行的SSM(Spring+Spring MVC+MyBatis)框架所体现的架构模式。
 
 ## Design Style
 
-## Tomcat
+### Event Driven Design
 
-Tomcat是一种轻量级的Web应用服务器，也是Servlet/JSP规范的参考实现。它不只是一个静态资源服务器，更是一个动态资源处理容器，能够管理Servlet/JSP应用程序的生命周期。
+贫血模型/面向过程编程/分层（Controll+Service+Entitty+Dao）
 
-### Standalone Tomcat
+### Domain Driven Design
 
-### Embedded Tomcat
+充血模型/面向对象编程/
 
-Java Web应用程序总是需要一个可以运行这些应用程序的Tomcat，但是在每台开发机器上都安装和配置一个本地Tomcat会非常耗时。此外，开发人员如果想要运行 Web 应用程序，则需要手动管理依赖项。
-
-Maven 有一个 tomcat 插件，可以让我们运行嵌入式 tomcat 实例，而无需安装本地 tomcat 服务器。
-
-### Maven Tomcat Plugin
-
-**Maven plugin config**：
+![Domain-Driven Design vs. anemic model. How do they differ?](https://blog.pragmatists.com/domain-driven-design-vs-anemic-model-how-do-they-differ-ffdee9371a86)
