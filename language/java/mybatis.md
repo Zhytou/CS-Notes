@@ -12,25 +12,18 @@
   - [配置](#配置)
     - [property标签](#property标签)
     - [setting标签](#setting标签)
+    - [typeAliases标签](#typealiases标签)
+    - [typeHandler标签](#typehandler标签)
     - [plugin标签](#plugin标签)
     - [typeAlias标签](#typealias标签)
     - [package标签](#package标签)
-    - [typeHandler标签](#typehandler标签)
     - [environments标签](#environments标签)
     - [databaseIdProvider标签](#databaseidprovider标签)
     - [mapper标签](#mapper标签)
-    - [==特别注意==](#特别注意)
   - [映射器](#映射器)
-    - [XML实现映射器](#xml实现映射器)
-    - [注解实现映射器](#注解实现映射器)
+    - [标签](#标签)
+    - [注解](#注解)
   - [动态SQL](#动态sql)
-    - [常用标签](#常用标签)
-      - [if标签](#if标签)
-      - [set标签](#set标签)
-      - [foreach标签](#foreach标签)
-      - [bind标签](#bind标签)
-      - [trim标签](#trim标签)
-    - [其他](#其他)
   - [Spring集成](#spring集成)
 
 ## 概述
@@ -133,6 +126,8 @@ public class UserService {
 
 上一章节中的UserMapper示例演示了在Spring框架下集成MyBatis的用法，而MyBatis本身也可以通过类似JDBC的方式，打开面向数据库的会话并执行已注册的SQL语句。这就涉及到了MyBatis的核心组件及其工作原理，同时也解释了为什么只需提供Mapper接口和映射器文件，而无需实现实体类。
 
+![MyBatis工作流程](https://pic1.zhimg.com/v2-bc338a28008c9e0fa50deb6010ddf95c_r.jpg)
+
 ### 核心组件
 
 MyBatis的核心组件包括：
@@ -158,6 +153,9 @@ public static void main(String[] args) {
 
     // 执行sql语句
     List<User> userList = sqlSession.selectList("userMapper.findAll");
+    // 或使用Mapper执行sql语句
+    UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+    List<User> userList2 = mapper.findAll();
 
     // 打印结果
     for (User user : userList) {
@@ -192,6 +190,8 @@ SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建�
 
 ## 配置
 
+一个常见的MyBatis项目配置如下。
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
@@ -214,42 +214,67 @@ SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建�
 </configuration>
 ```
 
+其中，DOCTYPE声明包含对DTD文件的引用。而DTD（Document Type Definition，DTD）文件定义了XML文档的结构以及合法元素和属性。
+
+另外，我们就能看出，在MyBatis的配置文件中：configuration节点为根节点。在configuration节点之下，我们可以配置10个子节点， 分别为：properties、typeAliases、plugins、objectFactory、objectWrapperFactory、settings、environments、databaseIdProvider、typeHandlers、mappers。
+
 ### property标签
 
-- 作用：mybatis可以使用properties标签引入外部properties配置文件的内容
+properties是一个配置属性的元素，能让我们在配置文件的上下文中使用它。MyBatis提供了三种配置方式：
 
-- 使用方法：
+- property子元素；
+- properties配置文件；
+- 程序参数传递。
 
-  - 使用url属性或resource属性引入；
-    - url属性：引入网络或磁盘路径下的资源
-    - resource属性：引入类路径下的资源
-  - 使用value属性取出外部配置文件具体值
+此外，当三种配置方式同时出现，MyBatis按照如下顺序来加载：
 
-``` xml
-<datasource type="POOLED">
-  <property name="dirver" value="${jdbc.driver}"/>
-</datasource>
+- properties元素内指定属性首先被读取；
+- 接着根据resource属性或url属性，并覆盖已读取的同名属性；
+- 读取作为方法参数传递的属性，并覆盖已读取的同名属性。
+
+**property子元素**:
+
+使用property子元素的配置方法如下：
+
+```xml
+<properties>
+  <property name="driver" value="com.mysql.jdbc.Driver"/>
+  <property name="url" value="jdbc:mysql://localhost:3306/mybatis"/>
+  <property name="username" value="root"/>
+  <property name="password" value="learn"/>
+</properties>
 ```
 
-- 注意：Mybatis和Spring整合时，这部分内容常常交给Spring处理
+这样就可以在上下文中使用已经配置好的属性值了，比如配置数据库时就可以使用这些属性。
+
+```xml
+<dataSource type="POOLED">
+  <property name="driver" value="${driver}"/>
+  <property name="url" value="${url}"/>
+  <property name="username" value="${username}"/>
+</dataSource>
+```
+
+**properties配置文件**：
+
+当我们使用properties配置文件（内容如下），可以直接使用resource属性将其引入，比如：
+
+```properties
+driver=com.mysql.jdbc.Driver
+url=jdbc:mysql://localhost:3306/mybatis
+username=root
+password=1234
+```
+
+```xml
+<properties resource="jdbc.properties"/>
+```
 
 ### setting标签
 
-- 作用：修改MyBatis运行时行为（很重要）
+### typeAliases标签
 
-- 使用方法 ：
-
-  - 使用name属性设置项属性名
-
-  - 使用value属性设置值
-
-- e.g.
-
-  ``` xml
-  <settings>
-    <setting name="mapUnderscoreToCamelCase" value="true"/>
-  </settings>
-  ```
+### typeHandler标签
 
 ### plugin标签
 
@@ -288,14 +313,6 @@ SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建�
 
 ``` xml
 <package name="xxx.xxx.xxx">
-```
-
-### typeHandler标签
-
-- 作用：建立java对象和数据库对象的映射
-
-``` xml
-<typeHandler handler=""/>
 ```
 
 ### environments标签
@@ -362,41 +379,6 @@ SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建�
   } 
   ```
 
-### ==特别注意==
-
-- 当Spring和MyBatis集成时，mapper的xml文件需要在Spring配置文件中注册，具体有两种方法：
-
-  - 开启mapper xml==文件扫描==（mapper xml文件中会包含其对应的mapper接口位置）
-
-    ``` xml
-    <!--  配置sqlSessionFactory -->
-    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-        <!-- 配置数据源 -->
-    	<property name="dataSource" ref="multipleDataSource"/>
-        <!-- 配置mybatis配置文件的位置 -->
-        <property name="configLocation" value="classpath:mybatis-config.xml"/>
-        <!-- 配置扫描mapper xml文件的位置 -->
-        <property name="mapperLocations">
-            <list>       <value>classpath:mybatis_mapper/*Mapper.xml</value>
-            </list>
-        </property>
-    </bean>
-    ```
-
-  - 如果不配置MapperScannerConfigurer，则需要单独定义每一个mapper接口的bean
-
-    ```xml
-    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-    	<!-- 配置扫描mapper接口的包路径 -->
-        <property name="basePackage" value="com.mystudy.dao"/>
-        <property name="sqlSessionTemplateBeanName" value="sqlSessionTemplate"/>
-    </bean>
-    ```
-
-    单独定义每一个mapper接口（在接口多的情况下）代码太繁琐，冗杂
-
-- 除此之外，二者数据源的配置是类似的，可以写在Spring配置中也可以写在MyBatis配置中
-
 ## 映射器
 
 - 定义：映射器是 MyBatis 中最重要的文件，文件中包含一组 SQL 语句（例如查询、添加、删除、修改），这些语句称为映射语句或映射 SQL 语句
@@ -406,73 +388,11 @@ SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建�
   - 提供 SQL 语句和动态 SQL
   - 定义查询结果和 POJO 的映射关系
 
-### XML实现映射器
+### 标签
 
-XML 定义映射器分为两个部分：接口和XML。首先定义接口
+### 注解
 
-``` java
-package net.biancheng.mapper;
-import java.util.List;
-import net.biancheng.po.Website;
-public interface WebsiteMapper {
-    public List<Website> selectAllWebsite();
-  
-    public Website selectOneWebsite();
-}
-```
-
-接着写对应的Mapper.xml
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-<mapper namespace="net.biancheng.mapper.WebsiteMapper">
-    <!-- 查询所有网站信息 -->
-    <select id="selectAllWebsite"
-        resultType="net.biancheng.po.Website">
-        select * from website
-    </select>
-</mapper>
-```
-
-然后在MyBatis配置文件中注册上述Mapper，
-
-  ```xml
-  <mappers>
-  <mapper resource="net/biancheng/mapper/WebsiteMapper.xml" />
-  </mappers>
-  ```
-
-接着用第一步定义的接口引用通过SqlSession获取的Mapper，调用该接口的函数
-
-```java
-//用第一步的接口引用mapper
-WebsiteMapper websiteMapper = sqlSession.getMapper(WebsiteMapper.class);
-//通过上述mapper调用接口中的函数
-List<Website> websiteList = websiteMapper.selectAllWebsite();
-```
-
-利用xxxMapper.xml中的sql语句实现了xxxMapper接口中的函数，最后直接通过接口类型调用实例化的函数实现增删改查的功能。在实际开发中，不会通过反射用sqlsession去获取xxxMapper类，而是利用spring属性注入（bean管理）获取xxxMapper类
-
-### 注解实现映射器
-
-使用注解的方式实现映射器，只需要在接口中使用Java注解，注入SQL即可。首先，定义接口。
-
-```java
-package net.biancheng.mapper;
-import java.util.List;
-import net.biancheng.po.Website;
-public interface WebsiteMapper {
-    public List<Website> selectAllWebsite();
-  
-    public Website selectOneWebsite();
-}
-```
-
-接着为接口中方法添加注解。
+使用注解的方式实现映射器，只需要在接口中使用Java注解，注入SQL即可。比如：
 
 ```java
 package net.biancheng.mapper;
@@ -491,95 +411,6 @@ public interface WebsiteMapper {
 
 ## 动态SQL
 
-- 动态SQL是MyBatis的强大特性之一，在JDBC或其他类似的框架中，开发人员需要手动拼接SQL语句
-
-### 常用标签
-
-#### if标签
-
-- 使用方法：
-
-  ```xml
-  <if test = "判断条件">
-  	SQL语句
-  </if>
-  ```
-
-- 执行流程：当判断条件为true时，才会执行所包含的SQL语句
-
-- e.g.
-
-  ```xml
-  <select id = "selectAllWebsite" resultMap = "myResult">
-  	select * from website
-    <if test = "name != null">
-      where name like #{name}
-    </if>
-  </select>
-  ```
-
-- choose、when和otherwise标签
-
-  - 效果：由于 MyBatis 并没有为 if 提供对应的 else  标签，如果想要达到、\<if>...\<else>...\</else> \</if> 的效果，可以借助   \<choose>、\<when>、\<otherwise> 来实现
-
-#### set标签
-
-#### foreach标签
-
-- 作用：用于循环语句，并且支持类List、Set接口等集合
-
-- 语法：
-
-  ```xml
-  <foreach item = "item" index = "index" collection = "list|array|map key" open = "(" separator = "," close = ")">
-  	参数
-  </foreach>
-  ```
-
-- 属性说明
-
-  - item：表示集合中每一个元素进行迭代时的别名
-  - index：指定一个名字，表示在迭代过程中每次迭代到的位置
-  - open：表示该语句可以以什么开始
-  - separator：表示每次进行迭代之间以什么符号作为分隔符
-  - close：表示该语句以什么结束
-
-#### bind标签
-
-- 作用：可以使用 OGNL 表达式创建一个变量井将其绑定到上下文中
-- 属性说明：
-  - value：对应传入实体类的某个字段，可以进行字符串拼接等特殊处理
-  - name：给对应参数取的别名
-
-#### trim标签
-
-- 作用：
-  - 实现多条件查询
-  - 可以选择性地插入、更新、删除或条件查询
-- 属性说明：
-  - prefix
-  - suffix
-  - prefixOverrides
-  - suffixOverrides
-
-### 其他
-
-- @Param注解在mapper中的使用
-
-  - 目的：为参数去别名，简化参数引用
-
-  - 使用：方法（@Param（“别名”）Type  参数）
-
-  - 例子：
-
-    ``` java
-     public int getUsersDetail(@Param("userid") int userid);
-    ```
-
-    ```sql
-    <select id = "getUserDetail" resultMap = "baseMap">
-    	select * from xxx
-    </select>
-    ```
+动态SQL是MyBatis的强大特性之一，在JDBC或其他类似的框架中，开发人员需要手动拼接SQL语句
 
 ## Spring集成
