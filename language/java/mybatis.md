@@ -7,6 +7,8 @@
   - [原理](#原理)
     - [核心组件](#核心组件)
     - [反射和动态代理](#反射和动态代理)
+    - [会话工厂的构建](#会话工厂的构建)
+    - [会话的执行](#会话的执行)
   - [配置](#配置)
     - [property标签](#property标签)
     - [setting标签](#setting标签)
@@ -29,7 +31,7 @@
       - [bind标签](#bind标签)
       - [trim标签](#trim标签)
     - [其他](#其他)
-  - [集成](#集成)
+  - [Spring集成](#spring集成)
 
 ## 概述
 
@@ -39,19 +41,9 @@ MyBatis是一个开源、轻量级的数据持久化框架，是JDBC和Hibernate
 
 **JDBC**：
 
-1.SQL夹杂在java代码中耦合度高，导致硬编码内伤
-2.维护不易且实际开发需求中SQL有变化，频繁修改的情况多见
-3.代码冗长，开发效率低
-Hibernate和JPA
-1.操作简单，开发效率高
-2.程序中的长难复杂SQL需要绕过框架
-3.内部自动生产的SQL，不容易做特殊优化
-4.基于全映射的全自动框架，大量字段的POJO进行部分映射比较困难
-5.反射操作太多，导致数据库性能下降
-MyBatis
-1.轻量级，性能出色
-2.SQL和java编码分开，功能边界清晰，java代码专注业务、SQL语句专注数据
-3.开发效率稍逊于Hibernate,但是完全能够接受
+**Hibernate**:
+
+**MyBatis**:
 
 ### 简单例子
 
@@ -118,7 +110,9 @@ public interface UserMapper {
 }
 ```
 
-通过这个简单的示例，我们可以看到MyBatis的使用过程非常简洁方便。开发者只需提供数据源、SQL语句和映射规则，并且定义相应的POJO类和Mapper接口，MyBatis就可以利用JDK动态代理自动生成对应的Mapper对象来根据我们提供的SQL语句操作POJO对象，从而实现Java对象到数据库表的映射。对于UserMapper这个例子，如果在SSM技术栈下，我们可以使用IoC容器方便的管理它，并在在Service层中调用相关操作，比如：
+通过这个简单的示例，我们可以看到MyBatis的使用过程非常简洁方便。开发者只需提供数据源、SQL语句和映射规则，并且定义相应的POJO类和Mapper接口，MyBatis就可以利用JDK动态代理自动生成对应的Mapper对象来根据我们提供的SQL语句操作POJO对象，从而实现Java对象到数据库表的映射。
+
+对于UserMapper这个例子，如果在SSM技术栈下，我们可以使用IoC容器方便的管理它，并在在Service层中调用相关操作，比如：
 
 ```java
 package org.example.service;
@@ -137,20 +131,70 @@ public class UserService {
 
 ## 原理
 
+上一章节中的UserMapper示例演示了在Spring框架下集成MyBatis的用法，而MyBatis本身也可以通过类似JDBC的方式，打开面向数据库的会话并执行已注册的SQL语句。这就涉及到了MyBatis的核心组件及其工作原理，同时也解释了为什么只需提供Mapper接口和映射器文件，而无需实现实体类。
+
 ### 核心组件
 
-- 读取Mybatis的全局配置文件 
-- 创建SqlSessionFactory会话工厂
-- 创建SqlSession会话
-- 执行查询操作
+MyBatis的核心组件包括：
+
+- SqlSessionFactoryBuilder（构造器）：用于构建SqlSessionFactory实例
+- SqlSessionFactory（会话工厂）：一个工厂接口，用于创建SqlSession实例
+- SqlSession（会话）：线程安全的会话对象，用于执行持久化操作
+
+当MyBatis运行时，它使用SqlSessionFactoryBuilder读取全局配置，并构建SqlSessionFactory对象。SqlSessionFactory实际上是一个接口，构建器创建的真正对象是继承于它的DefaultSqlSessionFactory类实例。
+
+通过SqlSessionFactory的openSession方法，可以获取SqlSession对象。SqlSession类似于JDBC中的Connection，提供了面向数据库执行SQL命令所需的所有方法。，以通过它直接运行映射的SQL语句。比如，对于上一章节UserMapper的例子，使用SqlSession的调用方法如下：
+
+```java
+public static void main(String[] args) {
+    //加载核心配置文件
+    InputStream resourceAsStream = Resources.getResourceAsStream("mybatis-config.xml");
+
+    // 获得sqlSession工厂对象
+    SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(resourceAsStream);
+
+    //获得sqlSession对象
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+
+    // 执行sql语句
+    List<User> userList = sqlSession.selectList("userMapper.findAll");
+
+    // 打印结果
+    for (User user : userList) {
+        System.out.println(user);
+    }
+
+    // 释放资源
+    sqlSession.close();
+}
+```
 
 ### 反射和动态代理
+
+MyBatis的工作原理主要依赖于两种技术:反射和动态代理。
+
+反射主要应用于MyBatis初始化时解析配置文件,构建Configuration对象。Configuration包含了数据源信息、映射器信息等核心配置数据。通过反射,MyBatis可以从XML中构建出对应的Java对象。
+
+动态代理则发挥作用于执行映射语句时。当调用映射器接口的方法时,MyBatis会通过动态代理方式为其创建代理对象,代理对象负责拦截方法调用,并执行相应的数据库操作。从外部看,就像是直接调用了Mapper接口方法一样,实际上是由MyBatis框架自动完成了底层的数据库访问。
+
+### 会话工厂的构建
+
+SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建出SqlSessionFactory对象。构建过程包括以下几个步骤:
+
+通过XMLConfigBuilder解析全局配置文件,构建出全局Configuration对象
+根据配置文件指定的映射器位置,解析映射器XML并构建相应的MappedStatement对象
+向Configuration中注册MappedStatement对象
+使用Configuration初始化DefaultSqlSessionFactory对象
+
+### 会话的执行
+
+![SqlSession执行](https://pdai.tech/images/mybatis/mybatis-y-arch-4.png)
 
 ## 配置
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-                    <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration><!-- 配置 -->
     <properties /><!-- 属性 -->
@@ -210,63 +254,49 @@ public class UserService {
 ### plugin标签
 
 - 作用：为MyBatis添加拦截器
-
 - 使用方法 ：
-
   - 使用name属性设置项属性名
   - 使用value属性设置值
 
-- e.g.
-
-  ``` xml
-  <!-- 拦截器 -->
-  <plugins>
-    <plugin interceptor="cn.com.mybatis.plugins.MyInterceptor" />
-    <plugin interceptor="cn.com.mybatis.plugins.MyInterceptor2">
-    	<property name="name" value="mybatis"/>
-    	<property name="age" value="10"/>
-  	</plugin>
-  </plugins>
-  ```
+``` xml
+<!-- 拦截器 -->
+<plugins>
+  <plugin interceptor="cn.com.mybatis.plugins.MyInterceptor" />
+  <plugin interceptor="cn.com.mybatis.plugins.MyInterceptor2">
+    <property name="name" value="mybatis"/>
+    <property name="age" value="10"/>
+  </plugin>
+</plugins>
+```
 
 ### typeAlias标签
 
 - 作用：MyBatis别名处理器设置
-
 - 使用方法：
-
   - 使用type属性指定要起别类名的类型全类名（默认别名是类名小写）
   - 使用alias属性指定别名
 
-- e.g.
-
-  ``` xml
-  <typeAlias type="xxx.xxx.xxx" alias="xxx"/>
-  ```
+``` xml
+<typeAlias type="xxx.xxx.xxx" alias="xxx"/>
+```
 
 ### package标签
 
 - 作用：MyBatis批量别名处理器设置
-
 - 使用方法：
-
   - 使用name属性指定包名
 
-- e.g.
-
-  ``` xml
-  <package name="xxx.xxx.xxx">
-  ```
+``` xml
+<package name="xxx.xxx.xxx">
+```
 
 ### typeHandler标签
 
 - 作用：建立java对象和数据库对象的映射
 
-- e.g.
-
-  ``` xml
-  <typeHandler handler=""/>
-  ```
+``` xml
+<typeHandler handler=""/>
+```
 
 ### environments标签
 
@@ -283,25 +313,21 @@ public class UserService {
     - dataSource标签
       - type属性指定数据源类型，例如：POOLED
 
-- e.g.
-
-  ``` xml
-  <environment id="">
-  	<transactionManager type=""/>
-    <dataSource type=""/>
-  </environment>
-  ```
+``` xml
+<environment id="">
+  <transactionManager type=""/>
+  <dataSource type=""/>
+</environment>
+```
 
 ### databaseIdProvider标签
 
 - 作用：支持多数据库厂商
 
-- e.g.
-
-  ``` xml
-  <databaseIdProvider type="DB_VENDOR">
-  </databaseIdProvider>
-  ```
+``` xml
+<databaseIdProvider type="DB_VENDOR">
+</databaseIdProvider>
+```
 
 ### mapper标签
 
@@ -556,4 +582,4 @@ public interface WebsiteMapper {
     </select>
     ```
 
-## 集成
+## Spring集成
