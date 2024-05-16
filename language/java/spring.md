@@ -208,9 +208,71 @@ Bean并非一个Spring新提出的一个概念，Java语言本身就有JavaBean�
 
 ### Context
 
+Context是程序执行中的上下文，包含了特定时间程序执行的环境和状态信息。以下是几个常出现在Java Web开发中的上下文概念：
+
 **ServletContext**：
 
-　　首先说说ServletContext这个web应用级的上下文。web容器（比如tomcat、jboss、weblogic等）启动的时候，它会为每个web应用程序创建一个ServletContext对象 它代表当前web应用的上下文（注意：是每个web应用有且仅创建一个ServletContext，一个web应用，就是你一个web工程）。一个web中的所有servlet共享一个ServletContext对象，所以可以通过ServletContext对象来实现Servlet之间的通讯。在一个继承自HttpServlet对象的类中，可以通过this.getServletContext来获取。
+当Web容器启动的时候，它会为每个Web应用程序创建一个ServletContext对象，其中包含了该Web应用的所有Servlet对象。换句话说，一个Web应用中的所有Servlet共享一个ServletContext对象，所以它们可以通过ServletContext对象来实现彼此之间的通讯。
+
+**ApplicationContext**：
+
+ApplicationContext是Spring应用的上下文。可以简单将其理解成IoC容器，负责创建、装配和销毁Bean。在Spring Web应用中，它通常通过一个名为ContextLoaderListener的监听器触发创建。该监听器定义在web.xml文件中，当Web应用初始化它自己的ServletContext时就会触发该监听器。除了定义监听器之外，还需要指出配置文件位置，比如：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns="http://xmlns.jcp.org/xml/ns/javaee" 
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+    http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" 
+    id="WebApp_ID" version="3.1">
+    <!-- 配置加载Spring文件的监听器-->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+    <listener>
+        <listener-class>
+            org.springframework.web.context.ContextLoaderListener
+        </listener-class>
+    </listener>
+</web-app>
+```
+
+关于两者更详细的比较，可以参考Stackoverflow的[讨论](https://stackoverflow.com/questions/31931848/applicationcontext-and-servletcontext)以及Spring[文档](https://docs.spring.io/spring-framework/reference/core/beans/context-introduction.html)。
+
+**WebApplicationContext**：
+
+WebApplicationContext是Spring MVC应用中的上下文。它继承自ApplicationContext，并且具备和ServletContext通信的能力。一般来说，一个Spring Web应用会在web.xml中定义一个或多个DispatchServlet来处理请求，比如：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns="http://xmlns.jcp.org/xml/ns/javaee" 
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+    http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" 
+    id="WebApp_ID" version="3.1">
+    <!-- 配置Spring MVC前端核心控制器 -->
+    <servlet>
+        <servlet-name>springmvc</servlet-name>
+        <servlet-class>
+             org.springframework.web.servlet.DispatcherServlet
+        </servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:springmvc-config.xml</param-value>
+        </init-param>
+        <!-- 配置服务器启动后立即加载Spring MVC配置文件 -->
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>springmvc</servlet-name>
+        <!--/:拦截所有请求（除了jsp）-->
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+</web-app>
+```
+
+关于WebApplicationContext更多的介绍，可以参考Spring MVC的[文档](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet/context-hierarchy.html)。
 
 ## 控制反转 IoC
 
@@ -559,11 +621,13 @@ SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web�
 
 ### 启动流程
 
-当Web服务器启动时，会去读取web.xml配置，找到ContextLoaderListener监听器，该监听器会初始化Spring的根上下文，并读取 applicationContext.xml配置文件去初始化其中定义好的Bean。
+当Web服务器启动时，会去读取web.xml配置，找到ContextLoaderListener监听器，该监听器会初始化Spring的根上下文，并读取applicationContext.xml配置文件去初始化其中定义好的Bean。
 
-同时，web.xml中还配置了DispatcherServlet。该Servlet也会启动一个SpringMVC的上下文,并读取 spring-mvc.xml 相关配置。DispatcherServlet的上下文会作为子上下文，从根上下文中继承相关的Bean定义，如 Service 层的 Bean 定义。
+同时，web.xml中还配置了DispatcherServlet。该Servlet也会启动一个SpringMVC的上下文,并读取spring-mvc.xml相关配置。DispatcherServlet的上下文会作为子上下文，从根上下文中继承相关的Bean定义，如Service层的Bean定义。此时，当HTTP请求发往DispatcherServlet，它就会将相应的请求分发给不同的Controller，而Controller则会使用其中被Spring注入的Service组件从而完成相应的业务处理。
 
-在根上下文的配置 applicationContext.xml 中,会配置 MyBatis 的 SqlSessionFactoryBean,并指定 mybatis-config.xml 全局配置文件的位置,这样就实现了 Spring 与 MyBatis 的整合。
+至于数据访问层，根上下文的配置applicationContext.xml中还会配置MyBatis的SqlSessionFactoryBean，并指定mybatis-config.xml配置文件的位置。这样就实现了Spring与MyBatis的整合。
+
+关于这部分更详细的介绍，可以参考[知乎 ContextLoaderListener解析](https://zhuanlan.zhihu.com/p/65258266)。
 
 ## 数据访问 Data Access
 
