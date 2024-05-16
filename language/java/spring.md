@@ -5,16 +5,23 @@
     - [Spring Framework](#spring-framework)
     - [Spring Boot](#spring-boot)
     - [Spring Cloud](#spring-cloud)
+  - [前置概念](#前置概念)
+    - [Servlet](#servlet)
+    - [Bean](#bean)
+    - [Context](#context)
   - [控制反转 IoC](#控制反转-ioc)
     - [依赖注入 DI](#依赖注入-di)
     - [IoC容器](#ioc容器)
-      - [Bean](#bean)
       - [IoC容器的原理](#ioc容器的原理)
       - [IoC容器的配置](#ioc容器的配置)
   - [面向切面编程 AOP](#面向切面编程-aop)
     - [Spring AOP](#spring-aop)
     - [AspectJ](#aspectj)
   - [Web开发 Spring MVC](#web开发-spring-mvc)
+    - [核心组件](#核心组件)
+    - [工作流程](#工作流程)
+    - [常用注解](#常用注解)
+    - [SpringMVC配置](#springmvc配置)
   - [数据访问 Data Access](#数据访问-data-access)
   - [参考 Reference](#参考-reference)
 
@@ -60,6 +67,31 @@ Spring Cloud是Spring官方支持的微服务全家桶，主要目标是简化�
 - 分布式跟踪
 
 Spring Cloud提供了一整套微服务架构的解决方案，帮助开发人员快速构建分布式、高可用、高扩展的微服务系统。
+
+## 前置概念
+
+### Servlet
+
+### Bean
+
+在Spring中，Bean是指一个由IoC容器创建、组装和管理的对象。
+
+**Bean的作用域**是指Bean在Spring整个框架中的某种行为模式。常见的作用域类型包括：
+
+- singleton：单例作用域
+- prototype：原型作用域（多例作用域）
+- request：请求作用域
+- session：会话作用域
+- application：全局作用域
+
+**Bean的生命周期**：
+
+- 实例化 Instantiation
+- 属性赋值 Populate
+- 初始化 Initialization
+- 销毁 Destruction
+
+### Context
 
 ## 控制反转 IoC
 
@@ -155,25 +187,6 @@ public class Main {
     }
 }
 ```
-
-#### Bean
-
-在Spring中，Bean是指一个由IoC容器创建、组装和管理的对象。
-
-**Bean的作用域**是指Bean在Spring整个框架中的某种行为模式。常见的作用域类型包括：
-
-- singleton：单例作用域
-- prototype：原型作用域（多例作用域）
-- request：请求作用域
-- session：会话作用域
-- application：全局作用域
-
-**Bean的生命周期**：
-
-- 实例化 Instantiation
-- 属性赋值 Populate
-- 初始化 Initialization
-- 销毁 Destruction
 
 #### IoC容器的原理
 
@@ -357,6 +370,42 @@ AspectJ是一个基于Java语言的 AOP 实现，它扩展了 Java 语言本身�
 但不同与Spring AOP，AspectJ本身不是Spring的一部分。直到 Spring 2.0 开始，Spring AOP才引入了对 AspectJ 的支持。在新版本的 Spring 框架中，建议使用 AspectJ 方式开发 AOP。类似IoC容器，基于AspectJ实现AOP操作也可以通过XML和注解的两种方式。
 
 ## Web开发 Spring MVC
+
+Spring Web MVC是一种基于Java的实现了Web MVC设计模式的请求驱动类型的轻量级Web框架。它使用了MVC架构模式的思想，将Web层进行职责解耦，基于请求驱动指的就是使用请求-响应模型，框架的目的就是帮助我们简化开发，Spring Web MVC也是要简化我们日常Web开发的。
+
+### 核心组件
+
+### 工作流程
+
+首先用户发送请求——>DispatcherServlet，前端控制器收到请求后自己不进行处理，而是委托给其他的解析器进行 处理，作为统一访问点，进行全局的流程控制；
+
+DispatcherServlet——>HandlerMapping， HandlerMapping 将会把请求映射为 HandlerExecutionChain 对象（包含一 个Handler 处理器（页面控制器）对象、多个HandlerInterceptor 拦截器）对象，通过这种策略模式，很容易添加新的映射策略；
+
+DispatcherServlet——>HandlerAdapter，HandlerAdapter 将会把处理器包装为适配器，从而支持多种类型的处理器，即适配器设计模式的应用，从而很容易支持很多类型的处理器；
+
+HandlerAdapter——>处理器功能处理方法的调用，HandlerAdapter 将会根据适配的结果调用真正的处理器的功能处 理方法，完成功能处理；并返回一个ModelAndView 对象（包含模型数据、逻辑视图名）；
+
+ModelAndView 的逻辑视图名——> ViewResolver，ViewResolver 将把逻辑视图名解析为具体的View，通过这种策 略模式，很容易更换其他视图技术；
+
+View——>渲染，View 会根据传进来的Model 模型数据进行渲染，此处的Model 实际是一个Map 数据结构，因此 很容易支持其他视图技术；返回控制权给DispatcherServlet，由DispatcherServlet 返回响应给用户，到此一个流程结束。
+
+### 常用注解
+
+**@RequestMapping**：
+
+用于处理请求 url 映射的注解，可用于类或方法上。用于类上，则表示类中的所有响应请求的方法都是以该地址作为父路径。
+
+**@RequestBody**：
+
+注解实现接收http请求的json数据，将json转换为java对象。
+
+**@ResponseBody**：注解实现将conreoller方法返回对象转化为json对象响应给客户。
+
+@Conntroller：控制器的注解，表示是表现层,不能用用别的注解代替
+
+### SpringMVC配置
+
+正如前面讲到的Spring配置文件applicationContext.xml一样，Spring MVC也通常有自己独立的配置文件springmvc-config.xml。
 
 ## 数据访问 Data Access
 
