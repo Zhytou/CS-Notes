@@ -23,7 +23,7 @@
     - [J2EE Web Application](#j2ee-web-application)
     - [SSM](#ssm)
   - [Design Style](#design-style)
-    - [Event Driven Design](#event-driven-design)
+    - [Data Access Layer](#data-access-layer)
     - [Domain Driven Design](#domain-driven-design)
 
 ## History
@@ -164,10 +164,10 @@ public interface Servlet {
 
 以下是 Servlet 遵循的过程：
 
-Servlet 初始化后调用 init () 方法。
-Servlet 调用 service() 方法来处理客户端的请求。
-Servlet 销毁前调用 destroy() 方法。
-最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。
+- Servlet 初始化后调用 init () 方法。
+- Servlet 调用 service() 方法来处理客户端的请求。
+- Servlet 销毁前调用 destroy() 方法。
+- 最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。
 
 ### Filter
 
@@ -518,12 +518,11 @@ MVC(模型-视图-控制器)是一种软件架构模式。它将应用程序划�
 
 ## Design Style
 
-### Event Driven Design
+### Data Access Layer
 
-贫血模型/面向过程编程/分层（Controll+Service+Entitty+Dao）
+- ![DAO vs Repository](https://stackoverflow.com/questions/8550124/what-is-the-difference-between-dao-and-repository-patterns)
+- ![DTO, VO, POJO, Entity, JavaBean](https://stackoverflow.com/questions/1612334/difference-between-dto-vo-pojo-javabeans)
 
 ### Domain Driven Design
-
-充血模型/面向对象编程/
 
 ![Domain-Driven Design vs. anemic model. How do they differ?](https://blog.pragmatists.com/domain-driven-design-vs-anemic-model-how-do-they-differ-ffdee9371a86)
