@@ -22,6 +22,9 @@
     - [工作流程](#工作流程)
     - [常用注解](#常用注解)
     - [SpringMVC配置](#springmvc配置)
+  - [SSM集成](#ssm集成)
+    - [集成配置](#集成配置)
+    - [启动流程](#启动流程)
   - [数据访问 Data Access](#数据访问-data-access)
   - [参考 Reference](#参考-reference)
 
@@ -406,6 +409,45 @@ View——>渲染，View 会根据传进来的Model 模型数据进行渲染，�
 ### SpringMVC配置
 
 正如前面讲到的Spring配置文件applicationContext.xml一样，Spring MVC也通常有自己独立的配置文件springmvc-config.xml。
+
+## SSM集成
+
+SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web技术栈。
+
+### 集成配置
+
+一个基于SSM的Web项目中往往会有4种配置文件。它们的关系以及项目启动过程如下:
+
+**web.xml**：这是整个Web应用的入口，也是与服务器进行交互的配置文件。它一般位于'web/WEB-INF'目录下，其中主要定义了:
+
+- 配置Spring的ContextLoaderListener，用于启动Spring的根应用上下文；
+- 配置DispatcherServlet，用于启动SpringMVC的上下文。
+
+**applicationContext.xml**：这是Spring的配置文件，通常定义以下内容:
+
+- 数据源、事务管理器等中间件相关配置；
+- 整合MyBatis的相关配置，如SqlSessionFactory等；
+- Service层相关Bean，开启注解扫描或者使用bean标签逐个定义。
+
+**spring-mvc.xml**：这是SpringMVC配置文件，它主要定义了SpringMVC中使用的相关Bean包括:
+
+- 视图解析器
+- 静态资源映射
+- 注解适配器和映射器等
+
+**mybatis-config.xml**：这是MyBatis自身的全局配置文件，其中可以定义:
+
+- 数据源配置
+- MyBatis 行为配置
+- 映射器位置
+
+### 启动流程
+
+当Web服务器启动时，会去读取web.xml配置，找到ContextLoaderListener监听器，该监听器会初始化Spring的根上下文，并读取 applicationContext.xml配置文件去初始化其中定义好的Bean。
+
+同时，web.xml中还配置了DispatcherServlet。该Servlet也会启动一个SpringMVC的上下文,并读取 spring-mvc.xml 相关配置。DispatcherServlet的上下文会作为子上下文，从根上下文中继承相关的Bean定义，如 Service 层的 Bean 定义。
+
+在根上下文的配置 applicationContext.xml 中,会配置 MyBatis 的 SqlSessionFactoryBean,并指定 mybatis-config.xml 全局配置文件的位置,这样就实现了 Spring 与 MyBatis 的整合。
 
 ## 数据访问 Data Access
 
