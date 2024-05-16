@@ -75,11 +75,123 @@ Spring Cloud提供了一整套微服务架构的解决方案，帮助开发人�
 
 ### Servlet
 
+Servlet的全称是Java Server Applet，也就是Java服务器小程序。它是2000年代重要的动态网页技术之一，直至今天也仍然作为大型Java Web框架的中重要组成部分而存在（Spring的核心组件DispatcherServlet）。因此，了解Servlet工作原理是学习Java Web是绕不开的话题。
+
+**Servlet API**：
+
+Java Servlet API是一套用于在服务器上实现响应请求的标准。它由javax.servlet和javax.servlet.http两个核心包组成，定义了Servlet组件的生命周期方法和客户端请求响应处理等规范。常用的Servlet接口和类包括:
+
+- GenericServlet类
+- HttpServlet类
+- Request对象
+- Response对象
+- ServletConfig对象
+- ServletContext对象
+
+**Servlet Workflow**：
+
+查看JDK中提供的Servlet接口我们发现，其中最核心的就是三个函数init、service和destroy，这也正好对应了一个Servlet对象的生命周期。
+
+```java
+public interface Servlet {
+    void init(ServletConfig var1) throws ServletException;
+
+    ServletConfig getServletConfig();
+
+    void service(ServletRequest var1, ServletResponse var2) throws ServletException, IOException;
+
+    String getServletInfo();
+
+    void destroy();
+}
+```
+
+以下是 Servlet 遵循的过程：
+
+- Servlet 初始化后调用 init () 方法。
+- Servlet 调用 service() 方法来处理客户端的请求。
+- Servlet 销毁前调用 destroy() 方法。
+- 最后，Servlet 是由 JVM 的垃圾回收器进行垃圾回收的。
+
+**Servlet Example**：
+
+一个最简单的HelloServlet程序如下：
+
+```java
+public class HelloServlet extends HttpServlet {
+    public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        res.setContentType("text/html");
+        //We need printwriter object to write html content
+        PrintWriter pw = res.getWriter();
+
+        // writing html in the stream
+        pw.println("<html><body>");
+        pw.println("Welcome to my first servlet");
+        pw.println("</body></html>");
+
+        pw.close();// close the stream
+    }
+}
+```
+
+将它打包并部署到Tomcat的webapps目录中，并修改Tomcat的web.xml配置文件如下。
+
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+    <display-name>Java Creed | How To Run Embedded Tomcat with Maven</display-name>
+
+    <servlet>
+        <servlet-name>hello</servlet-name>
+        <servlet-class>org.example.HelloServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>hello</servlet-name>
+        <url-pattern>/hello</url-pattern>
+    </servlet-mapping>
+</web-app>
+```
+
+最终，我们可以得到如图所示效果。
+
+![HelloServlet效果](../img/hello_servlet.png)
+
+**Servlet Container**：
+
+Servlet程序并没有main函数，需要部署在Servlet容器(如Tomcat)中运行。Servlet容器负责创建、管理和销毁Servlet对象，并根据HTTP请求调用相应的Servlet程序。整个调用过程如图3所示:
+
+![图3 Tomcat调用](https://picx.zhimg.com/v2-ce6e39bb02e3c6a2f4eb1e5afaa6e4e6_r.jpg?source=2c26e567)
+
+**Listener & Filter**：
+
+除了最基础的Servlet之外，Servlet API还提供了Listener和Filter组件。其中，Listener顾名思义就是监听器，用于监听Web应用中的事件，以实现一些全局操作。如监听Web应用的启动和停止，会话对象的创建和销毁等；而Filter过滤器的作用则是为了把一些公用逻辑从各个Servlet中抽离出来，在请求到达Servlet之前进行预处理。
+
 ### Bean
 
-在Spring中，Bean是指一个由IoC容器创建、组装和管理的对象。
+Bean并非一个Spring新提出的一个概念，Java语言本身就有JavaBean的概念。它通常是指一个有以下3种特点的公共Java类：
 
-**Bean的作用域**是指Bean在Spring整个框架中的某种行为模式。常见的作用域类型包括：
+- 有一个无参的构造方法（默认构造方法）；
+- 所有属性都是private的，类外部需要通过public的getter和setter来访问属性；
+- 实现了Serializable接口。
+
+除此之外，J2EE平台也提供了另一种Bean规范，即企业级JavaBean（Enterprise JavaBean，EJB）。它是一个封装有业务逻辑且可重用的服务器端组件，并包含以下特性：
+
+- 由容器在运行时管理；
+- 用户需要通过容器访问企业级Bean；
+- 能在部署时根据运行环境定制；
+- 能通过注解或XML在编译或部署时指定其中使用的一些配置信息（可配置）；
+- 只使用了EJB规范中规定的服务的企业级Bean能在任意EJB容器中使用（可移植）；
+- 企业级Bean可以不需要重新编译就被封装在一个企业级应用中。
+
+由此可见，EJB和JavaBeans其实是有挺大区别的，可以说一个EJB并不一定是一个JavaBean。一个EJB也不一定有无参构造方法和实现Serializable接口。
+
+而对于Spring来说，Bean就是指一个由Spring IoC容器创建、组装和管理的对象。
+
+**Spring Bean的作用域**是指Bean在Spring整个框架中的某种行为模式。常见的作用域类型包括：
 
 - singleton：单例作用域
 - prototype：原型作用域（多例作用域）
@@ -87,7 +199,7 @@ Spring Cloud提供了一整套微服务架构的解决方案，帮助开发人�
 - session：会话作用域
 - application：全局作用域
 
-**Bean的生命周期**：
+**Spring Bean的生命周期**：
 
 - 实例化 Instantiation
 - 属性赋值 Populate
@@ -95,6 +207,10 @@ Spring Cloud提供了一整套微服务架构的解决方案，帮助开发人�
 - 销毁 Destruction
 
 ### Context
+
+**ServletContext**：
+
+　　首先说说ServletContext这个web应用级的上下文。web容器（比如tomcat、jboss、weblogic等）启动的时候，它会为每个web应用程序创建一个ServletContext对象 它代表当前web应用的上下文（注意：是每个web应用有且仅创建一个ServletContext，一个web应用，就是你一个web工程）。一个web中的所有servlet共享一个ServletContext对象，所以可以通过ServletContext对象来实现Servlet之间的通讯。在一个继承自HttpServlet对象的类中，可以通过this.getServletContext来获取。
 
 ## 控制反转 IoC
 
