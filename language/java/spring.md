@@ -26,6 +26,10 @@
     - [集成配置](#集成配置)
     - [启动流程](#启动流程)
   - [数据访问 Data Access](#数据访问-data-access)
+    - [JDBC](#jdbc)
+    - [JPA](#jpa)
+    - [ORM Framework](#orm-framework)
+    - [Sharding-JDBC](#sharding-jdbc)
   - [参考 Reference](#参考-reference)
 
 ## 框架概述
@@ -558,31 +562,41 @@ Spring Web MVC是一种基于Java的实现了Web MVC设计模式的请求驱动�
 
 ### 工作流程
 
-首先用户发送请求——>DispatcherServlet，前端控制器收到请求后自己不进行处理，而是委托给其他的解析器进行 处理，作为统一访问点，进行全局的流程控制；
+![Spring MVC工作流程](https://pdai.tech/images/spring/springframework/spring-springframework-mvc-5.png)
 
-DispatcherServlet——>HandlerMapping， HandlerMapping 将会把请求映射为 HandlerExecutionChain 对象（包含一 个Handler 处理器（页面控制器）对象、多个HandlerInterceptor 拦截器）对象，通过这种策略模式，很容易添加新的映射策略；
+首先用户发送请求——>DispatcherServlet，前端控制器收到请求后自己不进行处理，而是委托给其他的解析器进行处理，作为统一访问点，进行全局的流程控制；
 
-DispatcherServlet——>HandlerAdapter，HandlerAdapter 将会把处理器包装为适配器，从而支持多种类型的处理器，即适配器设计模式的应用，从而很容易支持很多类型的处理器；
+DispatcherServlet——>HandlerMapping， HandlerMapping将会把请求映射为HandlerExecutionChain对象（包含一个Handler处理器（页面控制器）对象、多个HandlerInterceptor拦截器）对象，通过这种策略模式，很容易添加新的映射策略；
 
-HandlerAdapter——>处理器功能处理方法的调用，HandlerAdapter 将会根据适配的结果调用真正的处理器的功能处 理方法，完成功能处理；并返回一个ModelAndView 对象（包含模型数据、逻辑视图名）；
+DispatcherServlet——>HandlerAdapter，HandlerAdapter将会把处理器包装为适配器，从而支持多种类型的处理器，即适配器设计模式的应用，从而很容易支持很多类型的处理器；
 
-ModelAndView 的逻辑视图名——> ViewResolver，ViewResolver 将把逻辑视图名解析为具体的View，通过这种策 略模式，很容易更换其他视图技术；
+HandlerAdapter——>处理器功能处理方法的调用，HandlerAdapter将会根据适配的结果调用真正的处理器的功能处理方法，完成功能处理；并返回一个ModelAndView对象（包含模型数据、逻辑视图名）；
 
-View——>渲染，View 会根据传进来的Model 模型数据进行渲染，此处的Model 实际是一个Map 数据结构，因此 很容易支持其他视图技术；返回控制权给DispatcherServlet，由DispatcherServlet 返回响应给用户，到此一个流程结束。
+ModelAndView的逻辑视图名——> ViewResolver，ViewResolver 将把逻辑视图名解析为具体的View，通过这种策 略模式，很容易更换其他视图技术；
+
+View——>渲染，View会根据传进来的Model模型数据进行渲染，此处的Model实际是一个Map数据结构，因此 很容易支持其他视图技术；
+
+返回控制权给DispatcherServlet，由DispatcherServlet 返回响应给用户，到此一个流程结束。
 
 ### 常用注解
 
-**@RequestMapping**：
+**@Conntroller**：控制器的注解，表示是表现层，不能用用别的注解代替。
 
-用于处理请求 url 映射的注解，可用于类或方法上。用于类上，则表示类中的所有响应请求的方法都是以该地址作为父路径。
+**@RestController**：控制器的注解，同时表示控制器内部所有方法都返回数据而不是逻辑页面名称。
+
+**@RequestMapping**：用于处理请求url映射的注解，可用于类或方法上。用于类上，则表示类中的所有响应请求的方法都是以该地址作为父路径。其常用的3个参数如下所示：
+
+- value：指定映射的URL地址，如index
+- method：指定映射的请求类型，如GET请求、POST请求等
+- produces：指定返回的response的媒体类型和字符集，如application/json;charset=UTF-8。
+
+**@RequestParam**：
 
 **@RequestBody**：
 
 注解实现接收http请求的json数据，将json转换为java对象。
 
 **@ResponseBody**：注解实现将conreoller方法返回对象转化为json对象响应给客户。
-
-@Conntroller：控制器的注解，表示是表现层,不能用用别的注解代替
 
 ### SpringMVC配置
 
@@ -630,6 +644,147 @@ SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web�
 关于这部分更详细的介绍，可以参考[知乎 ContextLoaderListener解析](https://zhuanlan.zhihu.com/p/65258266)。
 
 ## 数据访问 Data Access
+
+### JDBC
+
+JDBC(Java Database Connectivity)是一套Java应用访问数据库的接口规范，主要由java.sql和javax.sql两个包组成。当Java程序尝试访问数据库时，实际上是通过使用该数据库公司提供的JDBC驱动进行访问的，其流程如图5所示。换句话说，第三方提供的JDBC驱动实现了JDBC接口，向上层Java应用隐藏了访问逻辑，从而简化了Java程序员的工作量。
+
+![图5 JDBC工作流程](../img/jdbc_workflow.png)
+
+**JDBC Driver**：
+
+想要使用JDBC驱动，我们只需要在工程中添加一个Maven依赖即可，比如使用MySQL的JDBC驱动：
+
+```xml
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>5.1.47</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
+**JDBC Connection**:
+
+使用JDBC时，首先需要加载驱动并建立与数据库的连接。连接过程中需要提供数据库URL、用户名和密码等信息。
+
+```java
+// JDBC连接的URL, 不同数据库有不同的格式:
+String JDBC_URL = "jdbc:mysql://localhost:3306/test";
+String JDBC_USER = "root";
+String JDBC_PASSWORD = "password";
+// 获取连接:
+Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+// TODO: 访问数据库...
+// 关闭连接:
+conn.close();
+```
+
+**JDBC Query**:
+
+建立连接后，可以通过执行SQL语句来查询数据。JDBC提供了 Statement 和 PreparedStatement 两种方式执行SQL语句。比如：
+
+```java
+java Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery("SELECT * FROM users");
+```
+
+相比Statement，PreparedStatement会对SQL语句进行预编译处理，而这条预编译的SQL查询语句能在将来的查询中重用，这样一来，在重复查询时，它将比Statement对象生成的查询速度快很多。
+
+**JDBC CURD**:
+
+除了查询，JDBC还可以执行增删改操作。
+
+```java
+// 插入
+PreparedStatement pstmt = conn.prepareStatement("INSERT INTO users(name, age) VALUES(?, ?)");
+pstmt.setString(1, "John");
+pstmt.setInt(2, 30);
+pstmt.executeUpdate();
+
+// 更新
+pstmt = conn.prepareStatement("UPDATE users SET age = ? WHERE id = ?");
+pstmt.setInt(1, 31);
+pstmt.setInt(2, 1);
+pstmt.executeUpdate();
+
+// 删除
+pstmt = conn.prepareStatement("DELETE FROM users WHERE id = ?");
+pstmt.setInt(1, 1);
+pstmt.executeUpdate();
+```
+
+**JDBC Transcation**:
+
+数据库事务（Transaction）是由若干个SQL语句构成的一个操作序列，有点类似于Java的synchronized同步。数据库系统保证在一个事务中的所有SQL要么全部执行成功，要么全部不执行，即数据库事务具有ACID特性：
+
+- Atomicity：原子性
+- Consistency：一致性
+- Isolation：隔离性
+- Durability：持久性
+
+要在JDBC中执行事务，本质上就是如何把多条SQL包裹在一个数据库事务中执行。
+
+### JPA
+
+JPA(Java Persistence API，Java持久层API)是一种对象关系映射(Object-Relational Mapping，ORM)的标准规范，旨在简化Java对象与关系数据库之间的持久化操作。它定义了一组注解和接口，用于描述对象与数据库表之间的映射关系，以及执行持久化操作(如创建、查询、更新和删除)所需的API。
+
+2006，JPA1.0首次作为EJB3.0规范的一部分提出。从J2EE6开始，JPA2.0已发展成单独的规范。值得注意的是，JPA是只针对RDBMS的，对于NoSQL没有作用。
+
+**Entity**:
+
+JPA基于[E-R模型](https://en.wikipedia.org/wiki/Entity%E2%80%93relationship_model)，即一个关系型数据库可以使用实体、属性和关系进行描述。其中，实体可以是有形的、实际存在的事物(如每个员工)，也可以是抽象的、概念上的事物(如一个部门)。
+
+在实际开发中，实体类往往是一个POJO（Plain Old Java Object），比如：
+
+```java
+import javax.persistence.*;  
+@Entity  
+public class Student {  
+    @Id  
+    private int id;  
+    private String name;  
+    public Student() {}  
+    public Student(int id)   
+    {  
+      this.id = id;  
+    }  
+    public int getId()   
+    {  
+      return id;  
+    }  
+    public void setId(int id)   
+    {  
+      this.id = id;  
+    }  
+    public String getName()  
+    {  
+      return name;   
+    }  
+    public void setName(String name)   
+    {  
+      this.name = name;  
+    }  
+}  
+```
+
+**Entity Manager**:
+
+在 JPA 规范中, EntityManager 是完成持久化操作的核心对象。
+
+**JPQL**：
+
+Java持久化查询语言（Java Persistence query language，简称 JPQL）定义实体及其持久状态的查询。 查询语言允许您编写可用的查询语句，而不用管底层数据是如何实现存储的。
+
+查询语言使用实体的抽象持久化模式（包括其关系）作为其数据模型，并基于此数据模型定义运算符和表达式。查询的范围跨越包装在同一持久单元中的相关实体的抽象模式。查询语言使用类似SQL的语法来基于实体抽象模式类型和它们之间的关系来选择对象或值。
+
+### ORM Framework
+
+ORM 框架是一种对象关系映射技术，它提供了一种将面向对象的对象模型与关系型数据库中的数据模型相互映射的机制。ORM 框架的主要目标是简化数据持久化操作，使开发人员可以像操作对象一样操作数据库中的数据，而无需直接编写 SQL 语句。常见的 ORM 框架有 Hibernate、MyBatis、EclipseLink 等。
+
+### Sharding-JDBC
+
+[Sharding-JDBC快速入门第一课](https://www.cnblogs.com/cjsblog/p/13154158.html)
 
 ## 参考 Reference
 
