@@ -10,16 +10,14 @@
     - [会话工厂的构建](#会话工厂的构建)
     - [会话的执行](#会话的执行)
   - [配置](#配置)
-    - [property标签](#property标签)
-    - [setting标签](#setting标签)
-    - [typeAliases标签](#typealiases标签)
-    - [typeHandler标签](#typehandler标签)
-    - [plugin标签](#plugin标签)
-    - [typeAlias标签](#typealias标签)
-    - [package标签](#package标签)
-    - [environments标签](#environments标签)
-    - [databaseIdProvider标签](#databaseidprovider标签)
-    - [mapper标签](#mapper标签)
+    - [属性 properties](#属性-properties)
+    - [设置 settings](#设置-settings)
+    - [别名 typeAliases](#别名-typealiases)
+    - [类型处理器 typeHandler](#类型处理器-typehandler)
+    - [插件 plugins](#插件-plugins)
+    - [配置环境 environments](#配置环境-environments)
+    - [数据库厂商标识 databaseIdProvider](#数据库厂商标识-databaseidprovider)
+    - [映射器注册 mappers](#映射器注册-mappers)
   - [映射器](#映射器)
     - [标签](#标签)
     - [注解](#注解)
@@ -218,7 +216,7 @@ SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建�
 
 另外，我们就能看出，在MyBatis的配置文件中：configuration节点为根节点。在configuration节点之下，我们可以配置10个子节点， 分别为：properties、typeAliases、plugins、objectFactory、objectWrapperFactory、settings、environments、databaseIdProvider、typeHandlers、mappers。
 
-### property标签
+### 属性 properties
 
 properties是一个配置属性的元素，能让我们在配置文件的上下文中使用它。MyBatis提供了三种配置方式：
 
@@ -270,114 +268,106 @@ password=1234
 <properties resource="jdbc.properties"/>
 ```
 
-### setting标签
+### 设置 settings
 
-### typeAliases标签
+### 别名 typeAliases
 
-### typeHandler标签
+类型别名可以为Java类型设置一个缩写名字，但仅用于XML设置，意在降低冗余的全限定类名书写。值得注意的是，MyBatis里面分为系统定义和自定义别名两类，且MyBatis别名是不区分大小写。对于系统别名来说，它主要包含的就是一些基本类型的别名定义，比如：_byte、_long、_int等。而对于自定义别名来说，一个最简单的例子如下：
 
-### plugin标签
-
-- 作用：为MyBatis添加拦截器
-- 使用方法 ：
-  - 使用name属性设置项属性名
-  - 使用value属性设置值
-
-``` xml
-<!-- 拦截器 -->
-<plugins>
-  <plugin interceptor="cn.com.mybatis.plugins.MyInterceptor" />
-  <plugin interceptor="cn.com.mybatis.plugins.MyInterceptor2">
-    <property name="name" value="mybatis"/>
-    <property name="age" value="10"/>
-  </plugin>
-</plugins>
+```xml
+<typeAliases>
+  <typeAlias alias="role" type="org.example.pojo.Role"/>
+</typeAliases>
 ```
 
-### typeAlias标签
+此外，也可以通过指定包名，开启扫描的方式定义别名。比如：
 
-- 作用：MyBatis别名处理器设置
-- 使用方法：
-  - 使用type属性指定要起别类名的类型全类名（默认别名是类名小写）
-  - 使用alias属性指定别名
-
-``` xml
-<typeAlias type="xxx.xxx.xxx" alias="xxx"/>
+```xml
+<typeAliases>
+  <package name="org.example.pojo"/>
+</typeAliases>
 ```
 
-### package标签
+在配置之后，MyBatis就会将包中的所有类加载到配置上下文中。其中，默认的名字就是类名全小写，不过也可以使用注解指定别名，比如：
 
-- 作用：MyBatis批量别名处理器设置
-- 使用方法：
-  - 使用name属性指定包名
-
-``` xml
-<package name="xxx.xxx.xxx">
+```java
+@Alias("role")
+class Role {
+  // ... 
+};
 ```
 
-### environments标签
+### 类型处理器 typeHandler
 
-- 作用：配置MyBatis环境
+MyBatis在设置预处理语句（PreparedStatement）中的参数或从结果集（ResultSet）中取出一个值时，都会用注册了的类型处理器将获取到的值以合适的方式转换成Java类型。类型处理器和别名相同，也分为系统定义和用户定义两种。
 
-- 使用方法：
+### 插件 plugins
 
-  - environments标签
-    - default属性指定默认使用环境
-  - environment标签
-    - id属性是每种环境的唯一标识
-    - transactionManager 标签
-      - type属性指定事务管理器类型，例如：JDBC（JdbcTransactionManager），也可以自定义
-    - dataSource标签
-      - type属性指定数据源类型，例如：POOLED
+### 配置环境 environments
 
-``` xml
-<environment id="">
-  <transactionManager type=""/>
-  <dataSource type=""/>
-</environment>
+配置环境可以注册多个数据源，而每一个数据源的配置又分成两部分：一是数据库连接的配置，二是数据库事务的配置。比如：
+
+```xml
+<environments default="development">
+  <environment id="development">
+    <transactionManager type="JDBC">
+      <property name="autoCommit" value="false"/>
+    </transactionManager>
+    <dataSource type="POOLED">
+      <property name="driver" value="com.mysql.jdbc.driver"/>
+      <property name="url" value="jdbc:mysql://localhost:3306/oa"/>
+      <property name="username" value="root"/>
+      <property name="password" value="1234"/>
+    </dataSource>
+  </environment>
+</environments>
 ```
 
-### databaseIdProvider标签
+其中，environments标签中的属性default，表明在缺省的情况下，我们将启用哪个数据源配置。而environment元素是配置一个数据源的开始，属性id是这个数据源的标志，以便上下文使用。
 
-- 作用：支持多数据库厂商
+transactionManager元素配置的数据库事务，其中的type属性有三种配置方式：
 
-``` xml
-<databaseIdProvider type="DB_VENDOR">
-</databaseIdProvider>
+- JDBC
+- MANAGED
+- 自定义
+
+### 数据库厂商标识 databaseIdProvider
+
+### 映射器注册 mappers
+
+映射器是MyBatis最复杂、最核心的组件，而mappers元素的作用正是将写好的映射器注册到全局配置中。它有三种引入方法。
+
+1、用文件路径引入，比如：
+
+```xml
+<mappers>
+  <mapper resource="org/example/mapper/userMapper.xml"/>
+</mappers>
 ```
 
-### mapper标签
+2、用包名引入该路径下的全部映射器，比如：
 
-- 作用：将写好的sql映射文件注册到全局配置中
-- 使用方法：
+```xml
+<mappers>
+  <package name="org/example/mapper"/>
+</mappers>
+```
 
-  - 注册配置文件
-    - 使用resource属性引用类路径下的sql映射文件
-    - 使用url属性引用网络路径或磁盘路径下的sql映射文件
-  - 注册接口
-    - 使用class属性引用注册接口接口
-    - 使用条件：
-      - 有sql映射文件，映射文件名必须和接口同名，且与接口放在同一目录
-      - 没有sql映射文件，所有sql都是利用注解写在接口上
+3、用映射器接口引入，比如：
 
-- 注册配置文件
+```xml
+<mappers>
+  <mapper class="org.example.mapper.userMapper"/>
+</mappers>
+```
 
-  ``` xml
-  <mapper resource="xxx.xxx.xxx"/>
-  ```
+4、用资源限定符引入，比如：
 
-- 注册接口（注解方式）
-
-  ``` xml
-  <mapper class="xxx.xxx.EmployeeMapperAnnotation"/>
-  ```
-
-  ``` java
-  public interface EmployeeMapperAnnotation{
-    @Select("select * from employee where id=#{id}")
-    public Employee getEmpById(Integer id);
-  } 
-  ```
+```xml
+<mappers>
+  <mapper url="file:///var/mappers/org/example/mapper/userMapper.xml"/>
+</mappers>
+```
 
 ## 映射器
 
