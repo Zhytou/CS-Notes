@@ -19,7 +19,14 @@
     - [数据库厂商标识 databaseIdProvider](#数据库厂商标识-databaseidprovider)
     - [映射器注册 mappers](#映射器注册-mappers)
   - [映射器](#映射器)
-    - [标签](#标签)
+    - [查询 select](#查询-select)
+    - [插入 insert](#插入-insert)
+    - [更新 updaet](#更新-updaet)
+    - [删除 delete](#删除-delete)
+    - [重用语句 sql](#重用语句-sql)
+    - [参数 parameterType](#参数-parametertype)
+    - [返回结果 resultMap](#返回结果-resultmap)
+    - [缓存 cache](#缓存-cache)
     - [注解](#注解)
   - [动态SQL](#动态sql)
   - [Spring集成](#spring集成)
@@ -177,10 +184,10 @@ MyBatis的工作原理主要依赖于两种技术:反射和动态代理。
 
 SqlSessionFactoryBuilder的作用是根据指定的环境及配置信息,构建出SqlSessionFactory对象。构建过程包括以下几个步骤:
 
-通过XMLConfigBuilder解析全局配置文件,构建出全局Configuration对象
-根据配置文件指定的映射器位置,解析映射器XML并构建相应的MappedStatement对象
-向Configuration中注册MappedStatement对象
-使用Configuration初始化DefaultSqlSessionFactory对象
+- 通过XMLConfigBuilder解析全局配置文件，构建出全局Configuration对象；
+- 根据配置文件指定的映射器位置，解析映射器XML并构建相应的MappedStatement对象；
+- 向Configuration中注册MappedStatement对象；
+- 使用Configuration初始化DefaultSqlSessionFactory对象。
 
 ### 会话的执行
 
@@ -371,14 +378,72 @@ transactionManager元素配置的数据库事务，其中的type属性有三种�
 
 ## 映射器
 
-- 定义：映射器是 MyBatis 中最重要的文件，文件中包含一组 SQL 语句（例如查询、添加、删除、修改），这些语句称为映射语句或映射 SQL 语句
-- 作用：
-  - 定义参数类型
-  - 配置缓存
-  - 提供 SQL 语句和动态 SQL
-  - 定义查询结果和 POJO 的映射关系
+映射器是MyBatis中最重要、最核心的文件，它包含一组SQL语句，并且可以通过配置生成对应的JavaBean返回给调用者。此外，MaBatis还支持动态SQL来满足不同场景的需求。同时，它也支持动态绑定JavaBean，只需要要让SQL返回的字段和JavaBean的属性保持一直即可省去繁琐的映射配置。
 
-### 标签
+### 查询 select
+
+### 插入 insert
+
+### 更新 updaet
+
+### 删除 delete
+
+### 重用语句 sql
+
+### 参数 parameterType
+
+### 返回结果 resultMap
+
+resultMap是MyBatis中最复杂的元素，其作用是定义映射规则、级联的更新、定义转换器等。它通常包含以下元素：
+
+constructor - 用于在实例化类时，注入结果到构造方法中
+idArg - ID 参数；标记出作为 ID 的结果可以帮助提高整体性能
+arg - 将被注入到构造方法的一个普通结果
+id – 一个 ID 结果；标记出作为 ID 的结果可以帮助提高整体性能
+result – 注入到字段或 JavaBean 属性的普通结果
+association – 一个复杂类型的关联；许多结果将包装成这种类型
+嵌套结果映射 – 关联可以是 resultMap 元素，或是对其它结果映射的引用
+collection – 一个复杂类型的集合
+嵌套结果映射 – 集合可以是 resultMap 元素，或是对其它结果映射的引用
+discriminator – 使用结果值来决定使用哪个 resultMap
+case – 基于某些值的结果映射
+嵌套结果映射 – case 也是一个结果映射，因此具有相同的结构和元素；或者引用其它的结果映射
+
+### 缓存 cache
+
+**一级缓存**：
+
+MyBatis提供缓存支持，但在没有配置的默认情况下，它只开启一级缓存。一级缓存中各个SqlSession的缓存是相互隔离的，即针对一个SqlSession的缓存。
+
+**二级缓存**：
+
+为了减少冗余查询，我们需要配置二级缓存。它是针对全局的，但同时也要求查询返回的POJO必须是可序列化的，即实现了Serializable接口。其配置方法很简单，需要在XML文件中添加`<cache/>`即可。这个简单的语句效果如下：
+
+- 映射语句文件中的所有select 语句的结果将会被缓存。
+- 映射语句文件中的所有insert、update和delete语句会刷新缓存。
+- 缓存会使用最近最少使用算法（LRU, Least Recently Used）算法来清除不需要的缓存。
+- 缓存不会定时进行刷新（也就是说，没有刷新间隔）。
+- 缓存会保存列表或对象（无论查询方法返回哪种）的 1024 个引用。
+- 缓存会被视为读/写缓存，这意味着获取到的对象并不是共享的，可以安全地被调用者修改，而不干扰其他调用者或线程所做的潜在修改。
+
+此外，二级缓存还有一些高级属性可以设置，包括：
+
+- eviction：缓存回收策略，可用值包括：
+  - LRU：最近最少使用，移除最长时间不使用的对象。
+  - FIFO：先进先出。
+  - SOFT：软引用，基于垃圾回收器状态移除对象。
+  - WEAK：弱引用，更积极的基于垃圾回收器状态移除对象。
+- flushInterval：刷新间隔时间，单位为毫秒。
+- size：缓存大小，代表可用存储多少个对象。
+- readOnly：只读，意味着缓存只能读取不可修改。
+
+**自定义缓存**：
+
+在大型服务器上，往往需要定制缓存，比如使用Redis缓存。此时，就需要实现MyBatis提供的接口org.apache.ibatis.cache.Cache，然后再引入cache标签即可。比如：
+
+```xml
+<cache type="org.example.cache.RedisCache">
+```
 
 ### 注解
 
@@ -397,10 +462,10 @@ public interface WebsiteMapper {
 }
 ```
 
-如果使用注解和 XML 文件两种方式同时定义，那么 XML 方式将覆盖掉注解方式。虽然这里注解的方式看起来比 XML 简单，但是现实中我们遇到的 SQL 会比该例子复杂得多，如果 SQL 语句中有多个表的关联、多个查询条件、级联、条件分支等，显然这条 SQL 就会复杂的多，所以并不建议读者使用这种方式
+如果使用注解和XML文件两种方式同时定义，那么XML方式将覆盖掉注解方式。虽然这里注解的方式看起来比XML简单，但是现实中我们遇到的SQL会比该例子复杂得多，如果SQL语句中有多个表的关联、多个查询条件、级联、条件分支等，显然这条SQL就会复杂的多，所以并不建议使用这种方式。
 
 ## 动态SQL
 
-动态SQL是MyBatis的强大特性之一，在JDBC或其他类似的框架中，开发人员需要手动拼接SQL语句
+动态SQL是MyBatis的强大特性之一，在JDBC或其他类似的框架中，开发人员需要手动拼接SQL语句，而MyBatis则通过动态SQL提供了SQL语句拼装能力。
 
 ## Spring集成
