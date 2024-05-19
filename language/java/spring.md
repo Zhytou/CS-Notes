@@ -506,16 +506,28 @@ public class FooService {
 
 除了XML和注解这两种方式之外，Spring还支持的另一种配置方式，即：只使用注解配置。
 
-通过创建一个配置类 SpringConfig并使用 @Configuration 注解标记，该类就成为了 Spring 的配置类，相当于以前的 XML 配置文件。@ComponentScan 注解指定需要扫描的包路径，Spring 将自动发现这些包及子包下标注了 @Component、@Service、@Repository、@Controller 等注解的类，并自动将它们注册为 Bean。这个功能类似于 XML 配置中的 <context:component-scan> 元素。
+通过创建一个配置类SpringConfig并使用@Configuration注解标记，该类就成为了Spring的配置类，相当于以前的XML配置文件。@ComponentScan 注解指定需要扫描的包路径，Spring 将自动发现这些包及子包下标注了@Component、@Service、@Repository、@Controller等注解的类，并自动将它们注册为Bean。这个功能类似于 XML 配置中的 <context:component-scan> 元素。
 
 ``` java
 @Configuration
 @ComponentScan(basePackages = {"net.bianchen"})
 public class SpringConfig{
+    @Bean
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/mydb");
+        dataSource.setUsername("root");
+        dataSource.setPassword("password");
+        return dataSource;
+    }
+
+    // other bean
+    //...
 }
 ```
 
-通过使用 AnnotationConfigApplicationContext 并将配置类 SpringConfig.class 作为参数传入,即可创建一个基于注解配置的 Spring 应用上下文环境。
+通过使用AnnotationConfigApplicationContext并将配置类SpringConfig.class作为参数传入，即可创建一个基于注解配置的Spring应用上下文环境。
 
 ``` java
 ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
