@@ -96,7 +96,18 @@ my-project
 
 ### 启动流程
 
-Spring Boot应用的启动类可以是非常简单，其中最关键的两部分是Annotation定义(@SpringBootApplication)和类定义(SpringApplication.run)。其中，SpringBootApplication注解的定义如下：
+在上面的例子中，SpringApplication.run会使用@SpringBootApplication注解描述的配置类启动Spring应用程序。具体来说，SpringApplication.run方法的执行流程如下：
+
+- 创建一个新的SpringApplication实例；
+- 准备Environment(环境)，包括加载外部属性源(如application.properties)到Environment中；
+- 为当前应用程序上下文创建Environment并加载单例(single)；
+- 初始化Spring容器源(sources)，通过注解或显式配置确定应该加载哪些Bean定义；
+- 注册ApplicationContextInitializer以准备上下文；
+- 加载源(sources)以构建上下文；
+- 刷新应用程序上下文刷新以启动所有单例Bean；
+- 完成其他启动步骤，如开始Web服务器(如果是Web应用)。
+
+除此之外，@SpringBootApplication注解修饰的配置类作为传入参数，其作用也同样重要。想要理解它，就需要先理解@SpringBootApplication的作用。其定义如下：
 
 ```java
 @Target({ElementType.TYPE})
@@ -124,18 +135,29 @@ public @interface SpringBootApplication {
 - @Configuration
 - @EnableAutoConfiguration
 - @ComponentScan
-  
-**@Configration**：
 
-其中，@Configuration和@ComponentScan在Spring IoC容器的配置中已经出现过。使用它们，可以进行完全注解
+其中，@Configuration和@ComponentScan在Spring IoC容器的配置中已经出现过。使用它们，可以进行完全注解开发而不再使用XML文件进行配置。比如，使用它们定义一个Spring应用的配置。
 
-启动入口是带有@SpringBootApplication注解的主类，该注解是一个组合注解，包含@Configuration、@EnableAutoConfiguration和@ComponentScan。
+```java
+@Configuration
+@ComponentScan(basePackages = {"net.bianchen"})
+public class SpringConfig{
+    @Bean
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/mydb");
+        dataSource.setUsername("root");
+        dataSource.setPassword("password");
+        return dataSource;
+    }
 
-- @EnableAutoConfiguration 注解启用了 Spring Boot 的自动配置功能,根据项目依赖自动配置相关的 Bean。
-- @ComponentScan 注解启用组件扫描,Spring 会自动扫描当前包及其子包下的组件(@Component、@Service、@Repository、@Controller 等)并将其注册为 Bean。
+    // other bean
+    //...
+}
+```
 
-在 main 方法中,调用 SpringApplication.run 方法启动 Spring 应用程序。
-Spring Boot 会创建一个新的应用程序上下文(ApplicationContext),初始化自动配置的 Bean 并启动内嵌的 Web 服务器(如 Tomcat)。
+当@ComponentScan注解不指定扫描范围时，它会默认从声明@ComponentScan所在类的包进行扫描。因此，Spring Boot的启动类需要放在根目录下，保证能够扫描完全部的Bean。至于，@EnableAutoConfiguration注解则是Spring Boot应用的区别于普通Spring应用的特性之一。有了它Spring Boot应用才有了自动配置的功能。
 
 ## 核心功能
 
