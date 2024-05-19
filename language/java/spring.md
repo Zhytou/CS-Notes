@@ -506,7 +506,7 @@ public class FooService {
 
 除了XML和注解这两种方式之外，Spring还支持的另一种配置方式，即：只使用注解配置。
 
-通过创建一个配置类SpringConfig并使用@Configuration注解标记，该类就成为了Spring的配置类，相当于以前的XML配置文件。@ComponentScan 注解指定需要扫描的包路径，Spring 将自动发现这些包及子包下标注了@Component、@Service、@Repository、@Controller等注解的类，并自动将它们注册为Bean。这个功能类似于 XML 配置中的 <context:component-scan> 元素。
+通过创建一个配置类SpringConfig并使用@Configuration注解标记，该类就成为了Spring的配置类，相当于以前的XML配置文件。比如：
 
 ``` java
 @Configuration
@@ -527,10 +527,20 @@ public class SpringConfig{
 }
 ```
 
+其中，@ComponentScan注解指定需要扫描的包路径，Spring将自动发现这些包及子包下标注了@Component、@Service、@Repository、@Controller等注解的类，并自动将它们注册为Bean。这个功能类似于 XML 配置中的 <context:component-scan> 元素。而@Bean注解则用于修饰方法，其返回值将作为一个Bean注册到Spring的IoC容器中。
+
 通过使用AnnotationConfigApplicationContext并将配置类SpringConfig.class作为参数传入，即可创建一个基于注解配置的Spring应用上下文环境。
 
 ``` java
 ApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+```
+
+或者在main函数中通过SpringApplication.run方法启动整个Spring应用。
+
+```java
+public static void main(String[] args) {
+    SpringApplication.run(HelloWorldApplication.class, args);
+}
 ```
 
 ## 面向切面编程 AOP
