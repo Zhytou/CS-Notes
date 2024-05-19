@@ -5,7 +5,6 @@
   - [快速入门](#快速入门)
     - [项目结构](#项目结构)
     - [启动流程](#启动流程)
-    - [@SpringBootApplication](#springbootapplication)
   - [核心功能](#核心功能)
     - [内嵌容器](#内嵌容器)
     - [Starter依赖](#starter依赖)
@@ -53,7 +52,6 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 @RestController
 public class HelloWorldApplication {
-
     @GetMapping("/")
     public String hello() {
         return "Hello, World!";
@@ -65,7 +63,9 @@ public class HelloWorldApplication {
 }
 ```
 
-这个示例创建了一个简单的 Spring Boot 应用程序,包含一个 REST 端点,当访问根路径时,返回 "Hello, World!" 字符串。
+这个示例创建了一个简单的Spring Boot应用程序，包含一个REST端点。当访问根路径时，返回"Hello, World!"字符串，具体效果如下图。
+
+![hello springboot](../img/hello_springboot.png)
 
 ### 项目结构
 
@@ -96,31 +96,64 @@ my-project
 
 ### 启动流程
 
-Spring Boot 应用程序的启动过程如下:
+Spring Boot应用的启动类可以是非常简单，其中最关键的两部分是Annotation定义(@SpringBootApplication)和类定义(SpringApplication.run)。其中，SpringBootApplication注解的定义如下：
 
-启动入口是带有 @SpringBootApplication 注解的主类,该注解是一个组合注解,包含 @Configuration、@EnableAutoConfiguration 和 @ComponentScan。
-@EnableAutoConfiguration 注解启用了 Spring Boot 的自动配置功能,根据项目依赖自动配置相关的 Bean。
-@ComponentScan 注解启用组件扫描,Spring 会自动扫描当前包及其子包下的组件(@Component、@Service、@Repository、@Controller 等)并将其注册为 Bean。
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(
+  excludeFilters = {@Filter(
+  type = FilterType.CUSTOM,
+  classes = {TypeExcludeFilter.class}
+), @Filter(
+  type = FilterType.CUSTOM,
+  classes = {AutoConfigurationExcludeFilter.class}
+)}
+)
+public @interface SpringBootApplication {
+  //...
+}
+```
+
+可见，它是一个组合注解，最重要的三个注解分别是：
+
+- @Configuration
+- @EnableAutoConfiguration
+- @ComponentScan
+  
+**@Configration**：
+
+其中，@Configuration和@ComponentScan在Spring IoC容器的配置中已经出现过。使用它们，可以进行完全注解
+
+启动入口是带有@SpringBootApplication注解的主类，该注解是一个组合注解，包含@Configuration、@EnableAutoConfiguration和@ComponentScan。
+
+- @EnableAutoConfiguration 注解启用了 Spring Boot 的自动配置功能,根据项目依赖自动配置相关的 Bean。
+- @ComponentScan 注解启用组件扫描,Spring 会自动扫描当前包及其子包下的组件(@Component、@Service、@Repository、@Controller 等)并将其注册为 Bean。
+
 在 main 方法中,调用 SpringApplication.run 方法启动 Spring 应用程序。
 Spring Boot 会创建一个新的应用程序上下文(ApplicationContext),初始化自动配置的 Bean 并启动内嵌的 Web 服务器(如 Tomcat)。
-
-### @SpringBootApplication
 
 ## 核心功能
 
 ### 内嵌容器
 
+Spring Boot可以内嵌Tomcat、Jetty 或 Undertow等容器，无需部署WAR包即可以作为独立程序运行。内嵌容器默认会将项目静态资源和JSP页面放在src/main/resources/public目录下。
+
 ### Starter依赖
+
+Spring Boot提供了大量的Starter依赖，用于简化应用程序构建。例如spring-boot-starter-web依赖会自动引入并配置好Tomcat、Spring MVC等Web开发所需的依赖。其背后的原理是Spring Boot利用了Maven或Gradle解析依赖的传递性特性。这使得开发者可以按需引入所需的Starter，而无需关心底层的具体依赖和它们的配置。
 
 ### 自动配置
 
-Spring Boot 应用程序的自动配置是由@SpringBootApplication注解的@EnableAutoConfiguration注解实现的。有了这个注解，Spring Boot 就会开启自动配置功能。
+Spring Boot应用程序的自动配置是由@SpringBootApplication注解中的@EnableAutoConfiguration注解实现的。有了这个注解，Spring Boot就会开启自动配置功能。其配置的流程如下:
 
-自动配置的流程如下:
-
-- 从META-INF/spring.factories配置文件中加载自动配置类
-- 去重并排除exclude和excludeName指定的自动配置类
-- 将满足条件(符合 @Conditional 注解指定的条件)的自动配置类返回，创建对应的 Bean
+- 从META-INF/spring.factories配置文件中加载自动配置类；
+- 去重并排除exclude和excludeName指定的自动配置类；
+- 将满足条件(符合 @Conditional 注解指定的条件)的自动配置类返回，创建对应的 Bean。
 
 自动配置极大地简化了Spring应用程序的配置过程，开发者无需手动配置大量Spring组件，只需要添加所需的Starter依赖，Spring Boot就会自动配置相关的Bean。
 
@@ -188,9 +221,38 @@ student2:
 animal: [Dog, Cat]
 ```
 
+另外，YAML文件还可以使用---将文件分割成多个部分，从而支持Profile特性。比如：
+
+```yml
+server:
+  port: 8081
+spring:
+  profiles:
+    active: prod
+
+---
+server:
+  port: 8083
+spring:
+  profiles: dev
+
+---
+
+server:
+  port: 8084
+spring:
+  profiles: prod
+```
+
 **Profile**：
 
-Spring Boot支持根据不同环境采用不同配置，这种特性被称为Profile。它通过spring.profiles.active属性来指定激活的环境配置。例如:`spring.profiles.active=dev`会让Spring Boot自动加载application-dev.properties文件。此外，也可以在配置文件中使用 @Profile 注解来指定该部分配置属于哪个环境。
+Spring Boot支持根据不同环境采用不同配置，这种特性被称为Profile。可以通过命令行参数spring.profiles.active来指定激活的环境配置。例如：
+
+```bash
+java -jar spring-boot-02-config-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
+```
+
+Spring Boot自动加载application-dev.properties文件或application.yml中dev的部分。此外，也可以在配置文件中使用@Profile 注解来指定该部分配置属于哪个环境。
 
 ## 数据访问
 
