@@ -30,6 +30,9 @@
     - [JPA](#jpa)
     - [ORM Framework](#orm-framework)
     - [Sharding-JDBC](#sharding-jdbc)
+  - [事务管理 Transcational Management](#事务管理-transcational-management)
+    - [数据库事务](#数据库事务)
+    - [声明式事务](#声明式事务)
   - [参考 Reference](#参考-reference)
 
 ## 框架概述
@@ -547,11 +550,7 @@ public static void main(String[] args) {
 
 AOP(Aspect Oriented Programming) 面向切面编程是一种编程范式，可以将遵循单一职责原则的代码进行解耦，把分布于多个模块中的与业务无关的代码重新集中到一个共同维护的模块中，从而提高代码复用性。这种与业务无关的横切代码被称为横切关注点，比如日志、事务管理、安全检查等。
 
-传统的面向对象编程只关注对象，而AOP则关注横切多个对象的行为，将对象内的散乱完成多个特定行为的语句进行封装，从而让编程逻辑更加清晰简洁。
-
-**术语**：
-
-在AOP编程中，我们经常会遇到下面的概念：
+传统的面向对象编程只关注对象，而AOP则关注横切多个对象的行为，将对象内的散乱完成多个特定行为的语句进行封装，从而让编程逻辑更加清晰简洁。在AOP编程中，我们经常会遇到下面的概念：
 
 - Aspect：切面，即一个横跨多个核心逻辑的功能，或者称之为系统关注点；
 - Joinpoint：连接点，即定义在应用程序流程的何处插入切面的执行；
@@ -572,9 +571,9 @@ Spring框架对AOP的概念提供了支持，称为Spring AOP。Spring AOP为程
 
 ### AspectJ
 
-AspectJ是一个基于Java语言的 AOP 实现，它扩展了 Java 语言本身，使其包含 AOP 的概念构造，如切面、切入点、通知等。AspectJ 定义了 AOP 语法，可直接编写代码进行AOP开发。
+AspectJ是一个基于Java语言的AOP实现，它扩展了Java语言本身，使其包含AOP的概念构造，如切面、切入点、通知等。AspectJ 定义了AOP语法，可直接编写代码进行AOP开发。
 
-但不同与Spring AOP，AspectJ本身不是Spring的一部分。直到 Spring 2.0 开始，Spring AOP才引入了对 AspectJ 的支持。在新版本的 Spring 框架中，建议使用 AspectJ 方式开发 AOP。类似IoC容器，基于AspectJ实现AOP操作也可以通过XML和注解的两种方式。
+但不同与Spring AOP，AspectJ本身不是Spring的一部分。直到Spring 2.0开始，Spring AOP才引入了对 AspectJ 的支持。在新版本的 Spring 框架中，建议使用AspectJ方式开发 AOP。类似IoC容器，基于AspectJ实现AOP操作也可以通过XML和注解的两种方式。
 
 ## Web开发 Spring MVC
 
@@ -807,6 +806,81 @@ ORM 框架是一种对象关系映射技术，它提供了一种将面向对象�
 ### Sharding-JDBC
 
 [Sharding-JDBC快速入门第一课](https://www.cnblogs.com/cjsblog/p/13154158.html)
+
+## 事务管理 Transcational Management
+
+### 数据库事务
+
+事务是数据库中进行一系列操作的基本单位。因此，事务管理和数据访问技术(如JDBC、MyBatis、JPA等)是紧密相关的。对于RDBMS来说，它的事务往往具有ACID的特性：
+
+- 原子性(Atomicity)：事务中的全部操作在数据库中是不可分割的，要么全部完成，要么全部不执行。
+- 一致性(Consistency)：几个并行执行的事务，其执行结果必须与按某一顺序串行执行的结果相一致。
+- 隔离性(Isolation)：事务的执行不受其他事务的干扰，事务执行的中间结果对其他事务必须是透明的。
+- 持久性(Durability):对于任意已提交事务，系统必须保证该事务对数据库的改变不被丢失，即使数据库出现故障。
+
+而对于NoSQL来说，它的事务则具有BASE的特性：
+
+- 基本可用(Basically Available)：系统保证基本的可用性，即系统在面对分区故障时仍能提供服务。这意味着系统可以在一些节点发生故障或无法通信的情况下继续运行。
+- 软状态(Soft State)：系统允许一段时间内不同节点的数据副本之间存在不一致。在一些时刻，系统的状态可能是不确定的，允许出现中间状态。
+- 最终一致性(Eventually Consistent)：系统最终会达到一致的状态，但不要求实时一致性。在系统进行一些更新后，最终所有节点的数据会达到一致状态，但这个过程可能需要一些时间。
+
+### 声明式事务
+
+Spring提供了统一的编程模型来管理事务，并与各种数据访问技术无缝集成。在Spring应用中，事务管理主要通过两种方式实现：编程式事务管理和声明式事务管理。其中，编程式事务管理并不常用，因为需要手动编写冗余代码。比如：
+
+```java
+TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+    protected void doInTransactionWithoutResult(TransactionStatus status) {
+        // 执行数据访问操作
+    }
+});
+```
+
+相比之下，声明式事务使用起来就相对方便和简单。比如：
+
+```java
+@Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.REPEATABLE_READ, timeout = 30, rollbackFor = Exception.class)
+public void processOrder(Order order) {
+    // 处理订单逻辑
+}
+```
+
+**@Transcational属性**：
+
+可见，声明式事务主要依靠@Transcational注解实现，并且可以设置该注解中某些属性实现更高级的事务配置。这些属性包括：
+
+- 传播行为(Propagation): 指定事务的传播方式，如新建事务、嵌套事务等。
+- 隔离级别(Isolation): 指定事务的隔离级别，以防止并发问题。
+- 只读(Readony): 将事务设置为只读，可提高性能。
+- 超时(Timeout): 指定事务超时时间，防止死锁。
+- 回滚规则(rollbackFor/noRollbackFor): 指定发生哪些异常时需要回滚事务。
+- 事务管理器(transactionManager): 指定使用的事务管理器。
+
+**@Transcational修饰对象**：
+
+此外，@Transcational还可以作用在接口、类和方法上。
+
+- 作用于类：当把@Transactional注解放在类上时，表示所有该类的public方法都配置相同的事务属性信息。
+- 作用于方法：当类配置了@Transactional，方法也配置了@Transactional，方法的事务会覆盖类的事务配置信息。
+- 作用于接口：不推荐这种使用方法，因为一旦标注在Interface上并且配置了Spring AOP 使用CGLib动态代理，将会导致@Transactional注解失效。
+
+**@Transcational缺陷**：
+
+首先，声明式事务有一个局限，那就是他的最小粒度要作用在方法上。也就是说，如果想要给一部分代码块增加事务的话，那就需要把这个部分代码块单独独立出来作为一个方法。
+
+其次，声明式事务容易被开发者忽略，而事务一旦被忽略就容易造成很多故障。比如，在@Transcational修饰的方法中加入一些如RPC远程调用、消息发送、缓存更新、文件写入等操作。当这些操作被包在事务中会出现两个问题：
+
+- 这些操作自身是无法回滚的，这就会导致数据的不一致。可能RPC调用成功了，但是本地事务回滚了，可是PRC调用无法回滚了(这里不讨论分布式事务)。
+- 在事务中有远程调用，就会拉长整个事务。那么久会导致本事务的数据库连接一直被占用，那么如果类似操作过多，就会导致数据库连接池耗尽。
+
+有些时候，即使没有在事务中进行远程操作，但是有些人还是可能会不经意的进行一些内存操作，如运算。或者如果遇到分库分表的情况，有可能不经意间进行跨库操作。
+
+最后，声明式事务在某些场景下容易失效，比如：
+
+- @Transactional应用在非public修饰的方法上；
+- @Transactional注解属性propagation或rollbackFor设置错误；
+- 同一个类中方法调用，导致@Transactional失效。
 
 ## 参考 Reference
 
