@@ -157,17 +157,37 @@ public class SpringConfig{
 }
 ```
 
-当@ComponentScan注解不指定扫描范围时，它会默认从声明@ComponentScan所在类的包进行扫描。因此，Spring Boot的启动类需要放在根目录下，保证能够扫描完全部的Bean。至于，@EnableAutoConfiguration注解则是Spring Boot应用的区别于普通Spring应用的特性之一。有了它Spring Boot应用才有了自动配置的功能。
+当@ComponentScan注解不指定扫描范围时，它会默认从声明@ComponentScan所在类的包进行扫描。因此，Spring Boot的启动类需要放在根目录下，保证能够扫描完全部的Bean。
+
+至于，@EnableAutoConfiguration注解则是Spring Boot应用的区别于普通Spring应用的特性之一。有了它Spring Boot应用才有了自动配置的功能。它借助@Import的帮助，将所有符合自动配置条件的bean定义加载到Ioc容器。其具体定义如下：
+
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import({AutoConfigurationImportSelector.class})
+public @interface EnableAutoConfiguration {
+    String ENABLED_OVERRIDE_PROPERTY = "spring.boot.enableautoconfiguration";
+
+    Class<?>[] exclude() default {};
+
+    String[] excludeName() default {};
+}
+```
 
 ## 核心功能
 
 ### 内嵌容器
 
-Spring Boot可以内嵌Tomcat、Jetty 或 Undertow等容器，无需部署WAR包即可以作为独立程序运行。内嵌容器默认会将项目静态资源和JSP页面放在src/main/resources/public目录下。
+Spring Boot可以内嵌Tomcat、Jetty或Undertow等容器，无需部署WAR包即可以作为独立程序运行。内嵌容器默认会将项目静态资源和JSP页面放在src/main/resources/public目录下。
 
 ### Starter依赖
 
-Spring Boot提供了大量的Starter依赖，用于简化应用程序构建。例如spring-boot-starter-web依赖会自动引入并配置好Tomcat、Spring MVC等Web开发所需的依赖。其背后的原理是Spring Boot利用了Maven或Gradle解析依赖的传递性特性。这使得开发者可以按需引入所需的Starter，而无需关心底层的具体依赖和它们的配置。
+Spring Boot提供了大量的Starter依赖，用于简化应用程序构建。例如spring-boot-starter-web依赖会自动引入并配置好Tomcat、Spring MVC等Web开发所需的依赖，而spring-boot-starter依赖则是Spring Boot应用最基础的启动器依赖，它集成了自动配置、日志和YAML等核心特性。
+
+Starter背后的原理是Spring Boot利用了Maven或Gradle解析依赖的传递性特性。这使得开发者可以按需引入所需的Starter，而无需关心底层的具体依赖和它们的配置。
 
 ### 自动配置
 
@@ -279,6 +299,32 @@ Spring Boot自动加载application-dev.properties文件或application.yml中dev�
 ## 数据访问
 
 ### MyBatis集成
+
+首先，在pom.xml中添加mybatis-spring-boot-starter和mysql-connector-java依赖。其中，mybatis-spring-boot-starter是MyBatis官方提供的Spring Boot启动器依赖，用于集成 MyBatis到Spring Boot应用中。它会引入MyBatis相关依赖并进行自动配置。
+
+```xml
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>2.2.2</version>
+</dependency>
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+</dependency>
+```
+
+接着，在application.properties中配置数据源和MyBatis。
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/mydb
+spring.datasource.username=root
+spring.datasource.password=root
+mybatis.type-aliases-package=com.example.model
+mybatis.mapper-locations=classpath:mapper/*.xml
+```
+
+最后，创建Mapper接口和对应的XML映射文件，并在Service中使用@Autowired注入Mapper接口。
 
 ### 事务管理
 
