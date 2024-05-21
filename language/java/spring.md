@@ -15,8 +15,8 @@
       - [IoC容器的原理](#ioc容器的原理)
       - [IoC容器的配置](#ioc容器的配置)
   - [面向切面编程 AOP](#面向切面编程-aop)
-    - [Spring AOP](#spring-aop)
     - [AspectJ](#aspectj)
+    - [Spring AOP](#spring-aop)
   - [Web开发 Spring MVC](#web开发-spring-mvc)
     - [核心组件](#核心组件)
     - [工作流程](#工作流程)
@@ -552,28 +552,38 @@ AOP(Aspect Oriented Programming) 面向切面编程是一种编程范式，可�
 
 传统的面向对象编程只关注对象，而AOP则关注横切多个对象的行为，将对象内的散乱完成多个特定行为的语句进行封装，从而让编程逻辑更加清晰简洁。在AOP编程中，我们经常会遇到下面的概念：
 
-- Aspect：切面，即一个横跨多个核心逻辑的功能，或者称之为系统关注点；
-- Joinpoint：连接点，即定义在应用程序流程的何处插入切面的执行；
-- Pointcut：切入点，即一组连接点的集合；
-- Advice：增强，指特定连接点上执行的动作；
-- Introduction：引介，指为一个已有的Java对象动态地增加新的接口；
-- Weaving：织入，指将切面整合到程序的执行流程中；
-- Interceptor：拦截器，是一种实现增强的方式；
-- Target Object：目标对象，即真正执行业务的核心逻辑对象；
-- AOP Proxy：AOP代理，是客户端持有的增强后的对象引用。
+- 连接点（Jointpoint）：表示需要在程序中插入横切关注点的扩展点，连接点可能是类初始化、方法执行、方法调用、字段调用或处理异常等等，Spring只支持方法执行连接点，在AOP中表示为在哪里干；
+- 切入点（Pointcut）： 选择一组相关连接点的模式，即可以认为连接点的集合，Spring支持perl5正则表达式和AspectJ切入点模式，Spring默认使用AspectJ语法，在AOP中表示为在哪里干的集合；
+- 通知（Advice）：在连接点上执行的行为，通知提供了在AOP中需要在切入点所选择的连接点处进行扩展现有行为的手段；包括前置通知（before advice）、后置通知(after advice)、环绕通知（around advice），在Spring中通过代理模式实现AOP，并通过拦截器模式以环绕连接点的拦截器链织入通知；在AOP中表示为干什么；
+- 方面/切面（Aspect）：横切关注点的模块化，比如上边提到的日志组件。可以认为是通知、引入和切入点的组合；在Spring中可以使用Schema和@AspectJ方式进行组织实现；在AOP中表示为在哪干和干什么集合；
+- 引入（inter-type declaration）：也称为内部类型声明，为已有的类添加额外新的字段或方法，Spring允许引入新的接口（必须对应一个实现）到所有被代理对象（目标对象）, 在AOP中表示为干什么（引入什么）；
+- 目标对象（Target Object）：需要被织入横切关注点的对象，即该对象是切入点选择的对象，需要被通知的对象，从而也可称为被通知对象；由于Spring AOP 通过代理模式实现，从而这个对象永远是被代理对象，在AOP中表示为对谁干；
+- 织入（Weaving）：把切面连接到其它的应用程序类型或者对象上，并创建一个被通知的对象。这些可以在编译时（例如使用AspectJ编译器），类加载时和运行时完成。Spring和其他纯Java AOP框架一样，在运行时完成织入。在AOP中表示为怎么实现的；
+- AOP代理（AOP Proxy）：AOP框架使用代理模式创建的对象，从而实现在连接点处插入通知（即应用切面），就是通过代理来对目标对象应用切面。在Spring中，AOP代理可以用JDK动态代理或CGLIB代理实现，而通过拦截器模型应用切面。在AOP中表示为怎么实现的一种典型方式。
+
+此外，通知（Advice）又可以根据执行位置分成以下类型：
+
+- 前置通知（Before advice）：在某连接点之前执行的通知，但这个通知不能阻止连接点之前的执行流程（除非它抛出一个异常）。
+- 后置通知（After returning advice）：在某连接点正常完成后执行的通知：例如，一个方法没有抛出任何异常，正常返回。
+- 异常通知（After throwing advice）：在方法抛出异常退出时执行的通知。最终通知（After (finally) advice）：当某连接点退出的时候执行的通知（不论是正常返回还是异常退出）。
+- 环绕通知（Around Advice）：包围一个连接点的通知，如方法调用。这是最强大的一种通知类型。环绕通知可以在方法调用前后完成自定义的行为。它也会选择是否继续执行连接点或直接返回它自己的返回值或抛出异常来结束执行。
+
+### AspectJ
+
+AspectJ是一个基于Java语言的AOP完整解决方案。它扩展了Java语法，并且定义了AOP中的重要概念，同时还提供了一个专门的编译器用于编译和织入切面。可以说，AspectJ就是可以说是最成熟和标准的AOP实现框架。值得一提的是，对于AspectJ来说，它采用静态织入的方式，首先使用AspectJ的acj编译器将AspectJ相关的类编译成字节码之后，再在Java目标类编译时将其织入，即先编译AspectJ类再编译目标类。
+
+不过，AspectJ本身不是Spring的一部分。直到Spring 2.0开始，Spring AOP才引入了对AspectJ的支持。在新版本的Spring框架中，建议使用AspectJ方式进行AOP编程，即：使用AspectJ风格的注解进行开发。但是，AOP在运行时仍是纯Spring AOP，并不依赖于AspectJ的编译器或织入器。
 
 ### Spring AOP
 
 Spring框架对AOP的概念提供了支持，称为Spring AOP。Spring AOP为程序提供了面向切面增强的编程能力，允许程序员定义方法执行的拦截规则，甚至可以新增增强处理，从而实现功能上的织入。Spring AOP使用动态代理机制实现，有两种实现方式:
 
-- 基于 JDK 动态代理，为接口创建代理对象
-- 基于 CGLib 动态代理，为指定类创建子类的代理对象
+- 基于JDK动态代理，为接口创建代理对象
+- 基于CGLib动态代理，为指定类创建子类的代理对象
 
-### AspectJ
+不过和AspectJ相比，String AOP功能更受限。String AOP仅支持Bean实例中的方法级编织，且只能运行时织入（所以更慢）。
 
-AspectJ是一个基于Java语言的AOP实现，它扩展了Java语言本身，使其包含AOP的概念构造，如切面、切入点、通知等。AspectJ 定义了AOP语法，可直接编写代码进行AOP开发。
-
-但不同与Spring AOP，AspectJ本身不是Spring的一部分。直到Spring 2.0开始，Spring AOP才引入了对 AspectJ 的支持。在新版本的 Spring 框架中，建议使用AspectJ方式开发 AOP。类似IoC容器，基于AspectJ实现AOP操作也可以通过XML和注解的两种方式。
+类似IoC容器，在String中实现AOP操作也可以通过XML和注解的两种方式。
 
 ## Web开发 Spring MVC
 
@@ -851,7 +861,19 @@ public void processOrder(Order order) {
 可见，声明式事务主要依靠@Transcational注解实现，并且可以设置该注解中某些属性实现更高级的事务配置。这些属性包括：
 
 - 传播行为(Propagation): 指定事务的传播方式，如新建事务、嵌套事务等。
+  - REQUIRED(默认值)：如果当前存在事务，则加入该事务，如果当前不存在事务，则创建一个新的事务。
+  - SUPPORTS：如果当前存在事务，则加入该事务；如果当前不存在事务，则以非事务方式继续运行。
+  - MANDATORY：如果当前存在事务，则加入该事务；如果当前不存在事务，则抛出异常。
+  - REQUIRES_NEW：重新创建一个新的事务，如果当前存在事务，暂停当前的事务。
+  - NOT_SUPPORTED：以非事务的方式运行，如果当前存在事务，暂停当前的事务。
+  - NEVER：以非事务的方式运行，如果当前存在事务，则抛出异常。
+  - NESTED：和 REQUIRED 效果一样。
 - 隔离级别(Isolation): 指定事务的隔离级别，以防止并发问题。
+  - DEFAULT(默认值)：使用底层数据库默认的隔离级别。
+  - READ_UNCOMMITTED：未提交读。无法防止。
+  - READ_COMMITTED：可提交读。可以防止脏读。
+  - REPEATABLE_READ：可重复读。可以防止脏读、可重复读。mysql 默认隔离级别。
+  - SERIALIZABLE：串行事务。最高事务隔离级别，可以防止脏读、可重复读、幻读。
 - 只读(Readony): 将事务设置为只读，可提高性能。
 - 超时(Timeout): 指定事务超时时间，防止死锁。
 - 回滚规则(rollbackFor/noRollbackFor): 指定发生哪些异常时需要回滚事务。
@@ -881,6 +903,13 @@ public void processOrder(Order order) {
 - @Transactional应用在非public修饰的方法上；
 - @Transactional注解属性propagation或rollbackFor设置错误；
 - 同一个类中方法调用，导致@Transactional失效。
+
+**@Transcational实现机制**：
+
+- @Transactional 声明目标方法后，Spring Framework 默认使用 AOP 代理，代码运行时生成一个代理对象，根据 @Transactional 的属性配置，代理对象决定该声明 @Transactional 的目标方法是否由拦截器 TransactionInterceptor 来使用拦截。
+- 在 TransactionInterceptor 拦截时，会在目标方法开始执行之前创建并加入事务，并执行目标方法的逻辑, 最后根据执行情况是否出现异常，利用抽象事务管理器 AbstractPlatformTransactionManager 操作数据源 DataSource 提交或回滚事务。
+- Spring AOP 代理有 CglibAopProxy 和 JdkDynamicAopProxy 两种，以 CglibAopProxy 为例，对于 CglibAopProxy，需要调用其内部类的 DynamicAdvisedInterceptor 的 intercept 方法。对于 JdkDynamicAopProxy，需要调用其 invoke 方法。
+- 默认的代理模式下，只有目标方法由外部调用，才能被 Spring 事务拦截器拦截。在同一个类中的两个方法直接调用，是不会被 Spring 的事务拦截器拦截。
 
 ## 参考 Reference
 
