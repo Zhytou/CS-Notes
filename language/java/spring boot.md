@@ -187,7 +187,180 @@ Spring Boot可以内嵌Tomcat、Jetty或Undertow等容器，无需部署WAR包�
 
 Spring Boot提供了大量的Starter依赖，用于简化应用程序构建。例如spring-boot-starter-web依赖会自动引入并配置好Tomcat、Spring MVC等Web开发所需的依赖，而spring-boot-starter依赖则是Spring Boot应用最基础的启动器依赖，它集成了自动配置、日志和YAML等核心特性。
 
-Starter背后的原理是Spring Boot利用了Maven或Gradle解析依赖的传递性特性。这使得开发者可以按需引入所需的Starter，而无需关心底层的具体依赖和它们的配置。
+Starter背后的原理是Spring Boot利用了Maven或Gradle解析依赖的传递性特性。这使得开发者可以按需引入所需的Starter，而无需关心底层的具体依赖和它们的配置。以mybatis-spring-boot-starter为例，这个包的元信息中又进一步依赖了其他包。
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot</artifactId>
+    <version>1.2.0</version>
+  </parent>
+  <artifactId>mybatis-spring-boot-starter</artifactId>
+  <name>mybatis-spring-boot-starter</name>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mybatis.spring.boot</groupId>
+      <artifactId>mybatis-spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis-spring</artifactId>
+    </dependency>
+  </dependencies>
+</project>
+```
+
+其中，mybatis-spring-boot-autoconfigure这个包实现了mybatis相关的bean自动装配的功能。打开其可以观察到，其核心实际是一个名为MybatisAutoConfiguration的文件，具体内容如下。
+
+```java
+@Configuration
+@ConditionalOnClass({SqlSessionFactory.class, SqlSessionFactoryBean.class})
+@ConditionalOnBean({DataSource.class})
+@EnableConfigurationProperties({MybatisProperties.class})
+@AutoConfigureAfter({DataSourceAutoConfiguration.class})
+public class MybatisAutoConfiguration {
+    private static final Logger logger = LoggerFactory.getLogger(MybatisAutoConfiguration.class);
+    private final MybatisProperties properties;
+    private final Interceptor[] interceptors;
+    private final ResourceLoader resourceLoader;
+    private final DatabaseIdProvider databaseIdProvider;
+
+    public MybatisAutoConfiguration(MybatisProperties properties, ObjectProvider<Interceptor[]> interceptorsProvider, ResourceLoader resourceLoader, ObjectProvider<DatabaseIdProvider> databaseIdProvider) {
+        this.properties = properties;
+        this.interceptors = (Interceptor[])interceptorsProvider.getIfAvailable();
+        this.resourceLoader = resourceLoader;
+        this.databaseIdProvider = (DatabaseIdProvider)databaseIdProvider.getIfAvailable();
+    }
+
+    @PostConstruct
+    public void checkConfigFileExists() {
+        if (this.properties.isCheckConfigLocation() && StringUtils.hasText(this.properties.getConfigLocation())) {
+            Resource resource = this.resourceLoader.getResource(this.properties.getConfigLocation());
+            Assert.state(resource.exists(), "Cannot find config location: " + resource + " (please add config file or check your Mybatis configuration)");
+        }
+
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+        SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
+        factory.setDataSource(dataSource);
+        factory.setVfs(SpringBootVFS.class);
+        if (StringUtils.hasText(this.properties.getConfigLocation())) {
+            factory.setConfigLocation(this.resourceLoader.getResource(this.properties.getConfigLocation()));
+        }
+
+        factory.setConfiguration(this.properties.getConfiguration());
+        if (this.properties.getConfigurationProperties() != null) {
+            factory.setConfigurationProperties(this.properties.getConfigurationProperties());
+        }
+
+        if (!ObjectUtils.isEmpty(this.interceptors)) {
+            factory.setPlugins(this.interceptors);
+        }
+
+        if (this.databaseIdProvider != null) {
+            factory.setDatabaseIdProvider(this.databaseIdProvider);
+        }
+
+        if (StringUtils.hasLength(this.properties.getTypeAliasesPackage())) {
+            factory.setTypeAliasesPackage(this.properties.getTypeAliasesPackage());
+        }
+
+        if (StringUtils.hasLength(this.properties.getTypeHandlersPackage())) {
+            factory.setTypeHandlersPackage(this.properties.getTypeHandlersPackage());
+        }
+
+        if (!ObjectUtils.isEmpty(this.properties.resolveMapperLocations())) {
+            factory.setMapperLocations(this.properties.resolveMapperLocations());
+        }
+
+        return factory.getObject();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory) {
+        ExecutorType executorType = this.properties.getExecutorType();
+        return executorType != null ? new SqlSessionTemplate(sqlSessionFactory, executorType) : new SqlSessionTemplate(sqlSessionFactory);
+    }
+
+    @Configuration
+    @Import({AutoConfiguredMapperScannerRegistrar.class})
+    @ConditionalOnMissingBean({MapperFactoryBean.class})
+    public static class MapperScannerRegistrarNotFoundConfiguration {
+        public MapperScannerRegistrarNotFoundConfiguration() {
+        }
+
+        @PostConstruct
+        public void afterPropertiesSet() {
+            MybatisAutoConfiguration.logger.debug("No {} found.", MapperFactoryBean.class.getName());
+        }
+    }
+
+    public static class AutoConfiguredMapperScannerRegistrar implements BeanFactoryAware, ImportBeanDefinitionRegistrar, ResourceLoaderAware {
+        private BeanFactory beanFactory;
+        private ResourceLoader resourceLoader;
+
+        public AutoConfiguredMapperScannerRegistrar() {
+        }
+
+        public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+            MybatisAutoConfiguration.logger.debug("Searching for mappers annotated with @Mapper");
+            ClassPathMapperScanner scanner = new ClassPathMapperScanner(registry);
+
+            try {
+                if (this.resourceLoader != null) {
+                    scanner.setResourceLoader(this.resourceLoader);
+                }
+
+                List<String> packages = AutoConfigurationPackages.get(this.beanFactory);
+                if (MybatisAutoConfiguration.logger.isDebugEnabled()) {
+                    Iterator var5 = packages.iterator();
+
+                    while(var5.hasNext()) {
+                        String pkg = (String)var5.next();
+                        MybatisAutoConfiguration.logger.debug("Using auto-configuration base package '{}'", pkg);
+                    }
+                }
+
+                scanner.setAnnotationClass(Mapper.class);
+                scanner.registerFilters();
+                scanner.doScan(StringUtils.toStringArray(packages));
+            } catch (IllegalStateException var7) {
+                IllegalStateException ex = var7;
+                MybatisAutoConfiguration.logger.debug("Could not determine auto-configuration package, automatic mapper scanning disabled.", ex);
+            }
+
+        }
+
+        public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+            this.beanFactory = beanFactory;
+        }
+
+        public void setResourceLoader(ResourceLoader resourceLoader) {
+            this.resourceLoader = resourceLoader;
+        }
+    }
+}
+```
+
+可见，这个文件实际就类似我们在Spring中所提到的IoC容器完全注解定义。首先，用@Configuration表明该类是一个Spring配置文件；接着，用@Bean修饰其中的方法，其返回值将作为一个Bean注册到Spring的IoC容器中。
 
 ### 自动配置
 
@@ -327,6 +500,8 @@ mybatis.mapper-locations=classpath:mapper/*.xml
 最后，创建Mapper接口和对应的XML映射文件，并在Service中使用@Autowired注入Mapper接口。
 
 ### 事务管理
+
+Spring Boot的事务管理和Spring应用类似，都是主要使用声明式事务管理。
 
 ## 任务调度
 
