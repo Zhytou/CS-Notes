@@ -660,6 +660,51 @@ public class AppConfig {
 
 在上面的例子中，拦截器@Before注解使用了`execution(* xxx.Xyz.*(..))`的语法来定义什么情况执行该方法。不过，更好的方法是使用一个自定义注解标注在需要被拦截的方法之上更加直观和不易出错。比如：
 
+首先，定义用于标识的注解。
+
+```java
+@Target(ElementType.METHOD)
+@Retention(RetetionPolicy.RUNTIME)
+public @interface MetricTime {
+    String value();
+}
+```
+
+接着，定义切面。
+
+```java
+@Aspect
+@Component
+public class MetricAspect {
+    @Around("@annotation(metricTime)")
+    public Object metric(ProceedingJoinPoint joinPoint, MetricTime metricTime) throws Throwable {
+        String name = metricTime.value();
+        long start = System.currentTimeMillis();
+        try {
+            return joinPoint.proceed();
+        } finally {
+            long t = System.currentTimeMillis() - start;
+            // 写入日志或发送至JMX:
+            System.err.println("[Metrics] " + name + ": " + t + "ms");
+        }
+    }
+}
+```
+
+最后，在Service层使用该注解标识哪些方法需要被拦截并执行AOP方法。
+
+```java
+@Service
+public class UserService {
+    // 监控register()方法性能:
+    @MetricTime("register")
+    public User register(String email, String password, String name) {
+        //...
+    }
+    ...
+}
+```
+
 ## Web开发 Spring MVC
 
 Spring Web MVC是一种基于Java的实现了Web MVC设计模式的请求驱动类型的轻量级Web框架。它使用了MVC架构模式的思想，将Web层进行职责解耦，基于请求驱动指的就是使用请求-响应模型，框架的目的就是帮助我们简化开发，Spring Web MVC也是要简化我们日常Web开发的。
