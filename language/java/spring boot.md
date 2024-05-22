@@ -187,6 +187,8 @@ Spring Boot可以内嵌Tomcat、Jetty或Undertow等容器，无需部署WAR包�
 
 Spring Boot提供了大量的Starter依赖，用于简化应用程序构建。例如spring-boot-starter-web依赖会自动引入并配置好Tomcat、Spring MVC等Web开发所需的依赖，而spring-boot-starter依赖则是Spring Boot应用最基础的启动器依赖，它集成了自动配置、日志和YAML等核心特性。
 
+**Starter原理**：
+
 Starter背后的原理是Spring Boot利用了Maven或Gradle解析依赖的传递性特性。这使得开发者可以按需引入所需的Starter，而无需关心底层的具体依赖和它们的配置。以mybatis-spring-boot-starter为例，这个包的元信息中又进一步依赖了其他包。
 
 ```xml
@@ -361,6 +363,20 @@ public class MybatisAutoConfiguration {
 ```
 
 可见，这个文件实际就类似我们在Spring中所提到的IoC容器完全注解定义。首先，用@Configuration表明该类是一个Spring配置文件；接着，用@Bean修饰其中的方法，其返回值将作为一个Bean注册到Spring的IoC容器中。
+
+**特殊Starter**：
+
+通过Spring Initializr，快速构建得到的SpringBoot应用的pom.xml文件中会有这么一个section：
+
+```xml
+<parent>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-parent</artifactId>
+  <version>2.1.1.RELEASE</version>
+</parent>
+```
+
+它表示当前pom文件从spring-boot-starter-parent继承下来。而spring-boot-starter-parent中提供了很多默认的配置，这些配置可以大大简化我们的开发。其中，最重要的一点就是再后续引入dependency时，不再需要指定版本号了。
 
 ### 自动配置
 
