@@ -409,15 +409,131 @@ transactionManager元素配置的数据库事务，其中的type属性有三种�
 
 映射器是MyBatis中最重要、最核心的文件，它包含一组SQL语句，并且可以通过配置生成对应的JavaBean返回给调用者。此外，MaBatis还支持动态SQL来满足不同场景的需求。同时，它也支持动态绑定JavaBean，只需要要让SQL返回的字段和JavaBean的属性保持一直即可省去繁琐的映射配置。
 
+一个最简单的映射器定义如下：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+                    <!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.WebsiteMapper">
+    <!-- 查询所有网站信息 -->
+    <select id="selectAllWebsite"
+            resultType="net.biancheng.po.Website">
+        select * from website
+    </select>
+
+</mapper>
+```
+
+与其对应的DAO层接口定义如下：
+
+```java
+package org.example.mapper;
+import java.util.List;
+import org.example.pojo.Website;
+public interface WebsiteMapper {
+    public List <Website> selectAllWebsite();
+}
+```
+
+可见，映射器由一个mapper根元素组成，其中的namespace属性会指定DAO层接口。此外，它通常还包括一些子元素，比如：
+
+- select|insert|update|delete元素：各种数据库操作语句；
+- cache元素：指定该映射器缓存策略；
+- sql元素：可重用的SQL代码块，可以被其他元素所使用；
+- resulMap元素：用于定义结果映射关系，将数据库查询结果映射到POJO中。
+
 ### 查询 select
+
+select元素是MyBatis中构建查询语句的元素，也是MyBatis中最常用和重要的元素。它能从数据库中读取数据，并组装成相应的实体类返回给上层应用。比如，下面就是统计一个姓氏用户数量的查询语句。
+
+```xml
+<select id="countFirstName" parameterType="string" resultType="int">
+  select count(*) as total from t_user where name like concat (#{firstName}, '%')
+</select>
+```
+
+其中，Dao层中UserMapper接口定义如下：
+
+```java
+public interface UserDao {
+  public int countFirstName(String firstName);
+}
+```
+
+**核心属性**：
+
+可见，select元素的核心属性包括：
+
+- id：当前语句的唯一标识符，用于与接口方法进行绑定。
+- parameterType：传递给SQL语句的参数类型，可以是基本类型或JavaBean。
+- resultType: 返回结果的类型，可以是基本类型或JavaBean。（不能和resultMap同时使用）
+- resultMap：是映射集的引用，使用它会执行定义好的映射规则。
+
+**传递多个参数**：
+
+**自动映射**：
+
+**复杂映射**：
 
 ### 插入 insert
 
+insert元素用于定义插入数据的SQL语句。MyBatis会在执行插入之后返回一个整数，以表示插入完成之后的记录数。示例如下:
+
+```xml
+<insert id="insertUser" parameterType="org.example.User" useGeneratedKeys="true" keyProperty="id">
+  insert into users (username, email, password)
+  values (#{username}, #{email}, #{password})
+</insert>
+```
+
+**主键回填和自定义**：
+
+其中，
+
+- parameterType指定传入参数的类型为User对象。
+- useGeneratedKeys设置为true表示允许JDBC支持自动生成主键。
+- keyProperty指定自动生成的主键将被设置到User对象的id属性中。
+
 ### 更新 updaet
+
+```xml
+<update id="updateUser" parameterType="com.myapp.User">
+  update users
+  <set>
+    <if test="username != null">username=#{username},</if>
+    <if test="email != null">email=#{email},</if>
+    <if test="password != null">password=#{password},</if>
+  </set>
+  where id=#{id}
+</update>
+```
 
 ### 删除 delete
 
+```xml
+<delete id="deleteUser" parameterType="int">
+  delete from users where id = #{id}
+</delete>
+```
+
 ### 重用语句 sql
+
+sql元素用于定义可重用的SQL代码块，可以被其他语句引用。比如：
+
+```xml
+<sql id="userColumns">
+  id, username, email, password
+</sql>
+
+<select id="selectUsers" resultType="com.myapp.User">
+  select
+    <include refid="userColumns"/>
+  from users
+</select>
+```
 
 ### 参数 parameterType
 
