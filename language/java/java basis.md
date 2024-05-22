@@ -15,7 +15,7 @@
     - [JIT](#jit)
     - [AOT](#aot)
   - [Java Annotation](#java-annotation)
-    - [Annotation Example](#annotation-example)
+    - [Annotation Definition](#annotation-definition)
     - [Meta Annotation](#meta-annotation)
     - [Annotation Intrinsic](#annotation-intrinsic)
   - [Java IO](#java-io)
@@ -139,9 +139,9 @@ Java的执行过程整体可以分为两个部分，第一步由javac将源码�
 
 Java注解是一种元数据机制，它可以在源代码、编译时、运行时和部署时为程序元素（类、方法、字段等）添加额外的信息。注解可以用于提供配置信息、执行代码生成、进行编译时检查等。
 
-### Annotation Example
+### Annotation Definition
 
-Java注解通过@interface关键字来定义。我们可以通过为注解添加元素来定义注解的属性。注解的属性可以有默认值，并且可以是基本类型、字符串、枚举、注解或其数组。比如：
+Java注解通过@interface关键字来定义。比如：
 
 ```java
 import java.lang.annotation.ElementType;
@@ -157,7 +157,33 @@ public @interface MyAnnotation {
 }
 ```
 
-在上述代码中定义了一个名为MyAnnotation的注解，并指定它可以用于方法上。该注解具有两个属性：value和count，并且都有默认值。
+在上述代码中定义了一个名为MyAnnotation的注解，通过@Retation指定它在运行时有效，通过@Target指定它用于方法上。此外，该注解具有两个属性：value和count，并且都有默认值。
+
+**Annotation Attribute**：
+
+从上面的例子可见，Java允许我们为注解定义属性。其一般语法如下`AttributeType AttributeName()`。并且，注解的属性可以通过default指定其默认值。
+
+特别的，在Java注解中value()方法是一个特殊的方法，它被用作默认属性。如果注解只有一个属性，并且该属性名为value，我们可以省略属性名，直接指定值。这样，在使用注解时就可以直接写值，而无需指定属性名。
+
+**Annotation Access**：
+
+如果想要获取注解中的属性，我们可以通过反射的方式一步步取出注解，并且调用其中的属性方法。比如：
+
+```java
+import java.lang.reflect.Method;
+
+public class AnnotationTest {
+    @MyAnnotation(value="Hello World")
+    public static void main(String[] args) {
+        try {
+            Class cls = AnnotationTest.class;
+            Method method = cls.getMethod("main", String[].class);
+            MyAnnotation anno = method.getAnnotation(MyAnnotation.class);
+            System.out.println(anno.value());
+        } catch (Exception ignore) {}
+    }
+}
+```
 
 ### Meta Annotation
 
@@ -199,15 +225,32 @@ public enum RetentionPolicy {
 }
 ```
 
-**@Document**：用于标识被修饰的注解
+**@Document**：用于标识被修饰的注解是否生成到API文档中。如果一个注解被@Documented注解修饰，那么当使用工具（如JavaDoc）生成API文档时，该注解的信息会包含在文档中。否则，注解的信息不会出现在文档中。
+
+**@Inherited**：用于指示被修饰的注解是否可以被继承。如果一个注解被@Inherited注解修饰，并且被一个类继承，那么该注解也会被继承到子类中。注意，@Inherited只适用于类级别的注解，对方法、字段等注解无效。
 
 ### Annotation Intrinsic
 
-Java注解的本质是一个接口，在编译时由编译器处理，并在运行时通过Java反射机制访问。它们不是语法糖，而是通过字节码文件中的特殊结构来存储和访问。
+**注解即接口**：
 
-Java注解继承自java.lang.annotation.Annotation接口，并可以通过反射机制获取和解析。Java提供了一些内置的注解，如@Override、@Deprecated等。
+Java注解的本质是一个接口，它们继承自java.lang.annotation.Annotation接口。在编译时由编译器处理，并在运行时允许通过Java反射机制访问。它们不是语法糖，而是通过字节码文件中的特殊结构来存储和访问。换句话说，用于定义注解的关键字@interface实际和`public interface MyAnnotation extends java.lang.annotation.Annotation`是等价的。我们甚至可以使用javap反编译命令去验证一下。
 
-在JVM中，Java注解是一种在运行时可以被读取的元数据，它们与Java类一起存储在类文件中，并可以在运行时通过反射来访问和解析。 Java注解在JVM中通过特殊的Attribute结构来表示，这些结构与类、方法和字段等元素关联。
+![注解反编译](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9naXRlZS5jb20vWmlwaHRyYWNrcy9GaWd1cmViZWQvcmF3L21hc3Rlci9pbWcvMS8yMDIwMDYwNjEwNDgyMC5wbmc?x-oss-process=image/format,png)
+
+**内置注解**：
+
+JDK提供了一些内置的注解，包括：
+
+- @Override：检查重写方法
+- @Deprecated：表示已过时，不推荐使用
+- @SuppressWarnings：抑制警告
+- @FunctionalInterface：标识函数式接口
+
+**注解API**：
+
+除了java.lang.annotation.Annotation之外，Java Annotation包还有两个重要的类就是之前提到的java.lang.annotation.ElementType和java.lang.annotation.RetentionPolicy。它们分别用于指定注解类型和作用域。
+
+**注解与动态代理**：
 
 - [Java Annotation的本质和实现原理](https://juejin.cn/post/6844904167517995022)
 - [@interface的使用](https://blog.csdn.net/phelovhl/article/details/9797721)
