@@ -17,6 +17,9 @@
   - [面向切面编程 AOP](#面向切面编程-aop)
     - [AspectJ](#aspectj)
     - [Spring AOP](#spring-aop)
+      - [String AOP实现原理](#string-aop实现原理)
+      - [String AOP例子](#string-aop例子)
+      - [Spring AOP的注解配置](#spring-aop的注解配置)
   - [Web开发 Spring MVC](#web开发-spring-mvc)
     - [核心组件](#核心组件)
     - [工作流程](#工作流程)
@@ -576,20 +579,99 @@ AspectJ是一个基于Java语言的AOP完整解决方案。它扩展了Java语�
 
 ### Spring AOP
 
-Spring框架对AOP的概念提供了支持，称为Spring AOP。Spring AOP为程序提供了面向切面增强的编程能力，允许程序员定义方法执行的拦截规则，甚至可以新增增强处理，从而实现功能上的织入。Spring AOP使用动态代理机制实现，有两种实现方式:
+Spring框架对AOP的概念提供了支持，称为Spring AOP。Spring AOP为程序提供了面向切面增强的编程能力，允许程序员定义方法执行的拦截规则，甚至可以新增增强处理，从而实现功能上的织入。不过和AspectJ相比，String AOP功能更受限。String AOP仅支持Bean实例中的方法级编织，且只能运行时织入（所以更慢）。
 
-- 基于JDK动态代理，为接口创建代理对象
-- 基于CGLib动态代理，为指定类创建子类的代理对象
+#### String AOP实现原理
 
-不过和AspectJ相比，String AOP功能更受限。String AOP仅支持Bean实例中的方法级编织，且只能运行时织入（所以更慢）。
+Spring AOP使用动态代理机制实现，有两种实现方式:
 
-类似IoC容器，在String中实现AOP操作也可以通过XML和注解的两种方式。
+- 基于JDK动态代理，为接口创建代理对象。Spring通过java.lang.reflect.Proxy类实现，它会为目标对象创建一个实现了相同接口的代理对象，并在代理对象的方法调用前后织入切面逻辑。
+- 基于CGLib动态代理，为指定类创建子类的代理对象。Spring使用net.sf.cglib.proxy.Enhancer类创建代理对象。它会为目标对象创建一个子类代理对象，并在代理对象的方法调用前后织入切面逻辑。
+
+#### String AOP例子
+
+类似IoC容器，在String中实现AOP操作也可以通过XML和注解的两种方式。比如：下面就是一个使用AOP注解实现日志打印的例子。
+
+首先，定义一个业务逻辑类和日志切面类。
+
+```java
+package com.example.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+    public void addUser(String username) {
+        System.out.println("Adding user: " + username);
+    }
+}
+
+package com.example.aspect;
+
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.springframework.stereotype.Component;
+
+@Aspect
+@Component
+public class LoggingAspect {
+    @Before("execution(* com.example.service.UserService.addUser(..))")
+    public void logBefore() {
+        System.out.println("LoggingAspect: Before method addUser() is called");
+    }
+}
+```
+
+其中，拦截器@Before表示在UserService.addUser方法执行之前，调用logBefore方法。接着，在配置类中添加@EnableAspectJAutoProxy注解启用AOP自动代理，并在主函数中使用该配置类创建Spring应用。
+
+```java
+package com.example;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableAspectJAutoProxy
+@ComponentScan(basePackages = "com.example")
+public class AppConfig {
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        UserService userService = context.getBean(UserService.class);
+        userService.addUser("John Doe");
+    }
+}
+```
+
+可见，在Spring中使用注解实现AOP只需要：
+
+- 定义切面，并且添加@Component和@Aspect注解；
+- 定义切面中方法，并在方法上通过AspectJ的拦截器注解告诉Spring应该在何处调用此方法；
+- 在@Configuration类上标注@EnableAspectJAutoProxy或在XML配置文件中添加`<aop:aspectj-autoproxy/>`开启AOP自动代理。
+
+#### Spring AOP的注解配置
+
+除了上面例子中使用的@Aspect和@Before之外，Spring AOP还提供了一些其他的注解如下：
+
+- @After：这种拦截器先执行目标代码，再执行拦截器代码。无论目标代码是否抛异常，拦截器代码都会执行；
+- @AfterReturning：和@After不同的是，只有当目标代码正常返回时，才执行拦截器代码；
+- @AfterThrowing：和@After不同的是，只有当目标代码抛出了异常时，才执行拦截器代码；
+- @Around：能完全控制目标代码是否执行，并可以在执行前后、抛异常后执行任意拦截代码，可以说是包含了上面所有功能。
+
+在上面的例子中，拦截器@Before注解使用了`execution(* xxx.Xyz.*(..))`的语法来定义什么情况执行该方法。不过，更好的方法是使用一个自定义注解标注在需要被拦截的方法之上更加直观和不易出错。比如：
 
 ## Web开发 Spring MVC
 
 Spring Web MVC是一种基于Java的实现了Web MVC设计模式的请求驱动类型的轻量级Web框架。它使用了MVC架构模式的思想，将Web层进行职责解耦，基于请求驱动指的就是使用请求-响应模型，框架的目的就是帮助我们简化开发，Spring Web MVC也是要简化我们日常Web开发的。
 
 ### 核心组件
+
+- DispatcherServlet：前端控制器，接收所有请求并统一分发。
+- HandlerMapping：处理请求与处理器之间的映射关系。
+- HandlerAdapter：处理适配器，调用具体的处理器。
+- Controller：处理用户请求的核心业务逻辑。
+- ViewResolver：视图解析器，将逻辑视图名解析为具体的视图。
+- View：视图，用于渲染模型数据。
 
 ### 工作流程
 
@@ -603,7 +685,7 @@ DispatcherServlet——>HandlerAdapter，HandlerAdapter将会把处理器包装�
 
 HandlerAdapter——>处理器功能处理方法的调用，HandlerAdapter将会根据适配的结果调用真正的处理器的功能处理方法，完成功能处理；并返回一个ModelAndView对象（包含模型数据、逻辑视图名）；
 
-ModelAndView的逻辑视图名——> ViewResolver，ViewResolver 将把逻辑视图名解析为具体的View，通过这种策 略模式，很容易更换其他视图技术；
+ModelAndView的逻辑视图名——> ViewResolver，ViewResolver 将把逻辑视图名解析为具体的View，通过这种策略模式，很容易更换其他视图技术；
 
 View——>渲染，View会根据传进来的Model模型数据进行渲染，此处的Model实际是一个Map数据结构，因此 很容易支持其他视图技术；
 
@@ -631,7 +713,40 @@ View——>渲染，View会根据传进来的Model模型数据进行渲染，此
 
 ### SpringMVC配置
 
-正如前面讲到的Spring配置文件applicationContext.xml一样，Spring MVC也通常有自己独立的配置文件springmvc-config.xml。
+正如前面讲到的Spring配置文件applicationContext.xml一样，Spring MVC也通常有自己独立的配置文件springmvc-config.xml。比如：
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:tx="http://www.springframework.org/schema/tx"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans 
+  http://www.springframework.org/schema/beans/spring-beans-4.3.xsd 
+  http://www.springframework.org/schema/mvc 
+  http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd 
+  http://www.springframework.org/schema/context 
+  http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+    <!-- 配置包扫描器，扫描@Controller注解的类 -->
+    <context:component-scan base-package="com.itheima.controller" />
+    <!-- 加载注解驱动 -->
+    <mvc:annotation-driven />
+
+    <!--配置静态资源的访问映射，此配置中的文件，将不被前端控制器拦截 -->
+    <mvc:resources location="/js/" mapping="/js/**"/>
+    <mvc:resources location="/css/" mapping="/css/**"/>
+    <mvc:resources location="/fonts/" mapping="/fonts/**"/>
+    <mvc:resources location="/images/" mapping="/images/**"/>
+    <mvc:resources location="/lib/" mapping="/lib/**"/>
+    <mvc:resources location="/layui_exts/" mapping="/layui_exts/**"/>
+
+    <!-- 配置视图解析器 -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+</beans>
+```
 
 ## SSM集成
 
@@ -668,7 +783,25 @@ SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web�
 
 当Web服务器启动时，会去读取web.xml配置，找到ContextLoaderListener监听器，该监听器会初始化Spring的根上下文，并读取applicationContext.xml配置文件去初始化其中定义好的Bean。
 
-同时，web.xml中还配置了DispatcherServlet。该Servlet也会启动一个SpringMVC的上下文,并读取spring-mvc.xml相关配置。DispatcherServlet的上下文会作为子上下文，从根上下文中继承相关的Bean定义，如Service层的Bean定义。此时，当HTTP请求发往DispatcherServlet，它就会将相应的请求分发给不同的Controller，而Controller则会使用其中被Spring注入的Service组件从而完成相应的业务处理。
+同时，web.xml中还配置了DispatcherServlet。该Servlet也会启动一个SpringMVC的上下文,并读取spring-mvc.xml相关配置，包括视图解析器的Bean定义和静态资源的解析配置等。比如：
+
+```xml
+<!--配置静态资源的访问映射，此配置中的文件，将不被前端控制器拦截 -->
+<mvc:resources location="/js/" mapping="/js/**"/>
+<mvc:resources location="/css/" mapping="/css/**"/>
+<mvc:resources location="/fonts/" mapping="/fonts/**"/>
+<mvc:resources location="/images/" mapping="/images/**"/>
+<mvc:resources location="/lib/" mapping="/lib/**"/>
+<mvc:resources location="/layui_exts/" mapping="/layui_exts/**"/>
+
+<!-- 配置视图解析器 -->
+<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="prefix" value="/WEB-INF/jsp/" />
+    <property name="suffix" value=".jsp" />
+</bean>
+```
+
+此外，DispatcherServlet的上下文会作为子上下文，从根上下文中继承相关的Bean定义，如Service层的Bean定义。此时，当HTTP请求发往DispatcherServlet，它就会将相应的请求分发给不同的Controller，而Controller则会使用其中被Spring注入的Service组件从而完成相应的业务处理。
 
 至于数据访问层，根上下文的配置applicationContext.xml中还会配置MyBatis的SqlSessionFactoryBean，并指定mybatis-config.xml配置文件的位置。这样就实现了Spring与MyBatis的整合。
 
