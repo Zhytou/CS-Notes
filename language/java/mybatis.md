@@ -29,6 +29,12 @@
     - [缓存 cache](#缓存-cache)
     - [注解](#注解)
   - [动态SQL](#动态sql)
+    - [if元素](#if元素)
+    - [choose、when、otherwise元素](#choosewhenotherwise元素)
+    - [trim、where、set元素](#trimwhereset元素)
+    - [foreach元素](#foreach元素)
+    - [bind元素](#bind元素)
+    - [test属性](#test属性)
   - [Spring集成](#spring集成)
 
 ## 概述
@@ -277,6 +283,8 @@ password=1234
 
 ### 设置 settings
 
+设置在MyBatis中是最复杂的配置，同时也是最重要的配置内容之一，它会改变MyBatis运行时的行为。即使不配置设置，MyBatis也能正常工作。不过了解其内容和作用仍然十分重要。
+
 ### 别名 typeAliases
 
 类型别名可以为Java类型设置一个缩写名字，但仅用于XML设置，意在降低冗余的全限定类名书写。值得注意的是，MyBatis里面分为系统定义和自定义别名两类，且MyBatis别名是不区分大小写。对于系统别名来说，它主要包含的就是一些基本类型的别名定义，比如：_byte、_long、_int等。而对于自定义别名来说，一个最简单的例子如下：
@@ -310,6 +318,8 @@ MyBatis在设置预处理语句（PreparedStatement）中的参数或从结果�
 
 ### 插件 plugins
 
+插件是MyBatis中比较复杂的组件，使用它将覆盖MyBatis内部核心对象的行为。
+
 ### 配置环境 environments
 
 配置环境可以注册多个数据源，而每一个数据源的配置又分成两部分：一是数据库连接的配置，二是数据库事务的配置。比如：
@@ -339,6 +349,25 @@ transactionManager元素配置的数据库事务，其中的type属性有三种�
 - 自定义
 
 ### 数据库厂商标识 databaseIdProvider
+
+数据库标识用于指定SQL到对应的数据库厂商提供的数据库中运行。MyBatis提供的默认配置规则如下：
+
+```xml
+<databaseIdProvider type="DB_VENDOR">
+  <property name="SQL Server" value="sqlserver"/>
+  <property name="MySQL" value="mysql"/>
+  <property name="DB2" value="db2"/>
+  <property name="Oracle" value="oracle"/>
+</databaseIdProvider>
+```
+
+此外，我们也可以指定SQL在哪个数据库执行，比如：
+
+```xml
+<select parameterType="string" id="getUser" resultTyp="User" databaseId="mysql">
+  select * where user_id=#{userId}
+</select>
+```
 
 ### 映射器注册 mappers
 
@@ -467,5 +496,121 @@ public interface WebsiteMapper {
 ## 动态SQL
 
 动态SQL是MyBatis的强大特性之一，在JDBC或其他类似的框架中，开发人员需要手动拼接SQL语句，而MyBatis则通过动态SQL提供了SQL语句拼装能力。
+
+### if元素
+
+if元素使最常用的判断语句，相当于Java中的if语句。它常常与test属性一起使用，比如：
+
+```xml
+<select id="findRoles" parameterType="string" resultMap="roleResultMap">
+  select role_no, role_name, note from t_role where 1=1
+  <if test="roleName != null and roleName !=''">
+    and role_name like concat('%', #{roleName}, '%')
+  </if>
+</select>
+```
+
+这个语句含义就是当我们将参数roleName传递到映射器中，采取构造对roleName进行模糊查询。如果这个参数为空，就不要构造这个条件。显然，这样的操作在实际工作中是十分常见的。可见，通过MyBatis的条件语句，开发者可以节省许多拼接SQL的工作，把精力集中在维护XML中。
+
+### choose、when、otherwise元素
+
+除了if语句之外，MyBatis还提供了choose、when、otherwise元素用于承担Java中switch、case、default语句的功能。比如：
+
+```xml
+<select id="findRoles" parameterType="string" resultMap="roleResultMap">
+  select role_no, role_name, note from t_role where 1=1
+  <choose>
+    <when test="roleNo != null and roleNo != ''">
+      and role_no = #{roleNo}
+    </when>
+    <when test="roleName != null and roleName != ''">
+      and role_name like concat('%', #(roleName), '%')
+    </when>
+    <otherwise>
+      and note is not null
+    </otherwise>
+  </choose>
+</select>
+```
+
+### trim、where、set元素
+
+从前面两个例子，我们可以看到都有一个条件“1=1”。如果去掉该条件，那么就会报错关于SQL的语法异常。而加入了“1=1”这样的条件又显得相当奇怪。此时，就需要直接使用where元素，比如上如两个例子修改后如下：
+
+```xml
+<select id="findRoles" parameterType="string" resultMap="roleResultMap">
+  select role_no, role_name, note from t_role
+  <where>
+  <if test="roleName != null and roleName !=''">
+    and role_name like concat('%', #{roleName}, '%')
+  </if>
+  </where>
+</select>
+
+<select id="findRoles" parameterType="string" resultMap="roleResultMap">
+  select role_no, role_name, note from t_role
+  <where>
+  <choose>
+    <when test="roleNo != null and roleNo != ''">
+      and role_no = #{roleNo}
+    </when>
+    <when test="roleName != null and roleName != ''">
+      and role_name like concat('%', #(roleName), '%')
+    </when>
+    <otherwise>
+      and note is not null
+    </otherwise>
+  </choose>
+  </where>
+</select>
+```
+
+这样当where元素里面的条件成立时，才会加入where这个关键字到组装的SQL中。
+
+set元素通常用于动态构建update语句中的set子句，它可以自动在每个赋值语句之间添加逗号。比如：
+
+```xml
+<update id="updateUser" parameterType="com.myapp.data.User">
+    UPDATE users
+    <set>
+        <if test="username != null">username=#{username},</if>
+        <if test="password != null">password=#{password},</if>
+        <if test="email != null">email=#{email},</if>
+    </set>
+    WHERE id=#{id}
+</update>
+```
+
+在这个例子中，set元素会根据username、password和email参数的值自动构建set子句，并在每个赋值语句之间添加逗号。
+
+### foreach元素
+
+显然foreach元素是一个循环语句，它的作用是遍历集合。比如：
+
+```xml
+<select id="findUserBySex" resultType="user">
+  select * from t_user where sex in 
+  <foreach item="sex" index="index" collection="sexList" open="(" seperator=",", close=")">
+  #{sex}
+  </foreach>
+</select>
+```
+
+其中，collection配置的sexList是传递进来的参数名称，它可以是一个数组或者List、Set等集合；item配置的是循环中当前的元素；index配置的是当前元素的下标；open和close配置的是以什么符号将这些集合元素包装起来；seperator是各个元素间的间隔符。
+
+### bind元素
+
+### test属性
+
+test属性主要用于条件判断语句中，它在MyBatis中广泛使用。它不仅可以判断空或非空，还可以判断字符串、数字和枚举等。比如：
+
+```xml
+<select id="getRoleTest" parameterType="string" resultMap="roleResultMap">
+  select role_no, role_name, note from t_role
+  <if test="type='Y'">
+  where 1=1
+  </if>
+</select>
+```
 
 ## Spring集成
