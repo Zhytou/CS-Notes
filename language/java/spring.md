@@ -24,7 +24,7 @@
     - [核心组件](#核心组件)
     - [工作流程](#工作流程)
     - [常用注解](#常用注解)
-    - [SpringMVC配置](#springmvc配置)
+    - [Spring MVC配置](#spring-mvc配置)
   - [SSM集成](#ssm集成)
     - [集成配置](#集成配置)
     - [启动流程](#启动流程)
@@ -304,7 +304,7 @@ IoC是一种降低模块耦合、提高对象复用的思想，在Spring中它�
 
 IoC容器也就是Spring框架中提供给开发者用于实现反转控制的工具，而被管理的类则被称为Bean。具体来说，Spring提供了IOC容器实现的两种方式（两个接口）：BeanFactory和ApplicationContext。
 
-其中，BeanFactory是IoC容器所具有的最基本形式，也被称为IoC容器的最底层实现。它由org.springframework.beans.factory.BeanFactory接口定义,主要的功能是对Bean的实例化、配置、管理等。而ApplicationContext则是BeanFactory的子接口，它不仅提供BeanFactory所具有的功能，还提供了更多企业级功能，如解析自定义配置、启动和关闭回调、国际化消息、事件传播等。ApplicationContext有多个具体的实现类，比较常用的有：ClassPathXmlApplicationContext、FileSystemXmlApplicationContext和AnnotationConfigApplicationContext等。
+其中，BeanFactory是IoC容器所具有的最基本形式，也被称为IoC容器的最底层实现。它由org.springframework.beans.factory.BeanFactory接口定义，主要的功能是对Bean的实例化、配置、管理等。而ApplicationContext则是BeanFactory的子接口，它不仅提供BeanFactory所具有的功能，还提供了更多企业级功能，如解析自定义配置、启动和关闭回调、国际化消息、事件传播等。ApplicationContext有多个具体的实现类，比较常用的有：ClassPathXmlApplicationContext、FileSystemXmlApplicationContext和AnnotationConfigApplicationContext等。
 
 一般来说，开发人员更多地使用ApplicationContext，因为它支持更多功能和特性。而BeanFactory则被认为是底层容器，更多地在框架内部使用。
 
@@ -430,31 +430,21 @@ XML配置是Spring早期使用的配置方式，也是最传统的方式。开�
 
 **注解方式**：
 
-注解是代码的特殊标记，其格式格式一般如下@注解名称。注意：注解实际上是一类特殊的类
-
-随着Spring版本的不断迭代，注解配置已经成为了主流的配置方式。使用注解可以很大程度上简化XML配置。下面是一个使用注解配置的示例:
+随着Spring版本的不断迭代，注解配置已经成为了主流的配置方式。使用注解可以很大程度上简化XML配置。下面是一个使用注解配置Spring容器的示例:
 
 ```java
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+@Service
+public class UserService {
+    @AutoWired
+    UserMapper userMapper;
 
-@Configuration
-public class AppConfig {
-    @Bean
-    public MessageService messageService() {
-        return new MessageService();
-    }
-
-    @Bean
-    public MessageRenderer renderer() {
-        MessageRenderer renderer = new MessageRenderer();
-        renderer.setMessageService(messageService());
-        return renderer;
+    public list<User> findAllUser() {
+        // ... 
     }
 }
 ```
 
-事实上，使用注解的方式配置IoC容器除了在类文件中加上注解之外，还需要引入依赖和开启组件扫描。其中，前者引入org.springframework.context.annotation.Bean等jar包使注解可用；后者启用自动扫描机制，并为符合条件的类创建 Bean 对象。这样就避免了在配置文件中一个一个的使用`<bean>`标签显式定义Bean。下面就是两个组件扫描配置的例子，它们有不同的扫描范围。
+事实上，使用注解的方式配置IoC容器除了在类文件中加上注解之外，还需要引入依赖和开启组件扫描。其中，前者引入org.springframework.context.annotation.Bean等jar包使注解可用；后者启用自动扫描机制，并为符合条件的类创建Bean对象。这样就避免了在配置文件中一个一个的使用`<bean>`标签显式定义Bean。下面就是两个组件扫描配置的例子，它们有不同的扫描范围。
 
 ``` xml
 <!--扫描范围——net/biancheng/文件夹下的所有文件 -->
@@ -467,7 +457,7 @@ public class AppConfig {
 </context:component-scan>
 ```
 
-最后来具体介绍一下，Spring提供的注解。它们可以按对象创建和属性注入分两类。以下这些注解都是用于标记Spring管理的Bean组件，只是分别对应不同的应用层:
+最后来具体介绍一下Spring提供的各种注解。它们可以按对象创建和属性注入分两类。以下这些注解都是用于标记Spring管理的Bean组件，只是分别对应不同的应用层:
 
 - @Component 通用组件
 - @Service 服务层组件
@@ -762,27 +752,85 @@ View——>渲染，View会根据传进来的Model模型数据进行渲染，此
 
 ### 常用注解
 
-**@Conntroller**：控制器的注解，表示是表现层，不能用用别的注解代替。
+**控制器注解**：
 
-**@RestController**：控制器的注解，同时表示控制器内部所有方法都返回数据而不是逻辑页面名称。
+@Controller和@RestController注解均用于标识一个类是控制器，处理客户端的请求。只不过，@RestController注解在标识控制器的同时，还表示控制器内部所有方法都返回数据而不是逻辑页面名称，相当于@Controller和@ResponseBody的组合注解。
 
-**@RequestMapping**：用于处理请求url映射的注解，可用于类或方法上。用于类上，则表示类中的所有响应请求的方法都是以该地址作为父路径。其常用的3个参数如下所示：
+**请求映射注解**：
 
-- value：指定映射的URL地址，如index
-- method：指定映射的请求类型，如GET请求、POST请求等
-- produces：指定返回的response的媒体类型和字符集，如application/json;charset=UTF-8。
+@RequestMapping注解用于标识URL路径与控制器类或方法的映射关系。它可以用在类上，表示该类中的所有方法都是以该URL作为父路径；也可以用在方法上，表示该方法处理的URL地址。其包含六个属性如下：
 
-**@RequestParam**：
+- value：指定映射的URL地址，如xxx/hello等；
+- method：指定映射的请求类型，如GET请求、POST请求等；
+- produces：指定返回响应的媒体类型和字符集，如application/json;charset=UTF-8，并且仅当符合请求中限定响应类型时才返回；
+- consumes：指定处理请求的媒体类型和字符集，如application/json;charset=UTF-8；
+- params：指定请求参数的属性和值；
+- headers：指定请求的头部属性。
 
-**@RequestBody**：
+除了@RequestMapping之外，Spring4.3之后还引入了@GetMapping和@PostMapping等指定了方法的注解。不过这些注解都只能用在方法上。
 
-注解实现接收http请求的json数据，将json转换为java对象。
+**参数注解**：
 
-**@ResponseBody**：注解实现将conreoller方法返回对象转化为json对象响应给客户。
+@RequestBody注解用于接收HTTP请求的JSON数据，并将其转换为Java对象。
 
-### SpringMVC配置
+@RequestParam注解用于将请求中的参数绑定到控制器方法的参数上，并且可以通过其中的属性指定参数名、默认值、是否必需等属性。具体来说，它的属性包括：
 
-正如前面讲到的Spring配置文件applicationContext.xml一样，Spring MVC也通常有自己独立的配置文件springmvc-config.xml。比如：
+- value/name：请求参数的名称；
+- required：是否必须提供该请求参数；
+- defaultValue：参数默认值。
+
+比如：
+
+```java
+@GetMapping("/api/foos")
+@ResponseBody
+public String getFoos(@RequestParam(name="userId") String id) {
+    return "ID: " + id;
+}
+```
+
+当访问`/api/foos/userId=xxx`时，返回`ID:xxx`。值得注意的是，@RequestParam注解对于POST请求同样有效，详细讨论见[stackoverflow](https://stackoverflow.com/questions/8652074/can-requestparam-be-used-on-non-get-requests)。
+
+**返回值注解**：
+
+@ResponseBody注解用于将控制器方法返回的对象转换为JSON对象，即返回值直接作为响应返回给客户端，而不是作为视图名称传递给视图解析器。
+
+### Spring MVC配置
+
+对于Spring MVC的配置来说，它包含Java Web项目配置web.xml和其独立配置文件springmvc-config.xml。其中，web.xml主要定义前端控制器
+和其映射，以及初始化WebApplicationContext。比如：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns="http://xmlns.jcp.org/xml/ns/javaee" 
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+    http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" 
+    id="WebApp_ID" version="3.1">
+
+    <!-- 配置Spring MVC前端核心控制器 -->
+    <servlet>
+        <servlet-name>springmvc</servlet-name>
+        <servlet-class>
+            org.springframework.web.servlet.DispatcherServlet
+        </servlet-class>
+        <init-param>
+            <!-- 指定Spring MVC独立配置文件位置 -->
+            <param-name>contextConfigLocation</param-name>        
+            <param-value>classpath:springmvc-config.xml</param-value>
+        </init-param>
+        <!-- 配置服务器启动后立即加载Spring MVC配置文件 -->
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>springmvc</servlet-name>
+        <!--/:拦截所有请求（除了jsp）-->
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+</web-app>
+```
+
+正如前面讲到的Spring配置文件applicationContext.xml一样，Spring MVC也通常有自己独立的配置文件。比如：
 
 ```xml
 <beans xmlns="http://www.springframework.org/schema/beans"
