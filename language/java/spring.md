@@ -579,20 +579,22 @@ AspectJ是一个基于Java语言的AOP完整解决方案。它扩展了Java语�
 
 ### Spring AOP
 
-Spring框架对AOP的概念提供了支持，称为Spring AOP。Spring AOP为程序提供了面向切面增强的编程能力，允许程序员定义方法执行的拦截规则，甚至可以新增增强处理，从而实现功能上的织入。不过和AspectJ相比，String AOP功能更受限。String AOP仅支持Bean实例中的方法级编织，且只能运行时织入（所以更慢）。
+Spring框架对AOP的概念提供了支持，称为Spring AOP。Spring AOP允许程序员定义拦截规则和增强处理，以实现面向切面的编程能力。不过和AspectJ相比，String AOP功能更受限。String AOP仅支持Bean实例中的方法级编织，且只能运行时织入（所以更慢）。
 
 #### String AOP实现原理
 
-Spring AOP使用动态代理机制实现，有两种实现方式:
+Spring AOP使用动态代理机制实现拦截和织入。在Spring AOP中，被拦截的Bean对象会被包装为一个代理对象。当调用被拦截的Bean对象的方法时，实际上是调用了代理对象的方法。代理对象会检查切面定义的切点表达式，如果当前调用的方法满足切点表达式的条件，则会触发拦截器的执行。
+
+具体而言，Spring AOP有两种实现方式:
 
 - 基于JDK动态代理，为接口创建代理对象。Spring通过java.lang.reflect.Proxy类实现，它会为目标对象创建一个实现了相同接口的代理对象，并在代理对象的方法调用前后织入切面逻辑。
 - 基于CGLib动态代理，为指定类创建子类的代理对象。Spring使用net.sf.cglib.proxy.Enhancer类创建代理对象。它会为目标对象创建一个子类代理对象，并在代理对象的方法调用前后织入切面逻辑。
 
+在拦截器中，可以使用JoinPoint对象来获取被拦截方法的相关信息，如方法名和参数值。如果拦截器的方法中定义了自定义注解作为参数，则可以通过反射来获取注解的值，并根据需要进行处理。
+
 #### String AOP例子
 
-类似IoC容器，在String中实现AOP操作也可以通过XML和注解的两种方式。比如：下面就是一个使用AOP注解实现日志打印的例子。
-
-首先，定义一个业务逻辑类和日志切面类。
+类似IoC容器，在String中实现AOP操作也可以通过XML和注解的两种方式。比如：下面就是一个使用AOP注解实现日志打印的例子。首先，定义一个业务逻辑类和日志切面类。
 
 ```java
 package com.example.service;
@@ -616,13 +618,29 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoggingAspect {
     @Before("execution(* com.example.service.UserService.addUser(..))")
-    public void logBefore() {
+    public void logBefore(ProceedingJoinPoint joinPoint) {
         System.out.println("LoggingAspect: Before method addUser() is called");
     }
 }
 ```
 
-其中，拦截器@Before表示在UserService.addUser方法执行之前，调用logBefore方法。接着，在配置类中添加@EnableAspectJAutoProxy注解启用AOP自动代理，并在主函数中使用该配置类创建Spring应用。
+其中，拦截器@Before表示在UserService.addUser方法执行之前，调用logBefore方法。此外，也可以用@PointCut注解单独定义切点，然后在拦截器中引用达到同样的效果。比如：
+
+```java
+@Aspect
+@Component
+public class LoggingAspect {
+    @PointCut("execution(* com.example.service.UserService.addUser(..))")
+    private void addUser() {}
+
+    @Before("addUser()")
+    public void logBefore(ProceedingJoinPoint joinPoint) {
+        System.out.println("LoggingAspect: Before method addUser() is called");
+    }
+}
+```
+
+接着，在配置类中添加@EnableAspectJAutoProxy注解启用AOP自动代理，并在主函数中使用该配置类创建Spring应用。
 
 ```java
 package com.example;
@@ -651,6 +669,8 @@ public class AppConfig {
 
 #### Spring AOP的注解配置
 
+**拦截器**：
+
 除了上面例子中使用的@Aspect和@Before之外，Spring AOP还提供了一些其他的注解如下：
 
 - @After：这种拦截器先执行目标代码，再执行拦截器代码。无论目标代码是否抛异常，拦截器代码都会执行；
@@ -658,9 +678,13 @@ public class AppConfig {
 - @AfterThrowing：和@After不同的是，只有当目标代码抛出了异常时，才执行拦截器代码；
 - @Around：能完全控制目标代码是否执行，并可以在执行前后、抛异常后执行任意拦截代码，可以说是包含了上面所有功能。
 
-在上面的例子中，拦截器@Before注解使用了`execution(* xxx.Xyz.*(..))`的语法来定义什么情况执行该方法。不过，更好的方法是使用一个自定义注解标注在需要被拦截的方法之上更加直观和不易出错。比如：
+**切点表达式**：
 
-首先，定义用于标识的注解。
+在上面的例子中，拦截器@Before注解使用了切点表达式，即：`execution(* xxx.Xyz.*(..))`来定义什么情况执行该方法。
+
+**自定义注解**：
+
+不过，更好的方法是使用一个自定义注解标注在需要被拦截的方法之上更加直观和不易出错。比如：首先，定义用于标识的注解。
 
 ```java
 @Target(ElementType.METHOD)
