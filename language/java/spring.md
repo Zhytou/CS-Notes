@@ -40,18 +40,17 @@
 
 ## 框架概述
 
-Spring是一款开源的轻量级Java开发框架，旨在提高开发人员的开发效率以及系统的可维护性。它包含了Spring Framework、Spring Boot、Spring Cloud等等模块。
+Spring是一款开源的轻量级Java开发框架，旨在提高开发人员的开发效率以及系统的可维护性。它包含了Spring Framework、Spring Boot、Spring Cloud等模块。
 
 ### Spring Framework
 
-其中，Spring Framework就是我们平时说的Spring框架。它Spring的基石，提供了许多核心特性和功能，比如：
+其中，Spring Framework就是我们平时说的Spring框架。它是Spring的基石，提供了许多核心特性和功能，比如：
 
 - 核心机制
   - 依赖注入(DI)和控制反转(IoC)
   - 面向切面编程(AOP)
 - 数据访问
-  - DAO
-  - ORM
+  - ORM框架支持
   - 事务管理
 - Web编程模块(如Spring MVC)
 - 测试支持
@@ -298,17 +297,17 @@ IoC是一种降低模块耦合、提高对象复用的思想，在Spring中它�
 
 **什么是依赖**：
 
-如果在 Class A 中，有 Class B 的实例，则称 Class A 对 Class B 有一个依赖。因此，依赖注入也就是将实例变量传入到一个对象中去。
+如果在Class A中，有Class B的实例，则称Class A对Class B有一个依赖。因此，依赖注入也就是将实例变量传入到一个对象中去。
 
 ### IoC容器
 
 IoC容器也就是Spring框架中提供给开发者用于实现反转控制的工具，而被管理的类则被称为Bean。具体来说，Spring提供了IOC容器实现的两种方式（两个接口）：BeanFactory和ApplicationContext。
 
+**BeanFactory & ApplicationContext**：
+
 其中，BeanFactory是IoC容器所具有的最基本形式，也被称为IoC容器的最底层实现。它由org.springframework.beans.factory.BeanFactory接口定义，主要的功能是对Bean的实例化、配置、管理等。而ApplicationContext则是BeanFactory的子接口，它不仅提供BeanFactory所具有的功能，还提供了更多企业级功能，如解析自定义配置、启动和关闭回调、国际化消息、事件传播等。ApplicationContext有多个具体的实现类，比较常用的有：ClassPathXmlApplicationContext、FileSystemXmlApplicationContext和AnnotationConfigApplicationContext等。
 
 一般来说，开发人员更多地使用ApplicationContext，因为它支持更多功能和特性。而BeanFactory则被认为是底层容器，更多地在框架内部使用。
-
-**BeanFactory和ApplicationContext的特点**：
 
 BeanFactory的特点是每次使用时都会创建一个新的Bean实例。因此，多次请求注入同一个Bean时实际得到的都是不同的实例。而ApplicationContext在初始化时，默认会创建并初始化所有的单例Bean。因此，我们可以认为ApplicationContext是以单例模式运行的容器。
 
@@ -392,7 +391,7 @@ IoC容器可以动态地创建和管理对象，而其底层原理则涉及到�
 
 **Class类**：
 
-Class 也是一个 Java 类，保存的是与之对应 Java 类的元信息，用来描述这个类的结构，比如描述一个类有哪些成员，有哪些方法等，一般在反射中使用。实际上，Java 源程序在经过 Java 编译器编译之后就被转换成 Java  字节代码（.class 文件）。类加载器负责读取 Java 字节代码，并转换成 java.lang.Class类的一个实例。也就是说，在 Java 中，每个类都有一个相应的 Class 对象，用于表示这个类的类型信息。
+Class 也是一个Java类，保存的是与之对应Java类的元信息，用来描述这个类的结构，比如描述一个类有哪些成员，有哪些方法等，一般在反射中使用。实际上，Java源程序在经过Java编译器编译之后就被转换成Java字节代码（.class 文件）。类加载器负责读取 Java字节代码，并转换成java.lang.Class类的一个实例。也就是说，在Java中，每个类都有一个相应的Class对象，用于表示这个类的类型信息。
 
 **工厂模式**：
 
@@ -721,7 +720,7 @@ public class UserService {
 
 ## Web开发 Spring MVC
 
-Spring Web MVC是一种基于Java的实现了Web MVC设计模式的请求驱动类型的轻量级Web框架。它使用了MVC架构模式的思想，将Web层进行职责解耦，基于请求驱动指的就是使用请求-响应模型，框架的目的就是帮助我们简化开发，Spring Web MVC也是要简化我们日常Web开发的。
+Spring MVC是一种基于Java的轻量级Web框架。它使用了MVC架构模式的思想，将Web应用进行职责解耦，并且基于请求驱动指的就是使用请求-响应模型。
 
 ### 核心组件
 
@@ -1097,13 +1096,23 @@ transactionTemplate.execute(new TransactionCallbackWithoutResult() {
 });
 ```
 
-相比之下，声明式事务使用起来就相对方便和简单。比如：
+相比之下，声明式事务使用起来就相对方便和简单。比如：下面就是一个声明式事务的例子。
+
+首先，在需要使用事务的方法上添加@Transcational注解即可。
 
 ```java
 @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.REPEATABLE_READ, timeout = 30, rollbackFor = Exception.class)
 public void processOrder(Order order) {
     // 处理订单逻辑
 }
+```
+
+接着，需要在配置类上添加@EnableTransactionManagement或在XML配置文件中添加`<tx:annotation-driven transaction-manager="tm"/>`用于启用Spring的声明式事务管理功能。
+
+最后，配置一个事务管理器（Transaction Manager），用于管理事务的开始、提交、回滚等操作。事务管理器需要与数据源（DataSource）关联，以便在事务中对数据库进行操作。
+
+```xml
+
 ```
 
 **@Transcational属性**：
