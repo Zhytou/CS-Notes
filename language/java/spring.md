@@ -21,13 +21,16 @@
       - [String AOP例子](#string-aop例子)
       - [Spring AOP的注解配置](#spring-aop的注解配置)
   - [Web开发 Spring MVC](#web开发-spring-mvc)
-    - [核心组件](#核心组件)
-    - [工作流程](#工作流程)
-    - [常用注解](#常用注解)
-    - [Spring MVC配置](#spring-mvc配置)
+    - [前端控制器 DispatcherServlet](#前端控制器-dispatcherservlet)
+    - [Web应用上下文 WebApplicationContext](#web应用上下文-webapplicationcontext)
+    - [其他组件 Other Components](#其他组件-other-components)
+    - [工作流程 Workflow](#工作流程-workflow)
+    - [常用注解 Useful Annotations](#常用注解-useful-annotations)
   - [SSM集成](#ssm集成)
-    - [集成配置](#集成配置)
-    - [启动流程](#启动流程)
+    - [XML集成配置](#xml集成配置)
+      - [配置文件](#配置文件)
+      - [启动流程](#启动流程)
+    - [完全注解配置](#完全注解配置)
   - [数据访问 Data Access](#数据访问-data-access)
     - [JDBC](#jdbc)
     - [JPA](#jpa)
@@ -722,16 +725,119 @@ public class UserService {
 
 Spring MVC是一种基于Java的轻量级Web框架。它使用了MVC架构模式的思想，将Web应用进行职责解耦，并且基于请求驱动指的就是使用请求-响应模型。
 
-### 核心组件
+### 前端控制器 DispatcherServlet
 
-- DispatcherServlet：前端控制器，接收所有请求并统一分发。
+和许多Web框架类似，Spring MVC也是基于一个前端控制器设计的。在Spring MVC中，这个控制器是一个Java Servlet，它接收所有请求并统一分发。和普通的Servlet一样，DispatcherServlet也需要在web.xml中根据Servlet规范进行声明和映射。比如：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns="http://xmlns.jcp.org/xml/ns/javaee" 
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+    http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" 
+    id="WebApp_ID" version="3.1">
+
+    <!-- 配置Spring MVC前端核心控制器 -->
+    <servlet>
+        <servlet-name>springmvc</servlet-name>
+        <servlet-class>
+            org.springframework.web.servlet.DispatcherServlet
+        </servlet-class>
+        <init-param>
+            <!-- 指定Spring MVC独立配置文件位置 -->
+            <param-name>contextConfigLocation</param-name>        
+            <param-value>classpath:springmvc-config.xml</param-value>
+        </init-param>
+        <!-- 配置服务器启动后立即加载Spring MVC配置文件 -->
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>springmvc</servlet-name>
+        <!--/:拦截所有请求（除了jsp）-->
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+</web-app>
+```
+
+### Web应用上下文 WebApplicationContext
+
+事实上，DispatcherServlet总是和一个WebApplicationContext绑定。它通过这个上下文，取和Web相关的Bean，包括：控制器、处理映射器和视图解析器等等。
+
+正如上述web.xml文件所示，其中设置的init-param，即Spring MVC配置文件位置，正是用于初始化WebApplication。而一个常见的Spring MVC配置文件如下：
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:tx="http://www.springframework.org/schema/tx"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans 
+  http://www.springframework.org/schema/beans/spring-beans-4.3.xsd 
+  http://www.springframework.org/schema/mvc 
+  http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd 
+  http://www.springframework.org/schema/context 
+  http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+    <!-- 配置包扫描器，扫描@Controller注解的类 -->
+    <context:component-scan base-package="com.itheima.controller" />
+    <!-- 加载注解驱动 -->
+    <mvc:annotation-driven />
+
+    <!--配置静态资源的访问映射，此配置中的文件，将不被前端控制器拦截 -->
+    <mvc:resources location="/js/" mapping="/js/**"/>
+    <mvc:resources location="/css/" mapping="/css/**"/>
+    <mvc:resources location="/fonts/" mapping="/fonts/**"/>
+    <mvc:resources location="/images/" mapping="/images/**"/>
+    <mvc:resources location="/lib/" mapping="/lib/**"/>
+    <mvc:resources location="/layui_exts/" mapping="/layui_exts/**"/>
+
+    <!-- 配置视图解析器 -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+</beans>
+```
+
+除此之外，Spring MVC的配置类似IoC容器也同样可以使用完全注解的方式进行配置，比如：
+
+```java
+@Configuration
+@EnableWebMvc
+@ComponentScan(basePackages = "com.example")
+public class AppConfig implements WebMvcConfigurer {
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        configurer.enable();
+    }
+    
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(new MappingJackson2HttpMessageConverter());
+    }
+    
+    @Bean
+    public ViewResolver viewResolver() {
+        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+        viewResolver.setPrefix("/WEB-INF/views/");
+        viewResolver.setSuffix(".jsp");
+        return viewResolver;
+    }
+    
+    // 可以添加其他配置，如拦截器、异常处理器等
+}
+```
+
+### 其他组件 Other Components
+
+除了最核心的DispatcherServlet和管理Bean的WebApplicationContext之外，Spring MVC的其他组件如下：
+
 - HandlerMapping：处理请求与处理器之间的映射关系。
 - HandlerAdapter：处理适配器，调用具体的处理器。
 - Controller：处理用户请求的核心业务逻辑。
 - ViewResolver：视图解析器，将逻辑视图名解析为具体的视图。
 - View：视图，用于渲染模型数据。
 
-### 工作流程
+### 工作流程 Workflow
 
 ![Spring MVC工作流程](https://pdai.tech/images/spring/springframework/spring-springframework-mvc-5.png)
 
@@ -749,7 +855,7 @@ View——>渲染，View会根据传进来的Model模型数据进行渲染，此
 
 返回控制权给DispatcherServlet，由DispatcherServlet 返回响应给用户，到此一个流程结束。
 
-### 常用注解
+### 常用注解 Useful Annotations
 
 **控制器注解**：
 
@@ -794,81 +900,13 @@ public String getFoos(@RequestParam(name="userId") String id) {
 
 @ResponseBody注解用于将控制器方法返回的对象转换为JSON对象，即返回值直接作为响应返回给客户端，而不是作为视图名称传递给视图解析器。
 
-### Spring MVC配置
-
-对于Spring MVC的配置来说，它包含Java Web项目配置web.xml和其独立配置文件springmvc-config.xml。其中，web.xml主要定义前端控制器
-和其映射，以及初始化WebApplicationContext。比如：
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xmlns="http://xmlns.jcp.org/xml/ns/javaee" 
-    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
-    http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" 
-    id="WebApp_ID" version="3.1">
-
-    <!-- 配置Spring MVC前端核心控制器 -->
-    <servlet>
-        <servlet-name>springmvc</servlet-name>
-        <servlet-class>
-            org.springframework.web.servlet.DispatcherServlet
-        </servlet-class>
-        <init-param>
-            <!-- 指定Spring MVC独立配置文件位置 -->
-            <param-name>contextConfigLocation</param-name>        
-            <param-value>classpath:springmvc-config.xml</param-value>
-        </init-param>
-        <!-- 配置服务器启动后立即加载Spring MVC配置文件 -->
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>springmvc</servlet-name>
-        <!--/:拦截所有请求（除了jsp）-->
-        <url-pattern>/</url-pattern>
-    </servlet-mapping>
-</web-app>
-```
-
-正如前面讲到的Spring配置文件applicationContext.xml一样，Spring MVC也通常有自己独立的配置文件。比如：
-
-```xml
-<beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-  xmlns:mvc="http://www.springframework.org/schema/mvc"
-  xmlns:context="http://www.springframework.org/schema/context"
-  xmlns:tx="http://www.springframework.org/schema/tx"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans 
-  http://www.springframework.org/schema/beans/spring-beans-4.3.xsd 
-  http://www.springframework.org/schema/mvc 
-  http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd 
-  http://www.springframework.org/schema/context 
-  http://www.springframework.org/schema/context/spring-context-4.3.xsd">
-    <!-- 配置包扫描器，扫描@Controller注解的类 -->
-    <context:component-scan base-package="com.itheima.controller" />
-    <!-- 加载注解驱动 -->
-    <mvc:annotation-driven />
-
-    <!--配置静态资源的访问映射，此配置中的文件，将不被前端控制器拦截 -->
-    <mvc:resources location="/js/" mapping="/js/**"/>
-    <mvc:resources location="/css/" mapping="/css/**"/>
-    <mvc:resources location="/fonts/" mapping="/fonts/**"/>
-    <mvc:resources location="/images/" mapping="/images/**"/>
-    <mvc:resources location="/lib/" mapping="/lib/**"/>
-    <mvc:resources location="/layui_exts/" mapping="/layui_exts/**"/>
-
-    <!-- 配置视图解析器 -->
-    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-        <property name="prefix" value="/WEB-INF/jsp/" />
-        <property name="suffix" value=".jsp" />
-    </bean>
-</beans>
-```
-
 ## SSM集成
 
 SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web技术栈。
 
-### 集成配置
+### XML集成配置
+
+#### 配置文件
 
 一个基于SSM的Web项目中往往会有4种配置文件。它们的关系以及项目启动过程如下:
 
@@ -895,7 +933,7 @@ SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web�
 - MyBatis 行为配置
 - 映射器位置
 
-### 启动流程
+#### 启动流程
 
 当Web服务器启动时，会去读取web.xml配置，找到ContextLoaderListener监听器，该监听器会初始化Spring的根上下文，并读取applicationContext.xml配置文件去初始化其中定义好的Bean。
 
@@ -922,6 +960,37 @@ SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web�
 至于数据访问层，根上下文的配置applicationContext.xml中还会配置MyBatis的SqlSessionFactoryBean，并指定mybatis-config.xml配置文件的位置。这样就实现了Spring与MyBatis的整合。
 
 关于这部分更详细的介绍，可以参考[知乎 ContextLoaderListener解析](https://zhuanlan.zhihu.com/p/65258266)。
+
+### 完全注解配置
+
+除了使用XML文件对SSM应用进行配置，我们同样可以使用完全注解的方式配置SSM应用。比如：
+
+```java
+public class MainApplication {
+    public static void main(String[] args) {
+        // 创建AnnotationConfigApplicationContext实例
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        
+        // 注册Spring的配置类
+        context.register(SpringConfig.class);
+        
+        // 注册Spring MVC的配置类
+        context.register(SpringMvcConfig.class);
+        
+        // 刷新应用程序上下文
+        context.refresh();
+        
+        // 获取Spring MVC的DispatcherServlet并启动
+        DispatcherServlet dispatcherServlet = context.getBean(DispatcherServlet.class);
+        ServletRegistration.Dynamic registration = servletContext.addServlet("dispatcherServlet", dispatcherServlet);
+        registration.setLoadOnStartup(1);
+        registration.addMapping("/");
+        
+        // 关闭应用程序上下文
+        context.close();
+    }
+}
+```
 
 ## 数据访问 Data Access
 
