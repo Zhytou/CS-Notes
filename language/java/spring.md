@@ -1,11 +1,11 @@
 # Spring
 
 - [Spring](#spring)
-  - [框架概述](#框架概述)
+  - [框架概述 Introduction](#框架概述-introduction)
     - [Spring Framework](#spring-framework)
     - [Spring Boot](#spring-boot)
     - [Spring Cloud](#spring-cloud)
-  - [前置概念](#前置概念)
+  - [前置概念 Pre-concepts](#前置概念-pre-concepts)
     - [Servlet](#servlet)
     - [Bean](#bean)
     - [Context](#context)
@@ -26,22 +26,25 @@
     - [其他组件 Other Components](#其他组件-other-components)
     - [工作流程 Workflow](#工作流程-workflow)
     - [常用注解 Useful Annotations](#常用注解-useful-annotations)
-  - [SSM集成](#ssm集成)
-    - [XML集成配置](#xml集成配置)
+  - [SSM集成 SSM Integration](#ssm集成-ssm-integration)
+    - [XML集成配置 XML Integration](#xml集成配置-xml-integration)
       - [配置文件](#配置文件)
       - [启动流程](#启动流程)
-    - [完全注解配置](#完全注解配置)
+    - [完全注解配置 Annotation Integration](#完全注解配置-annotation-integration)
   - [数据访问 Data Access](#数据访问-data-access)
     - [JDBC](#jdbc)
     - [JPA](#jpa)
     - [ORM Framework](#orm-framework)
     - [Sharding-JDBC](#sharding-jdbc)
   - [事务管理 Transcational Management](#事务管理-transcational-management)
-    - [数据库事务](#数据库事务)
-    - [声明式事务](#声明式事务)
+    - [数据库事务 DataBase Transcation](#数据库事务-database-transcation)
+    - [Spring事务管理 Spring Transcational Management](#spring事务管理-spring-transcational-management)
+      - [Spring事务管理模型](#spring事务管理模型)
+      - [编程式事务](#编程式事务)
+      - [声明式事务](#声明式事务)
   - [参考 Reference](#参考-reference)
 
-## 框架概述
+## 框架概述 Introduction
 
 Spring是一款开源的轻量级Java开发框架，旨在提高开发人员的开发效率以及系统的可维护性。它包含了Spring Framework、Spring Boot、Spring Cloud等模块。
 
@@ -83,7 +86,7 @@ Spring Cloud是Spring官方支持的微服务全家桶，主要目标是简化�
 
 Spring Cloud提供了一整套微服务架构的解决方案，帮助开发人员快速构建分布式、高可用、高扩展的微服务系统。
 
-## 前置概念
+## 前置概念 Pre-concepts
 
 ### Servlet
 
@@ -900,11 +903,11 @@ public String getFoos(@RequestParam(name="userId") String id) {
 
 @ResponseBody注解用于将控制器方法返回的对象转换为JSON对象，即返回值直接作为响应返回给客户端，而不是作为视图名称传递给视图解析器。
 
-## SSM集成
+## SSM集成 SSM Integration
 
 SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web技术栈。
 
-### XML集成配置
+### XML集成配置 XML Integration
 
 #### 配置文件
 
@@ -961,7 +964,7 @@ SSM是指Spring、SpringMVC和MyBatis，它们是当前较为流行的Java Web�
 
 关于这部分更详细的介绍，可以参考[知乎 ContextLoaderListener解析](https://zhuanlan.zhihu.com/p/65258266)。
 
-### 完全注解配置
+### 完全注解配置 Annotation Integration
 
 除了使用XML文件对SSM应用进行配置，我们同样可以使用完全注解的方式配置SSM应用。比如：
 
@@ -1137,14 +1140,29 @@ ORM 框架是一种对象关系映射技术，它提供了一种将面向对象�
 
 ## 事务管理 Transcational Management
 
-### 数据库事务
+### 数据库事务 DataBase Transcation
 
-事务是数据库中进行一系列操作的基本单位。因此，事务管理和数据访问技术(如JDBC、MyBatis、JPA等)是紧密相关的。对于RDBMS来说，它的事务往往具有ACID的特性：
+事务是数据库中进行一系列操作的基本单位。因此，事务管理和数据访问技术(如JDBC、MyBatis、JPA等)是紧密相关的。
+
+**ACID**:
+
+对于RDBMS来说，它的事务往往具有ACID的特性：
 
 - 原子性(Atomicity)：事务中的全部操作在数据库中是不可分割的，要么全部完成，要么全部不执行。
 - 一致性(Consistency)：几个并行执行的事务，其执行结果必须与按某一顺序串行执行的结果相一致。
 - 隔离性(Isolation)：事务的执行不受其他事务的干扰，事务执行的中间结果对其他事务必须是透明的。
 - 持久性(Durability):对于任意已提交事务，系统必须保证该事务对数据库的改变不被丢失，即使数据库出现故障。
+
+**Isolation**:
+
+此外，数据库隔离性又可以分级为：
+
+- 读未提交（Read Uncommitted）：最低级别的隔离性，事务可以读取其他事务尚未提交的数据。该级别可能导致脏读（Dirty Read），即读取到未提交的数据。
+- 读已提交（Read Committed）：事务只能读取其他事务已经提交的数据。在该级别下，可以避免脏读，但可能会出现不可重复读（Non-repeatable Read），即在同一事务中，多次读取同一数据，但获取的结果不一致。
+- 可重复读（Repeatable Read）：在同一事务中，多次读取同一数据，获取的结果保持一致。其他事务对该数据的修改只能在该事务提交后才能被读取到。但在该级别下，可能会出现幻读（Phantom Read），即在同一事务中，多次查询某个范围内的数据，但结果集却发生了变化。
+- 串行化（Serializable）：最高级别的隔离性，事务按照串行的方式执行，相互之间不会产生任何冲突。在该级别下，可以完全避免脏读、不可重复读和幻读，但会降低并发性能。
+
+**BASE**:
 
 而对于NoSQL来说，它的事务则具有BASE的特性：
 
@@ -1152,9 +1170,52 @@ ORM 框架是一种对象关系映射技术，它提供了一种将面向对象�
 - 软状态(Soft State)：系统允许一段时间内不同节点的数据副本之间存在不一致。在一些时刻，系统的状态可能是不确定的，允许出现中间状态。
 - 最终一致性(Eventually Consistent)：系统最终会达到一致的状态，但不要求实时一致性。在系统进行一些更新后，最终所有节点的数据会达到一致状态，但这个过程可能需要一些时间。
 
-### 声明式事务
+### Spring事务管理 Spring Transcational Management
 
-Spring提供了统一的编程模型来管理事务，并与各种数据访问技术无缝集成。在Spring应用中，事务管理主要通过两种方式实现：编程式事务管理和声明式事务管理。其中，编程式事务管理并不常用，因为需要手动编写冗余代码。比如：
+Spring提供了统一的编程模型来管理事务，并与各种数据访问技术无缝集成。相比于直接使用JDBC或MyBatis等数据访问层提供的事务管理API，Spring事务管理明显更方便和易用。尤其是其提供的@Transcational注解，可以非常方便的声明事务。总之，它的优势包括：
+
+- 跨不同事务API（例如Java事务API(JTA)、JDBC、Hibernate、JPA）的一致编程模型；
+- 用于编程式事务管理的API比JTA等复杂事务API更简单；
+- 支持声明式事务管理，如@Transactional注解；
+- 与Spring数据访问抽象的完美集成。
+
+关于Spring事务管理的优势，可以参考[Spring Transaction Management](https://docs.spring.io/spring-framework/docs/4.2.x/spring-framework-reference/html/transaction.html)文档。它详细对比了为什么建议使用Spring事务管理而不是EJB容器管理事务 (CMT) 或选择通过专有API（例如 Hibernate）驱动本地事务。
+
+#### Spring事务管理模型
+
+Spring事务管理模型的核心是org.springframework.transaction.PlatformTransactionManager接口。其定义如下：
+
+```java
+public interface PlatformTransactionManager {
+    TransactionStatus getTransaction(
+            TransactionDefinition definition) throws TransactionException;
+
+    void commit(TransactionStatus status) throws TransactionException;
+
+    void rollback(TransactionStatus status) throws TransactionException;
+}
+```
+
+其中，
+
+想要实例化一个Spring事务管理器，我们可以使用XML配置。比如：下面定义了一个基于JDBC的Spring事务管理器。
+
+```xml
+<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="${jdbc.driverClassName}" />
+    <property name="url" value="${jdbc.url}" />
+    <property name="username" value="${jdbc.username}" />
+    <property name="password" value="${jdbc.password}" />
+</bean>
+
+<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+```
+
+#### 编程式事务
+
+在Spring应用中，事务管理主要通过两种方式实现：编程式事务管理和声明式事务管理。其中，编程式事务管理并不常用，因为需要手动编写冗余代码。比如：
 
 ```java
 TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
@@ -1165,7 +1226,11 @@ transactionTemplate.execute(new TransactionCallbackWithoutResult() {
 });
 ```
 
+#### 声明式事务
+
 相比之下，声明式事务使用起来就相对方便和简单。比如：下面就是一个声明式事务的例子。
+
+**声明式事务例子**：
 
 首先，在需要使用事务的方法上添加@Transcational注解即可。
 
