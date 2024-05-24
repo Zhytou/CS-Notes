@@ -1196,9 +1196,25 @@ public interface PlatformTransactionManager {
 }
 ```
 
-其中，
+其中，TransactionDefinition接口会指定事务的隔离性、传播性、是否超时以及是否只读等状态；而TransactionStatus接口则提供了一下用于检查事务状态的方法。其定义如下：
 
-想要实例化一个Spring事务管理器，我们可以使用XML配置。比如：下面定义了一个基于JDBC的Spring事务管理器。
+```java
+public interface TransactionStatus extends SavepointManager {
+    boolean isNewTransaction();
+
+    boolean hasSavepoint();
+
+    void setRollbackOnly();
+
+    boolean isRollbackOnly();
+
+    void flush();
+
+    boolean isCompleted();
+}
+```
+
+无论在Spring中选择声明式事务管理还是编程式事务管理，定义正确的PlatformTransactionManager实例都是绝对必要的。它的定义方法类似IoC容器。我们可以使用XML配置。比如：下面定义了一个基于JDBC的Spring事务管理器。
 
 ```xml
 <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
@@ -1241,12 +1257,21 @@ public void processOrder(Order order) {
 }
 ```
 
-接着，需要在配置类上添加@EnableTransactionManagement或在XML配置文件中添加`<tx:annotation-driven transaction-manager="tm"/>`用于启用Spring的声明式事务管理功能。
+接着，需要在配置类上添加@EnableTransactionManagement或在XML配置文件中添加`<tx:annotation-driven transaction-manager="txManager"/>`用于启用Spring的声明式事务管理功能。
 
 最后，配置一个事务管理器（Transaction Manager），用于管理事务的开始、提交、回滚等操作。事务管理器需要与数据源（DataSource）关联，以便在事务中对数据库进行操作。
 
 ```xml
+<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    <property name="driverClassName" value="${jdbc.driverClassName}" />
+    <property name="url" value="${jdbc.url}" />
+    <property name="username" value="${jdbc.username}" />
+    <property name="password" value="${jdbc.password}" />
+</bean>
 
+<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
 ```
 
 **@Transcational属性**：
