@@ -1,7 +1,13 @@
 # Java
 
 - [Java](#java)
+  - [Java Data Types \& Basic Data Structures](#java-data-types--basic-data-structures)
+    - [Java Primitive Types](#java-primitive-types)
+    - [Java String](#java-string)
+    - [Java Array](#java-array)
   - [Java Collection \& Map](#java-collection--map)
+    - [ArrayList](#arraylist)
+    - [LinkedList](#linkedlist)
   - [Java OOP](#java-oop)
   - [Java Reflection](#java-reflection)
   - [Java Generics](#java-generics)
@@ -20,8 +26,134 @@
     - [Annotation Intrinsic](#annotation-intrinsic)
   - [Java IO](#java-io)
   - [Java Concurrency](#java-concurrency)
+  - [Other](#other)
+    - [static](#static)
+    - [final](#final)
+
+## Java Data Types & Basic Data Structures
+
+在Java中，一个变量的数据类型只可能是基本数据类型(Primitive Types)或引用数据类型(Reference Types)。两者异同可以参考[讨论](https://pages.cs.wisc.edu/~hasti/cs302/examples/primitiveVsRef.html)。
+
+### Java Primitive Types
+
+其中，基本数据类型包括：
+
+- 布尔值(boolean)
+- 整数值(byte、short、int、long)
+- 浮点数值(float、double)
+- 字符(char)
+
+这些基本类型在内存中直接存储值，并且有固定的存储空间大小。值得注意的是，在使用数值类型时，需要添加一些额外的字符告知编译器数据类型，比如：
+
+```java
+int a = 100000;
+long b = 101L;
+float c = 0.2f;
+double d = 0.00999d;
+```
+
+此外，基本类型都有与之对应的包装器类型(Wrapper Class)，如Integer、Long等，用于基本类型与对象之间的转换。值得注意的是，包装器类型是不可变的，即已经创建就不可改变。比如：
+
+```java
+
+```
+
+个人感觉这一点有些类似C++中关于指针指向cosnt值的讨论，即指针的地址可以修改，但指向内容不可以修改。
+
+在Java中，有不少场合都无法使用基本类型，比如：使用ArrayList存储int数据，就只能使用Integer。这是因为ArrayList是一个泛型类，而Java泛型依靠将类型参数为类型上界(Object)实现，即模板参数必须要继承自Object才行，而int显然不满足条件，所以ArrayList只能使用Integer类存储int数据。关于这一点，更多更详细的解释可以参考stackoverflow的这两篇讨论[Why can't I have 'int' as the type of an ArrayList?](https://stackoverflow.com/questions/14349011/why-cant-i-have-int-as-the-type-of-an-arraylist)和[Can I use generics over reference types only?](https://stackoverflow.com/questions/3015716/can-i-use-generics-over-reference-types-only)。
+
+### Java String
+
+在Java中，String是一个类，并且是不可变的。换句话说，每当对String进行改变（如连接、替换等）时，都会创建一个新的String对象，而原来的String对象保持不变。这种设计使得String对象在多线程环境中是安全的。此外，每个String对象还内部包含一个字符数组，这个字符数组存储了实际的字符数据。
+
+**Initialization**：
+
+Java String有多种初始化方式，包括：
+
+```java
+// 直接赋值
+String str1 = "Hello, World!";
+
+// 使用构造函数
+String str2 = new String("Hello, World!");
+
+// 从字符数组创建
+char[] chars = {'H', 'e', 'l', 'l', 'o'};
+String str3 = new String(chars);
+
+// 从字节数组创建
+byte[] bytes = {72, 101, 108, 108, 111};
+String str4 = new String(bytes);
+```
+
+其中，使用new关键字创建的String和直接赋值创建的String实际存储位置不同。前置存于堆，后者则存于JVM常量池，更详细的介绍可参考JVM内存管理笔记。
+
+**Useful Functions**：
+
+Java String提供了许多有用的函数，包括：检查字符串内容是否相等、连接字符串、查找和获取子字符串以及转换大小写等。
+
+```java
+String str = "Hello, World!";
+String str1 = "Hello";
+String str2 = "World";
+
+/** 比较是否相等 */
+// equals函数检查引用类型内容是否相等
+boolean isEqual1 = str1.equals(str2);
+// ==函数检查引用类型引用地址是否相等 
+boolean isEqual2 = (str1 == str2);
+
+/** 连接字符串 */
+// 使用+操作符
+String result1 = str1 + ", " + str2 + "!";
+// 使用concat方法
+String result2 = str1.concat(", ").concat(str2).concat("!");
+
+/** 查找子字符串 */
+int index = str.indexOf("World"); // 返回7
+
+/** 获取子字符串 */
+String substr = str.substring(7, 12); // "World"
+
+/** 获取字符串长度 */
+int length = str.length(); // 返回13
+
+/** 转换为大写/小写 */
+String upper = str.toUpperCase(); // "HELLO, WORLD!"
+String lower = str.toLowerCase(); // "hello, world!"
+```
+
+### Java Array
+
+在Java中，Array是一种用来存储固定大小相同数据类型元素的数据结构。在内存中，数组是一块连续的空间，可以通过索引来访问和操作数组中的元素。
+
+**Initialization**：
+
+```java
+// 一维数组
+int[] arr1 = new int[5]; // 声明一个长度为5的int型数组
+int[] arr2 = {1, 2, 3, 4, 5}; // 使用花括号直接初始化 
+int[] arr3 = new int[] {1, 2, 3, 4, 5}; // 另一种初始化方式
+
+// 二维数组 
+int[][] arr2D = new int[3][4]; // 一个3行4列的二维数组
+int[][] arr2D = {{1,2},{3,4},{5,6}}; // 直接初始化
+```
 
 ## Java Collection & Map
+
+在Java中，主要包括两种类型的容器：
+
+- 集合（Collection）：用于存储单一元素；
+- 图（Map）：用于存储键/值对映射。
+
+其中，Collection接口又有3种子类型，分别是List、Set和Queue。而它们常用的实现类则包括：ArrayList、LinkedList、HashSet、LinkedHashSet、HashMap、LinkedHashMap等等。
+
+### ArrayList
+
+ArrayList是一个可以动态修改的数组，与普通数组的区别就是它是没有固定大小的限制，我们可以添加或删除元素。
+
+### LinkedList
 
 ## Java OOP
 
@@ -258,3 +390,9 @@ JDK提供了一些内置的注解，包括：
 ## Java IO
 
 ## Java Concurrency
+
+## Other
+
+### static
+
+### final
