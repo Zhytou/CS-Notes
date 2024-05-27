@@ -55,12 +55,21 @@ double d = 0.00999d;
 此外，基本类型都有与之对应的包装器类型(Wrapper Class)，如Integer、Long等，用于基本类型与对象之间的转换。值得注意的是，包装器类型是不可变的，即已经创建就不可改变。比如：
 
 ```java
-
+Integer a = new Integer(10);
+Integer b = new Integer(11);
+a = b;
+// output 11
+System.out.println(a);
 ```
 
-个人感觉这一点有些类似C++中关于指针指向cosnt值的讨论，即指针的地址可以修改，但指向内容不可以修改。
+个人感觉这一点有些类似C++中关于指针指向cosnt值的讨论，即指针的地址可以修改，但指向内容不可以修改。此外，在Java中，有不少场合都无法使用基本类型，这也是提出包装器的核心原因。比如：使用ArrayList存储int数据，就只能使用Integer。
 
-在Java中，有不少场合都无法使用基本类型，比如：使用ArrayList存储int数据，就只能使用Integer。这是因为ArrayList是一个泛型类，而Java泛型依靠将类型参数为类型上界(Object)实现，即模板参数必须要继承自Object才行，而int显然不满足条件，所以ArrayList只能使用Integer类存储int数据。关于这一点，更多更详细的解释可以参考stackoverflow的这两篇讨论[Why can't I have 'int' as the type of an ArrayList?](https://stackoverflow.com/questions/14349011/why-cant-i-have-int-as-the-type-of-an-arraylist)和[Can I use generics over reference types only?](https://stackoverflow.com/questions/3015716/can-i-use-generics-over-reference-types-only)。
+```java
+ArrayList<int> myNumbers = new ArrayList<int>(); // Invalid
+ArrayList<Integer> myNumbers = new ArrayList<Integer>(); // Valid
+```
+
+这是因为ArrayList是一个泛型类，而Java泛型依靠将类型参数为类型上界(Object)实现，即模板参数必须要继承自Object才行，而int显然不满足条件，所以ArrayList只能使用Integer类存储int数据。关于这一点，更多更详细的解释可以参考stackoverflow的这两篇讨论[Why can't I have 'int' as the type of an ArrayList?](https://stackoverflow.com/questions/14349011/why-cant-i-have-int-as-the-type-of-an-arraylist)和[Can I use generics over reference types only?](https://stackoverflow.com/questions/3015716/can-i-use-generics-over-reference-types-only)。
 
 ### Java String
 
@@ -125,9 +134,9 @@ String lower = str.toLowerCase(); // "hello, world!"
 
 ### Java Array
 
-在Java中，Array是一种用来存储固定大小相同数据类型元素的数据结构。在内存中，数组是一块连续的空间，可以通过索引来访问和操作数组中的元素。
+在Java中，Array是一种用来存储固定大小相同数据类型元素的数据结构。在内存中，数组是一块连续的空间，可以通过索引来访问和操作数组中的元素。和String不同的是，Array即可以存储基本数据类型也可存储引用数据类型。
 
-**Initialization**：
+**Definition & Element Access**：
 
 ```java
 // 一维数组
@@ -138,6 +147,37 @@ int[] arr3 = new int[] {1, 2, 3, 4, 5}; // 另一种初始化方式
 // 二维数组 
 int[][] arr2D = new int[3][4]; // 一个3行4列的二维数组
 int[][] arr2D = {{1,2},{3,4},{5,6}}; // 直接初始化
+
+// 访问数组首元素
+System.out.println(arr2[0]); // 输出1
+
+// 访问二维数组元素
+System.out.println(arr2D[1][1]); // 输出4
+```
+
+**Useful Functions**：
+
+此外，Array同样提供了许多有用的函数，包括：
+
+```java
+int[] arr1 = {1, 2, 3, 4};
+int[] arr2 = {5, 6, 7, 8};
+String[] strs = new String[5];
+
+/** 获取数组长度 */
+// 值得注意的是length是Array的属性，与String中的length()函数不同
+int len = arr1.length;
+
+/** 填充数组内容 */
+// 直接修改strs内容，返回void
+Arrays.fills(strs, "abc");
+
+/** 检查数组内容是否相等*/
+// 两个数组类型必须相同才能比较
+Arrays.equals(arr1, arr2);
+
+/** 排序数组 */
+Arrays.sort(arr1);
 ```
 
 ## Java Collection & Map
@@ -151,7 +191,31 @@ int[][] arr2D = {{1,2},{3,4},{5,6}}; // 直接初始化
 
 ### ArrayList
 
-ArrayList是一个可以动态修改的数组，与普通数组的区别就是它是没有固定大小的限制，我们可以添加或删除元素。
+ArrayList是一个可以动态修改的数组，与Array的最大区别就是它是没有固定大小的限制，可以添加或删除元素。此外，ArrayList只能存储引用数据类型，而Array则可以存储基本数据类型和引用数据类型。除了ArrayList之外，Collection接口还有一个名为Vector的实现。它同样是一个可以动态修改和没有固定大小限制的数组。只不过和ArrayList相比，它是线程安全的，且在扩容时往往按两倍原大小去申请内存，具体异同可参考stackoverflow的讨论[What are the differences between ArrayList and Vector?](https://stackoverflow.com/questions/2986296/what-are-the-differences-between-arraylist-and-vector)。
+
+**Element Operation**:
+
+ArrayList的核心功能就是元素操控，比如：添加、删除、修改、遍历等功能。
+
+```java
+ArrayList<String> arr = new ArrayList<String>();
+
+/** 添加元素 */
+arr.add("abc");
+arr.add("xxx");
+
+/** 访问元素 */
+String s = arr.get(1);
+
+/** 修改元素 */
+arr.set(1, "yyy");
+
+/** 删除元素 */
+arr.remove(1);
+
+/** 获取数组长度 */
+int len = arr.size();
+```
 
 ### LinkedList
 
