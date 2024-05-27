@@ -8,6 +8,9 @@
   - [Java Collection \& Map](#java-collection--map)
     - [ArrayList](#arraylist)
     - [LinkedList](#linkedlist)
+    - [PriorityQueue](#priorityqueue)
+    - [HashSet/HashMap](#hashsethashmap)
+    - [TreeSet/TreeMap](#treesettreemap)
   - [Java OOP](#java-oop)
   - [Java Reflection](#java-reflection)
   - [Java Generics](#java-generics)
@@ -189,6 +192,8 @@ Arrays.sort(arr1);
 
 其中，Collection接口又有3种子类型，分别是List、Set和Queue。而它们常用的实现类则包括：ArrayList、LinkedList、HashSet、LinkedHashSet、HashMap、LinkedHashMap等等。
 
+![Java Collection](https://pdai.tech/images/java_collections_overview.png)
+
 ### ArrayList
 
 ArrayList是一个可以动态修改的数组，与Array的最大区别就是它是没有固定大小的限制，可以添加或删除元素。此外，ArrayList只能存储引用数据类型，而Array则可以存储基本数据类型和引用数据类型。除了ArrayList之外，Collection接口还有一个名为Vector的实现。它同样是一个可以动态修改和没有固定大小限制的数组。只不过和ArrayList相比，它是线程安全的，且在扩容时往往按两倍原大小去申请内存，具体异同可参考stackoverflow的讨论[What are the differences between ArrayList and Vector?](https://stackoverflow.com/questions/2986296/what-are-the-differences-between-arraylist-and-vector)。
@@ -218,6 +223,48 @@ int len = arr.size();
 ```
 
 ### LinkedList
+
+LinkedList是一个双向链表的实现,它不是通过一个连续的内存空间来存储数据,而是使用一组对象来表示一个链,每个对象称为一个节点(Node),每个节点存储数据和两个指针(prev和next),分别指向前一个和后一个节点。
+
+LinkedList同时实现了List接口和Deque接口，也就是说它既可以看作一个顺序容器，又可以看作一个队列(Queue)，同时又可以看作一个栈(Stack)。这样看来，LinkedList简直就是个全能冠军。当你需要使用栈或者队列时，可以考虑使用LinkedList，一方面是因为Java官方已经声明不建议使用Stack类，更遗憾的是，Java里根本没有一个叫做Queue的类(它是个接口名字)。关于栈或队列，现在的首选是ArrayDeque，它有着比LinkedList(当作栈或队列使用时)有着更好的性能。
+
+```java
+LinkedList<String> list = new LinkedList<>();
+
+/** 添加元素 */
+// 添加到链表尾部
+list.add("d"); 
+// 添加到链表头部 
+list.addFirst("x");
+// 添加到指定位置
+list.add(2,"y");
+
+/** 获取/修改元素 */
+// 获取头部元素
+String first = list.getFirst();
+// 获取尾部元素 
+String last = list.getLast();
+// 获取指定位置元素
+String e = list.get(2);
+// 修改指定位置元素
+list.set(2, "z");
+
+/** 删除元素 */
+// 删除头部元素
+list.removeFirst();
+// 删除尾部元素
+list.removeLast(); 
+// 删除指定元素
+list.remove(2);
+// 删除首次出现的"z"
+list.remove("z");
+```
+
+### PriorityQueue
+
+### HashSet/HashMap
+
+### TreeSet/TreeMap
 
 ## Java OOP
 
