@@ -12,10 +12,10 @@
     - [HashSet/HashMap](#hashsethashmap)
     - [TreeSet/TreeMap](#treesettreemap)
   - [Java OOP](#java-oop)
-    - [Class](#class)
     - [Constructor](#constructor)
     - [Modifier](#modifier)
     - [Abstraction](#abstraction)
+    - [Polymorphism](#polymorphism)
     - [Package](#package)
   - [Java Reflection](#java-reflection)
   - [Java Generics](#java-generics)
@@ -34,9 +34,6 @@
     - [Annotation Intrinsic](#annotation-intrinsic)
   - [Java IO](#java-io)
   - [Java Concurrency](#java-concurrency)
-  - [Other](#other)
-    - [static](#static)
-    - [final](#final)
 
 ## Java Data Types & Basic Data Structures
 
@@ -273,8 +270,6 @@ list.remove("z");
 
 ## Java OOP
 
-### Class
-
 ### Constructor
 
 ### Modifier
@@ -354,7 +349,42 @@ class Pig implements Animal {
 
 更详细的介绍参考geeksforgeeks上的讨论[Difference between Abstract Class and Interface in Java](https://www.geeksforgeeks.org/difference-between-abstract-class-and-interface-in-java/)。
 
+### Polymorphism
+
+在OOP中，多态(Polymorphism)指的是多个对象的同一方法表现出不同结果。类似C++，Java的多态也分为静态多态和动态多态，也被称为编译期多态(Compile-time Polymorphism)和运行时多态(Run-time Polymorphism)。其中，前者依赖方法重载(Overload)；后者依赖方法重写(Override)。
+
+方法重载指的是同一个类中允许出现多个同名函数的情况，这些函数往往拥有不同数量或不同类型的参数。编译器会根据方法签名(方法名+参数列表)来确定实际调用函数。而方法重写则是指子类重新定义了从父类继承的一个方法。除了函数签名必须与父类一致外，重写允许将返回类型修改原返回类型的一个子类。当调用一个对象的属性或方法时，真正执行的方法仅在运行期才能确定，这就也就是动态多态。
+
+关于二者更详细的异同，可以参考geeksforgeeks的讨论[Difference Between Method Overloading and Method Overriding in Java](https://www.geeksforgeeks.org/difference-between-method-overloading-and-method-overriding-in-java/)。至于这两个概念在C++和Java中差异，则可以参考Quora的讨论[What is the difference between method overloading in Java and C++?](https://www.quora.com/What-is-the-difference-between-method-overloading-in-Java-and-C)。
+
 ### Package
+
+Java允许使用包(Package)将类组织在一个集合中。一般来说，开发者使用包来避免命名冲突，并且更方便维护。在实际项目中，我们往往使用因特网域名的逆序形式作为包名，比如：com.example.demo。此外，值得一提的是从Java编译器的角度来说，嵌套的包之间没有任何关系。比如，java.util和java.util.jar就毫无关系，每个包都是独立的集合。
+
+**包的导入**：
+
+一个类可以使用所属包中的所有类，以及其他包中的公共类(Public Class)。但是想要访问其他包中的公共类，就必须将其导入。第一种方式就是使用完全限定名，即包名跟着类名，比如：`java.time.LocalDate`。显然，这种方式很繁琐。Java提供了关键字`import`用于导入一个特定的类或整个包，比如：
+
+```java
+// 导入LocalDate
+import java.time.LocalDate;
+// 导入java.time包
+import java.time.*
+```
+
+不过值得注意的是，使用星号只能导入一个包，而不能使用`import java.*`导入所有以java为前缀的包。
+
+**在包中增加类**：
+
+要想将类放入包中，就必须将包名放在源文件开头。比如：
+
+```java
+package com.example
+
+public class xxx {
+
+}
+```
 
 ## Java Reflection
 
@@ -589,9 +619,3 @@ JDK提供了一些内置的注解，包括：
 ## Java IO
 
 ## Java Concurrency
-
-## Other
-
-### static
-
-### final
