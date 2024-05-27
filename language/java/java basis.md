@@ -15,6 +15,7 @@
     - [Class](#class)
     - [Constructor](#constructor)
     - [Modifier](#modifier)
+    - [Abstraction](#abstraction)
     - [Package](#package)
   - [Java Reflection](#java-reflection)
   - [Java Generics](#java-generics)
@@ -294,10 +295,64 @@ protected：只能用于修饰类内方法和属性，表示只能被同一个�
 
 **非访问修饰符**：
 
-abstract：当修饰类时，表示该类是抽象类，不能实例化对象；另外，还可用于修饰抽象类中的无函数体的函数。
-final：当修饰类时，表示不能被其他类继承；当修饰类内方法和属性时，表示不能被重写或修改。
+abstract：当修饰类时，表示该类是抽象类，不能实例化对象；另外，还可用于修饰抽象类中无函数体的函数。
+final：当修饰类时，表示不能被其他类继承；当修饰类内方法和属性时，表示不能被继承、重写或修改。
 static：只能修饰类内属性和方法，表示可以直接使用类名访问，作用和C++中一致。
 volatile：只能修饰属性和方法，表示访问时必须从主存中读取，作用和C++中一致。
+
+### Abstraction
+
+在Java中，抽象类(Abstract Class)和接口(Interface)都是用于实现数据抽象的概念。其中，抽象类就是使用关键字`abstract`修饰的类。它可以包含纯虚函数，即用关键字`abstract`修饰的无函数体函数。比如：
+
+```java
+// Abstract class
+abstract class Animal {
+  // Abstract method (does not have a body)
+  public abstract void animalSound();
+  // Regular method
+  public void sleep() {
+    System.out.println("Zzz");
+  }
+}
+
+// Subclass (inherit from Animal)
+class Pig extends Animal {
+  public void animalSound() {
+    // The body of animalSound() is provided here
+    System.out.println("The pig says: wee wee");
+  }
+}
+```
+
+至于接口，则是一组无函数体函数的集合。它其实类似C++中纯虚类的概念，即只包含纯虚函数的类。相比抽象类，接口是层次更高的抽象类型。比如：
+
+```java
+// Interface
+interface Animal {
+  public void animalSound(); // interface method (does not have a body)
+  public void sleep(); // interface method (does not have a body)
+}
+
+// Pig "implements" the Animal interface
+class Pig implements Animal {
+  public void animalSound() {
+    // The body of animalSound() is provided here
+    System.out.println("The pig says: wee wee");
+  }
+  public void sleep() {
+    // The body of sleep() is provided here
+    System.out.println("Zzz");
+  }
+}
+```
+
+除此之外，二者的异同还包括：
+
+- 抽象类继承使用`extends`；接口继承使用`implements`。且Java中并不直接支持继承多个类，但支持同时继承多个接口。
+- 接口中的属性默认是`final`的，但抽象类中属性可以使用`private`、`static`等修饰符修改。
+- 接口中只能包含纯虚函数，而抽象类中可以包含非纯虚函数。
+
+更详细的介绍参考geeksforgeeks上的讨论[Difference between Abstract Class and Interface in Java](https://www.geeksforgeeks.org/difference-between-abstract-class-and-interface-in-java/)。
 
 ### Package
 
