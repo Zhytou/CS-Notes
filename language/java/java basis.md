@@ -12,6 +12,10 @@
     - [HashSet/HashMap](#hashsethashmap)
     - [TreeSet/TreeMap](#treesettreemap)
   - [Java OOP](#java-oop)
+    - [Class](#class)
+    - [Constructor](#constructor)
+    - [Modifier](#modifier)
+    - [Package](#package)
   - [Java Reflection](#java-reflection)
   - [Java Generics](#java-generics)
   - [Java Dynamic Proxy](#java-dynamic-proxy)
@@ -267,6 +271,35 @@ list.remove("z");
 ### TreeSet/TreeMap
 
 ## Java OOP
+
+### Class
+
+### Constructor
+
+### Modifier
+
+前面代码示例中提到的关键字`public`是一个修饰符(Modifier)。在Java中，修饰符是一种用于修改类、方法、变量和其他实体的访问权限、行为或特性的关键字。一般来说，它们可以分为两类：
+
+- 访问修饰符：public、private、protected等；
+- 非访问修饰符：final、static、abstract等。
+
+其中，每类修饰符又可按是否能用于修饰类分类。
+
+**访问修饰符**：
+
+default：当类没有添加访问修饰符时，默认使用default修饰，表示只能被该包内其他类或方法访问。
+public：当其修饰类时，表示能被其他类访问到；当其修饰类内属性和方法方法时，表示可以通过该类对象访问。
+private：只能用于修饰类内属性和方法，表示只能被该类中的其他方法访问。
+protected：只能用于修饰类内方法和属性，表示只能被同一个包的方法和类或子类访问。
+
+**非访问修饰符**：
+
+abstract：当修饰类时，表示该类是抽象类，不能实例化对象；另外，还可用于修饰抽象类中的无函数体的函数。
+final：当修饰类时，表示不能被其他类继承；当修饰类内方法和属性时，表示不能被重写或修改。
+static：只能修饰类内属性和方法，表示可以直接使用类名访问，作用和C++中一致。
+volatile：只能修饰属性和方法，表示访问时必须从主存中读取，作用和C++中一致。
+
+### Package
 
 ## Java Reflection
 
