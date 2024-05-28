@@ -3,6 +3,7 @@
 - [Java](#java)
   - [Java Data Types \& Basic Data Structures](#java-data-types--basic-data-structures)
     - [Java Primitive Types](#java-primitive-types)
+    - [Java Wrapper](#java-wrapper)
     - [Java String](#java-string)
     - [Java Array](#java-array)
   - [Java Collection \& Map](#java-collection--map)
@@ -58,7 +59,20 @@ float c = 0.2f;
 double d = 0.00999d;
 ```
 
-此外，基本类型都有与之对应的包装器类型(Wrapper Class)，如Integer、Long等，用于基本类型与对象之间的转换。值得注意的是，包装器类型是不可变的，即已经创建就不可改变。比如：
+### Java Wrapper
+
+在Java中，有不少场合都无法使用基本类型。比如：使用ArrayList存储int数据，就只能使用int的包装器Integer类。
+
+```java
+ArrayList<int> myNumbers = new ArrayList<int>(); // Invalid
+ArrayList<Integer> myNumbers = new ArrayList<Integer>(); // Valid
+```
+
+这是因为ArrayList是一个泛型类，而Java泛型依靠将类型参数为类型上界(Object)实现，即模板参数必须要继承自Object才行，而int显然不满足条件，所以ArrayList只能使用Integer类存储int数据。关于这一点，更多更详细的解释可以参考stackoverflow的这两篇讨论[Why can't I have 'int' as the type of an ArrayList?](https://stackoverflow.com/questions/14349011/why-cant-i-have-int-as-the-type-of-an-arraylist)和[Can I use generics over reference types only?](https://stackoverflow.com/questions/3015716/can-i-use-generics-over-reference-types-only)。
+
+**不可变性**：
+
+因此，基本类型都有与之对应的包装器类型(Wrapper Class)，如Integer、Long等，用于基本类型与对象之间的转换。值得注意的是，包装器类型是不可变的，即已经创建就不可改变。比如：
 
 ```java
 Integer a = new Integer(10);
@@ -68,14 +82,33 @@ a = b;
 System.out.println(a);
 ```
 
-个人感觉这一点有些类似C++中关于指针指向cosnt值的讨论，即指针的地址可以修改，但指向内容不可以修改。此外，在Java中，有不少场合都无法使用基本类型，这也是提出包装器的核心原因。比如：使用ArrayList存储int数据，就只能使用Integer。
+个人感觉这一点有些类似C++中关于指针指向cosnt值的讨论，即指针的地址可以修改，但指向内容不可以修改。
+
+**自动装箱和拆箱**：
+
+装箱（Boxing）和拆箱（Unboxing）是Java中自动将基本数据类型与其对应的包装类进行转换的机制。装箱是指将基本数据类型转换为对应的包装类，而拆箱则是指将包装类转换为对应的基本数据类型。
+
+装箱的原理是通过调用包装类的valueOf方法来实现。例如，对于Integer类型的装箱，可以通过调用Integer.valueOf(int)方法将int类型的值转换为对应的Integer对象。拆箱的原理是通过调用包装类的xxxValue方法（例如intValue、doubleValue等）来获取包装类中存储的基本数据类型的值。例如，对于Integer类型的拆箱，可以通过调用Integer.intValue()方法将Integer对象中的值转换为int类型的值。
+
+为了提高性能和节省内存，当使用相同值创建包装器对象时，JVM会返回一个相同的对象引用，而不是创建一个新的对象。比如，JVM对范围在[-128, 127]之间的整型包装器就使用了缓存。这也是为什么下面代码的返回值分别为true和false。
 
 ```java
-ArrayList<int> myNumbers = new ArrayList<int>(); // Invalid
-ArrayList<Integer> myNumbers = new ArrayList<Integer>(); // Valid
+public class Main {
+  public static void main(String[] args) {
+    Integer i1 = 100;
+    Integer i2 = 100;
+    Integer i3 = 200;
+    Integer i4 = 200;
+    
+    // true
+    System.out.println(i1==i2);
+    // false
+    System.out.println(i3==i4);
+  }
+}
 ```
 
-这是因为ArrayList是一个泛型类，而Java泛型依靠将类型参数为类型上界(Object)实现，即模板参数必须要继承自Object才行，而int显然不满足条件，所以ArrayList只能使用Integer类存储int数据。关于这一点，更多更详细的解释可以参考stackoverflow的这两篇讨论[Why can't I have 'int' as the type of an ArrayList?](https://stackoverflow.com/questions/14349011/why-cant-i-have-int-as-the-type-of-an-arraylist)和[Can I use generics over reference types only?](https://stackoverflow.com/questions/3015716/can-i-use-generics-over-reference-types-only)。
+此外，JVM还对字符型包装器提供[0, 127]的缓存，对浮点型提供最小值和最大值两个缓存。换句话说，除了最大和最小两个值之外，每次创建浮点包装器时都会创建新的对象。关于自动装箱和拆箱相关的面试题，可以参考[博客](https://www.cnblogs.com/dolphin0520/p/3780005.html)。
 
 ### Java String
 
@@ -459,6 +492,8 @@ public class xxx {
 
 }
 ```
+
+但是值得注意的是，每个单独的文件中都只能有一个public类，且必须与该文件名完全匹配。如果在某个文件中有一个以上的public类，编译器就会给出出错信息。
 
 ## Java Reflection
 
