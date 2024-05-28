@@ -40,10 +40,12 @@
     - [Thread](#thread)
       - [Concurency Basis](#concurency-basis)
       - [Java Thread API](#java-thread-api)
+      - [Java Thread Pool](#java-thread-pool)
     - [Synchronization](#synchronization)
       - [Lock](#lock)
       - [Condition](#condition)
       - [Synchronized Key Word](#synchronized-key-word)
+      - [Atomic](#atomic)
     - [Thread-Safe Data Structures](#thread-safe-data-structures)
 
 ## Java Data Types & Basic Data Structures
@@ -765,20 +767,45 @@ JDK提供了一些内置的注解，包括：
 
 因此，Java线程的状态有以下几种：
 
-- New：新创建的线程，尚未执行；
-- Runnable：运行中的线程，正在执行run()方法的Java代码；
-- Blocked：运行中的线程，因为某些操作被阻塞而挂起；
-- Waiting：运行中的线程，因为某些操作在等待中；
-- Timed Waiting：运行中的线程，因为执行sleep()方法正在计时等待；
-- Terminated：线程已终止，因为run()方法执行完毕。
+- New：创建后尚未启动；
+- Runnable：可能正在运行，也可能正在等待CPU时间片；
+- Blocked：等待获取一个互斥锁或文件句柄等系统资源，如果其线程释放了该资源就会结束此状态；
+- Waiting：无限期等待其他线程显示唤醒，否则就不会被分配CPU时间片，比如：Object.wait()、Thread.join()等方法；
+- Timed Waiting：无需等待其它线程显式地唤醒，在一定时间之后会被系统自动唤醒，比如：Thread.sleep()等方法；
+- Terminated：线程已终止。
 
-**Runnable和Callable接口**：
+注意区分阻塞和等待的区别，前者是被动的，而后者是主动的。
 
 **创建和运行线程**：
 
+在Java中，使用线程的方法包括：继承Runnable接口/Callable接口/Thread类并实现其中的run方法。其中，Callable与Runnable相比可以有返回值，返回值通过FutureTask进行封装。一般来说，更建议继承Runnable或Callable接口而不是Thread类去实现线程，因为Java不支持多继承，且继承Thread类开销太大。下面是一个使用Runnable接口创建并运行线程的例子：
+
+```java
+Runnable r = ()-> {
+  // do work
+}
+Thread th = new Thread(r);
+th.start();
+```
+
+由于Runnable是一个函数式接口，所以上面的例子使用了一个lambda表达式创建了一个实例。
+
 **阻塞和等待线程**：
 
+- Thread.sleep(long millis)：使当前线程休眠指定的毫秒数。
+- Object.wait(), Object.notify(), Object.notifyAll()：在synchronized代码块中使用，用于线程间的通信和同步。
+
 **终止线程**：
+
+- Thread.join()：等待指定线程执行完毕。
+
+**守护线程**：
+
+通过调用Thread.setDaemon(true)方法，可以将线程设置为守护线程。但是守护线程并不会阻止程序的退出，即使还有守护线程在运行，只要非守护线程都结束，程序就会终止。
+
+#### Java Thread Pool
+
+Java的java.util.concurrent包提供了ExecutorService和ThreadPoolExecutor，用于管理线程池，提高线程的复用性和系统资源利用率。线程池可以控制线程的创建、调度和销毁，避免频繁创建和销毁线程的开销。
 
 ### Synchronization
 
@@ -788,6 +815,28 @@ JDK提供了一些内置的注解，包括：
 
 #### Synchronized Key Word
 
-Java中的每个对象都有一个内部锁，如果一个方法声明时使用了`synchronized`关键字，那么调用该方法时线程就必须获得内部对象锁。
+Java中的每个对象都有一个内部锁，如果一个方法声明时使用了`synchronized`关键字，那么调用该方法时线程就必须获得内部对象锁。正因为有这个内部锁，Object中才有以下函数：
+
+- `void notifyAll()`：唤醒所有等待内部锁的线程。
+- `void notify()`：随机选择一个等待内部锁的线程。
+- `void wait()`：使当前线程陷入等待状态，直到被唤醒。
+
+比如，下面使用`synchronized`实现了一个Bank类的转账函数。
+
+```java
+class Bank {
+  private double[] accounts;
+
+  public synchronized void transfer(int from, int to, int amount) {
+    while (accounts[from] < amount) 
+      wait();
+    accounts[from] -= amount;
+    accounts[to] += amount;
+    notifyAll();
+  }
+}
+```
+
+#### Atomic
 
 ### Thread-Safe Data Structures
