@@ -12,6 +12,7 @@
     - [PriorityQueue](#priorityqueue)
     - [HashSet/HashMap](#hashsethashmap)
     - [TreeSet/TreeMap](#treesettreemap)
+    - [Iterator](#iterator)
   - [Java Lambda](#java-lambda)
   - [Java OOP](#java-oop)
     - [Constructor](#constructor)
@@ -36,6 +37,14 @@
     - [Annotation Intrinsic](#annotation-intrinsic)
   - [Java IO](#java-io)
   - [Java Concurrency](#java-concurrency)
+    - [Thread](#thread)
+      - [Concurency Basis](#concurency-basis)
+      - [Java Thread API](#java-thread-api)
+    - [Synchronization](#synchronization)
+      - [Lock](#lock)
+      - [Condition](#condition)
+      - [Synchronized Key Word](#synchronized-key-word)
+    - [Thread-Safe Data Structures](#thread-safe-data-structures)
 
 ## Java Data Types & Basic Data Structures
 
@@ -86,7 +95,7 @@ System.out.println(a);
 
 **自动装箱和拆箱**：
 
-装箱（Boxing）和拆箱（Unboxing）是Java中自动将基本数据类型与其对应的包装类进行转换的机制。装箱是指将基本数据类型转换为对应的包装类，而拆箱则是指将包装类转换为对应的基本数据类型。
+装箱(Boxing)和拆箱(Unboxing)是Java中自动将基本数据类型与其对应的包装类进行转换的机制。装箱是指将基本数据类型转换为对应的包装类，而拆箱则是指将包装类转换为对应的基本数据类型。
 
 装箱的原理是通过调用包装类的valueOf方法来实现。例如，对于Integer类型的装箱，可以通过调用Integer.valueOf(int)方法将int类型的值转换为对应的Integer对象。拆箱的原理是通过调用包装类的xxxValue方法（例如intValue、doubleValue等）来获取包装类中存储的基本数据类型的值。例如，对于Integer类型的拆箱，可以通过调用Integer.intValue()方法将Integer对象中的值转换为int类型的值。
 
@@ -226,7 +235,7 @@ Arrays.sort(arr1);
 - 集合（Collection）：用于存储单一元素；
 - 图（Map）：用于存储键/值对映射。
 
-其中，Collection接口又有3种子类型，分别是List、Set和Queue。而它们常用的实现类则包括：ArrayList、LinkedList、HashSet、LinkedHashSet、HashMap、LinkedHashMap等等。
+其中，Collection接口又有3种子类型，分别是List、Set和Queue；而Map接口则有SortedMap和NavigableMap两个子接口。它们常用的实现类则包括：ArrayList、LinkedList、HashSet、LinkedHashSet、HashMap、LinkedHashMap等等。
 
 ![Java Collection](https://pdai.tech/images/java_collections_overview.png)
 
@@ -372,6 +381,8 @@ for (String s : set) {
 ```
 
 ### TreeSet/TreeMap
+
+### Iterator
 
 ## Java Lambda
 
@@ -728,3 +739,55 @@ JDK提供了一些内置的注解，包括：
 ## Java IO
 
 ## Java Concurrency
+
+### Thread
+
+#### Concurency Basis
+
+**并发与并行**：
+
+- 并发：在同一时间段内，多个任务交替执行，宏观上看起来是同时进行的，但微观上是交替进行的，如在单核CPU上。
+- 并行：在同一时间段内，多个任务真正地同时执行，通常在多核或多处理器系统中实现。
+
+**线程与进程**：
+
+进程、线程和协程这些概念的提出其实都或多或少为了允许计算机在有限的计算资源下能够同时执行多个任务，即并发地运行程序。也就是说，进程、线程、协程都是操作系统中重要的并发模型。其中，进程是操作系统资源分配的基本单位。每个进程都有独立的内存空间，包括代码、数据和栈等。而线程则是执行程序的基本单位，是进程内的一个执行流。线程共享进程的内存空间，拥有自己的栈和程序计数器。至于协程则是一种轻量级线程。它一般在用户空间实现，并允许在一个程序中并发执行多个独立的控制流，且其调度由自身完成而不依赖操作系统。它们的关系如下图所示。
+
+![进程 vs 线程](https://blog.kennycoder.io/2020/05/16/%E9%80%B2%E7%A8%8B-Process-%E3%80%81%E7%B7%9A%E7%A8%8B-Thread-%E3%80%81%E5%8D%94%E7%A8%8B-Coroutine-%E7%9A%84%E6%A6%82%E5%BF%B5%E8%AC%9B%E8%A7%A3/cover.png)
+
+#### Java Thread API
+
+**Java线程模型**：
+
+现在主流的后端开发语言中，Java和C++均是内核线程，而Go则是轻量级线程（通常称为协程）。换句话说，Java线程的创建、调度和销毁都需要操作系统内核的参与，而Go协程由Go Runtime库管理。它使用一种称为调度器的机制，在多个协程之间分配CPU时间，从而实现高效并发执行。
+
+**Java线程状态**：
+
+因此，Java线程的状态有以下几种：
+
+- New：新创建的线程，尚未执行；
+- Runnable：运行中的线程，正在执行run()方法的Java代码；
+- Blocked：运行中的线程，因为某些操作被阻塞而挂起；
+- Waiting：运行中的线程，因为某些操作在等待中；
+- Timed Waiting：运行中的线程，因为执行sleep()方法正在计时等待；
+- Terminated：线程已终止，因为run()方法执行完毕。
+
+**Runnable和Callable接口**：
+
+**创建和运行线程**：
+
+**阻塞和等待线程**：
+
+**终止线程**：
+
+### Synchronization
+
+#### Lock
+
+#### Condition
+
+#### Synchronized Key Word
+
+Java中的每个对象都有一个内部锁，如果一个方法声明时使用了`synchronized`关键字，那么调用该方法时线程就必须获得内部对象锁。
+
+### Thread-Safe Data Structures
