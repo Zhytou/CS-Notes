@@ -11,6 +11,7 @@
     - [PriorityQueue](#priorityqueue)
     - [HashSet/HashMap](#hashsethashmap)
     - [TreeSet/TreeMap](#treesettreemap)
+  - [Java Lambda](#java-lambda)
   - [Java OOP](#java-oop)
     - [Constructor](#constructor)
     - [Modifier](#modifier)
@@ -266,7 +267,80 @@ list.remove("z");
 
 ### HashSet/HashMap
 
+HashMap是Java中Map接口的一种具体实现。它存储键值对映射，且允许null作为键或值。而HashSet则是Java中Collection子接口Set的一种具体实现，用于存储不重复的元素。事实上，HashSet的实现依赖于HashMap，即前者只是对后者的包装。因此，本节将主要聚焦于HashMap。
+
+**Insertion**：
+
+当HashMap被插入键值对时，它首先会根据键的hashCode计算该键值对应存放的索引位置，然后遍历索引位置处链表，查找是否存在与待插入键值对重复的键。如果没有找到重复键值对，就直接将键值对插入链表头部；如果找到了重复键，就替换旧值。
+
+**Hash Collision**：
+
+当发生哈希冲突时，HashMap会将冲突的键值对存储为同一个索引位置处的链表。当链表长度超过一定阈值(8)时，链表会转化为红黑树，有效避免了链表过长带来的哈希冲突风险。事实上，不同版本的JDK中HashMap实现是不同的：
+
+- 在JDK1.7及之前版本，HashMap使用单链表解决哈希冲突。此版本下，链表过长性能会大幅下降。
+- JDK1.8引入了更高效的哈希算法，并在桶中使用链表和红黑树组合，从而更好的解决了哈希冲突。但是此版本下，HashMap在并发环境下可能出现死循环问题。
+- JDK1.9针对JDK1.8并发情况下死循环问题，对HashMap源码进行了改进。
+
+**Differences Versus Other Map**：
+
+和Map接口的其他实现相比，HashMap有以下特点：
+
+- HashMap允许null键和null值，而TreeMap和Hashtable不允许null键。
+- TreeMap是有序的，而HashMap和HashTable是无序的。
+- HashTable是线程安全的，但HashMap不是。也正因如此，HashMap的性能优于HashTable。
+
+**Useful Functions**：
+
+```java
+HashMap<String, String> map = new HashMap<String, String>();
+
+/** 添加元素 */
+// xxx不存在，创建xxx和yyy键值对
+map.put("xxx", "yyy");
+// xxx存在，覆盖原键值对
+map.put("xxx", "zzz");
+
+/** 获取值 */
+String val = map.get("xxx");
+
+/** 删除键值对 */
+map.remove("xxx");
+
+/** 获取大小 */
+int s = map.size();
+
+/** 遍历 */
+for (String key : map.keySet()) {
+  //...
+}
+for (String val : map.values()) {
+  //...
+}
+
+HashSet<String> set = new HashSet<String>();
+/** 添加元素 */
+set.add("xxx");
+// 添加两次xxx，set也只会存一个xxx
+set.add("xxx");
+
+/** 检查是否存在 */
+set.contains("xxx");
+
+/** 删除值 */
+set.remove("xxx");
+
+/** 获取大小 */
+int s = set.size();
+
+/** 遍历 */
+for (String s : set) {
+  //...
+}
+```
+
 ### TreeSet/TreeMap
+
+## Java Lambda
 
 ## Java OOP
 
