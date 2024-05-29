@@ -17,6 +17,7 @@
     - [Java Thread Basis](#java-thread-basis)
     - [Java Thread API](#java-thread-api)
     - [Java Thread Pool](#java-thread-pool)
+    - [Java ThreadLoacl Variable](#java-threadloacl-variable)
   - [Synchronization](#synchronization)
     - [Synchronized Key Word](#synchronized-key-word)
     - [Lock](#lock)
@@ -119,10 +120,10 @@ int cmpxchg(int* val, int expected, int newval) {
 - Runnable：可能正在运行，也可能正在等待CPU时间片；
 - Blocked：等待获取一个互斥锁或文件句柄等系统资源，如果其线程释放了该资源就会结束此状态；
 - Waiting：无限期等待其他线程显示唤醒，否则就不会被分配CPU时间片，比如：Object.wait()、Thread.join()等方法；
-- Timed Waiting：无需等待其它线程显式地唤醒，在一定时间之后会被系统自动唤醒，比如：Thread.sleep()等方法；
+- Timed Waiting：无需等待其它线程显式地唤醒，在一定时间之后会被系统自动唤醒，比如：Thread.sleep(long)等方法；
 - Terminated：线程已终止。
 
-注意区分阻塞和等待的区别，前者是被动的，而后者是主动的。
+注意区分阻塞和等待的区别，前者是被动的，而后者是主动的。此外，等待和阻塞在资源释放一致，都会在线程挂起之前释放其获取到的资源；而有限时间等待则不会，比如Thread.sleep(long)等、方法只会让线程睡眠，而不会释放其持有的锁。
 
 ### Java Thread API
 
@@ -189,6 +190,8 @@ Runnable r = () {
 
 Java的java.util.concurrent包提供了ExecutorService和ThreadPoolExecutor，用于管理线程池，提高线程的复用性和系统资源利用率。线程池可以控制线程的创建、调度和销毁，避免频繁创建和销毁线程的开销。
 
+### Java ThreadLoacl Variable
+
 ## Synchronization
 
 在Java中，同步主要依赖Java语言提供的`synchronized`关键字和JDK中提供的`java.util.concorrent`包。相比`synchronized`，JDK中提供的各种方法和接口更加灵活和强大，其内容主要如下。
@@ -197,13 +200,13 @@ Java的java.util.concurrent包提供了ExecutorService和ThreadPoolExecutor，�
 
 ### Synchronized Key Word
 
-Java中的每个对象都有一个内部锁，如果一个方法声明时使用了`synchronized`关键字，那么调用该方法时线程就必须获得内部对象锁。正因为有这个内部锁，Object中才有以下函数：
+Java中的每个对象都有一个内部锁，如果一个方法声明时使用了synchronized关键字，那么调用该方法时线程就必须获得内部对象锁。正因为有这个内部锁，Object中才有以下函数：
 
 - `void notifyAll()`：唤醒所有等待内部锁的线程。
 - `void notify()`：随机选择一个等待内部锁的线程。
 - `void wait()`：使当前线程陷入等待状态，直到被唤醒。
 
-比如，下面使用`synchronized`实现了一个Bank类的转账函数。
+比如，下面使用synchronized实现了一个Bank类的转账函数。
 
 ```java
 class Bank {
@@ -219,21 +222,83 @@ class Bank {
 }
 ```
 
-除了修饰普通函数之外，`synchronized`关键字还能修饰静态方法和代码块。
+除了修饰普通函数之外，synchronized关键字还能修饰静态方法和代码块。其中，使用synchronized关键字修饰的静态方法实际上是锁住了该类的Class对象，这表明一次只能有一个线程访问该类中任何静态同步方法。至于synchronized关键字修饰代码块，它需要指定锁定对象，可以指定this、类中其他成员变量或自定义的锁。比如：
+
+```java
+public class Counter {
+  private int count = 0;
+  private Object lock = new Object();
+
+  public void increment() {
+    synchronized (lock) {
+      count++;
+    }
+  }
+}
+```
 
 ### Lock
+
+Java中出现了很多锁的概念，包括：
+
+- 乐观锁/悲观锁；
+- 无锁/偏向锁/轻量级锁/重量级锁；
+- 公平锁/非公平锁；
+- 独享锁/共享锁；
+- 可重入锁/非可重入锁。
+
+关于这些概念的详细介绍可以参考这篇[文章](https://pdai.tech/md/java/thread/java-thread-x-lock-all.html)，下面主要介绍java.util.concurrent包中提供的锁。
 
 #### ReentranLock
 
 ReentrantLock实现了Lock接口，是一个可重入且独占式的锁，和`synchronized`关键字类似。不过，ReentrantLock更灵活、更强大，增加了轮询、超时、中断、公平锁和非公平锁等高级功能。
 
-**和synchronized的区别**：
+**可重入性**：
+
+ReentrantLock是一个可重入锁，这意味着一个线程可以多次获取同一锁而不阻塞自己。因此，一个被该锁保护的方法可以调用另一个使用相同锁的方法。比如：
+
+```java
+import java.util.concurrent.locks.ReentrantLock;
+
+public class ReentrantExample {
+  private final ReentrantLock lock = new ReentrantLock();
+
+  public void outerMethod() {
+    lock.lock();
+    try {
+      innerMethod();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  public void innerMethod() {
+    lock.lock();
+    try {
+      // 执行内部方法的逻辑
+    } finally {
+      lock.unlock();
+    }
+  }
+}
+```
+
+如果该类中的成员变量lock是一个不可重入锁，那么在执行outerMethod方法时就会发生死锁。实际上，ReentrantLock通过维护一个持有计数来记录lock方法的嵌套调用，并以此保证unlock正确。
+
+**和synchronized的异同**：
+
+- 在Java中，synchronized和ReentrantLock都是可重入锁。
+- ReentrantLock的lockInterruptibly()方法允许线程在等待锁时被中断，而synchronized无法中断等待锁的线程。
+- ReentrantLock提供了tryLock()方法，可以尝试获取锁而不阻塞。
+- ReentranLock可以在初始化时提供一个boolen参数指定构建一个采用公平或非公平策略的锁。（公平锁总是倾向于等待时间最长的锁，但这有可能严重影响效率）
 
 #### ReentranReadWriteLock
 
+ReentranReadWriteLock是可重入读写锁，允许多个读线程同时访问，但写线程独占资源。
+
 #### StampedLock
 
-StampedLock是JDK1.8引入的性能更好的读写锁，不可重入且不支持条件变量Condition。
+StampedLock是JDK1.8引入的乐观的读写锁。相比ReentranReadWriteLock，它性能更好但不可重入且不支持条件变量Condition。
 
 #### Other
 
