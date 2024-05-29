@@ -9,13 +9,20 @@
       - [Semaphore](#semaphore)
       - [Condition Variable](#condition-variable)
       - [Monitor](#monitor)
+    - [Synchronization Implementation](#synchronization-implementation)
+      - [Memory Barrier](#memory-barrier)
+      - [Lock Prefix Instructions](#lock-prefix-instructions)
+      - [CAS](#cas)
   - [Thread](#thread)
     - [Java Thread API](#java-thread-api)
     - [Thread Pool](#thread-pool)
   - [Synchronization](#synchronization)
-    - [Lock](#lock)
-    - [Condition](#condition)
     - [Synchronized Key Word](#synchronized-key-word)
+    - [Lock](#lock)
+      - [ReentranLock](#reentranlock)
+      - [ReentranReadWriteLock](#reentranreadwritelock)
+      - [StampedLock](#stampedlock)
+    - [Condition](#condition)
     - [Atomic](#atomic)
   - [Thread-Safe Data Structures](#thread-safe-data-structures)
 
@@ -53,6 +60,36 @@
 管程(Monitor)是更高级的一种同步原语。它指的是使用一个互斥量以及一个或多个条件变量管理共享数据并发的方法，即结合了数据结构（共享数据）和控制结构（如互斥量和条件变量）来实现线程间的同步和通信。因此，和前面提到的其他同步原语相比，管程是一种更高层次的抽象。而Java中的`synchronized`关键字就可以看作是管程的一种实现。
 
 关于同步原语更详细的介绍，可以参考stackoverflow的讨论[Definition of "synchronization primitive"](https://stackoverflow.com/questions/8017507/definition-of-synchronization-primitive)以及CMPSCI 377的[课件](https://lass.cs.umass.edu/~shenoy/courses/fall16/lectures/Lec09.pdf)
+
+### Synchronization Implementation
+
+#### Memory Barrier
+
+内存栅栏是一种硬件指令，用于确保特定的内存操作按照指定的顺序执行，防止编译器和处理器的优化导致数据可见性问题。内存栅栏分为读屏障（Load Barrier）和写屏障（Store Barrier），可以防止指令重排序。例如，mfence指令在x86架构中用于实现全内存屏障，确保在屏障前后的读写操作按照正确的顺序执行。
+
+#### Lock Prefix Instructions
+
+#### CAS
+
+CAS的全称是Compare And Swap。它指的是计算机的一种原子指令，可以实现无锁同步。该指令一般涉及三个操作数：
+
+- V：要更新的变量值
+- E：预期值
+- N：拟写入的值
+
+它允许原子地比较内存中的值并进行交换。如果内存中的值与预期值相等，CAS会将内存中的值更新为新值；如果不相等，它不会做任何修改。比如，`lock cmpxchg`指令就是x86体系下的CAS指令，所以我们可以使用Inline ASM实现如下效果。
+
+```java
+
+```
+
+此外，GCC也提供了。
+
+**ABA问题**：
+
+**Atomic与乐观锁**：
+
+由于CAS指令能够原子的更新某个变量，所以它可以很方便的实现原子类。那么CAS指令和乐观锁有什么关系呢？
 
 ## Thread
 
@@ -104,7 +141,31 @@ th.start();
 - run方法正常退出，线程自热终止。
 - run方法抛出异常，且没有对应catch语句，线程意外终止。
 
-除此之外，Java还提供了Thread.interrupt()方法来请求终止一个线程。当一个线程调用Thread.interrupt()方法后，它并不会立即停止执行，而是设置一个中断标志。
+除此之外，Java还提供了Thread.interrupt()方法来请求终止一个线程。当一个线程调用Thread.interrupt()方法后，它并不会立即停止执行，而是设置一个中断标志。而检查是否设置中断状态，则可以使用静态方法Thread.currentThread().isInterrupted()。使用该方法我们就可以尝试在run方法中结束该进程，比如：
+
+```java
+Runnable r = () {
+  while(!Thread.currentThread.isInterrupted()) {
+    // ...
+  }
+}
+```
+
+但是，如果线程阻塞或等待时，就无法检查中断状态。此时就需要引入InterruptException异常。当一个正在sleep或wait的线程上调用interrupt方法时，它将被InterruptException异常中断。比如：
+
+```java
+Runnable r = () {
+  try {
+      while(!Thread.currentThread.isInterrupted()) {
+      // ...
+    }
+  } catch(InterruptedException e) {
+    // thread was interrupted during sleep or wait
+  } finally {
+    // cleanup
+  }
+}
+```
 
 **守护线程**：
 
@@ -116,9 +177,9 @@ Java的java.util.concurrent包提供了ExecutorService和ThreadPoolExecutor，�
 
 ## Synchronization
 
-### Lock
+在Java中，同步主要依赖Java语言提供的`synchronized`关键字和JDK中提供的`java.util.concorrent`包。相比`synchronized`，JDK中提供的各种方法和接口更加灵活和强大，其内容主要如下。
 
-### Condition
+![JUC](https://pdai.tech/images/thread/java-thread-x-juc-overview-1-u.png)
 
 ### Synchronized Key Word
 
@@ -143,6 +204,24 @@ class Bank {
   }
 }
 ```
+
+除了修饰普通函数之外，`synchronized`关键字还能修饰静态方法和代码块。
+
+### Lock
+
+#### ReentranLock
+
+ReentrantLock实现了Lock接口，是一个可重入且独占式的锁，和`synchronized`关键字类似。不过，ReentrantLock更灵活、更强大，增加了轮询、超时、中断、公平锁和非公平锁等高级功能。
+
+**和synchronized的区别**：
+
+#### ReentranReadWriteLock
+
+#### StampedLock
+
+StampedLock是JDK1.8引入的性能更好的读写锁，不可重入且不支持条件变量Condition。
+
+### Condition
 
 ### Atomic
 
