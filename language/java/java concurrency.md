@@ -26,6 +26,8 @@
       - [StampedLock](#stampedlock)
     - [Condition](#condition)
     - [Atomic](#atomic)
+    - [Volatile](#volatile)
+    - [Final](#final)
   - [Thread-Safe Data Structures](#thread-safe-data-structures)
 
 ## Concurency Basis
@@ -73,7 +75,7 @@
 
 #### CAS
 
-CAS的全称是Compare And Swap。狭义上，它指的是计算机的一种原子指令，可以实现无锁同步；广义上，它则是指基于CAS指令实现的无锁同步算法。对于CAS指令来说，它一般涉及三个操作数：
+[CAS](https://en.wikipedia.org/wiki/Compare-and-swap#Implementations)的全称是Compare And Swap。狭义上，它指的是计算机的一种原子指令，可以实现无锁同步；广义上，它则是指基于CAS指令实现的无锁同步算法。对于CAS指令来说，它一般涉及三个操作数：
 
 - V：要更新的变量值
 - E：预期值
@@ -301,8 +303,6 @@ StampedLock是JDK1.8引入的乐观的读写锁。相比ReentranReadWriteLock，
 
 ### Condition
 
-条件变量允许线程在满足特定条件时等待，而不是简单地阻塞。线程可以释放锁并等待，直到其他线程改变条件并唤醒它。条件变量通常与互斥量一起使用，确保线程在等待和唤醒时的正确同步。
-
 在Java中，条件变量由Condition接口实现。它总是由一个锁对象中的newCondition方法初始化，且一个锁可以有多个相关联的条件变量。比如：用一个条件变量表示资金充足。
 
 ```java
@@ -333,5 +333,20 @@ class Bank {
 上面的transfer方法中，当资金少于转账金额时，就会调用sufficientFunds.await()使该线程阻塞。直到其他资金充足的线程调用sufficientFunds.signalAll()将其唤醒，再次检查条件，直到满足条件执行完毕。
 
 ### Atomic
+
+Java的java.util.concurrent包除了提供锁和条件变量之外，还提供了一组原子操作的封装类。以AtomicInteger为例，它提供的主要操作有：
+
+- 增加值并返回新值：int addAndGet(int delta)
+- 加1后返回新值：int incrementAndGet()
+- 获取当前值：int get()
+- 用CAS方式设置：int compareAndSet(int expect, int update)
+
+### Volatile
+
+volatile关键字用于修饰变量，确保对这个变量的修改对所有线程都是可见的，并且禁止指令重排序。这意味着，当一个线程修改了volatile变量，其他线程可以立即看到这个修改，而不需要额外的同步机制。然而，volatile关键字不能保证原子性，所以它不能用于多线程环境中的复合操作，如++或--。
+
+### Final
+
+final关键字用于声明一个不可变的变量，一旦赋值后就不能再改变。对于类的成员变量，final可以防止子类覆盖。对于方法，final可以防止子类重写。对于final变量，如果在多线程环境中，如果在初始化后被正确地赋值，那么所有线程都能看到一致的值。但是，final关键字本身并不提供线程安全性，它只是保证了不可变性。
 
 ## Thread-Safe Data Structures
