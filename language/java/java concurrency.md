@@ -24,7 +24,6 @@
       - [ReentranLock](#reentranlock)
       - [ReentranReadWriteLock](#reentranreadwritelock)
       - [StampedLock](#stampedlock)
-      - [Other](#other)
     - [Condition](#condition)
     - [Atomic](#atomic)
   - [Thread-Safe Data Structures](#thread-safe-data-structures)
@@ -300,9 +299,38 @@ ReentranReadWriteLock是可重入读写锁，允许多个读线程同时访问�
 
 StampedLock是JDK1.8引入的乐观的读写锁。相比ReentranReadWriteLock，它性能更好但不可重入且不支持条件变量Condition。
 
-#### Other
-
 ### Condition
+
+条件变量允许线程在满足特定条件时等待，而不是简单地阻塞。线程可以释放锁并等待，直到其他线程改变条件并唤醒它。条件变量通常与互斥量一起使用，确保线程在等待和唤醒时的正确同步。
+
+在Java中，条件变量由Condition接口实现。它总是由一个锁对象中的newCondition方法初始化，且一个锁可以有多个相关联的条件变量。比如：用一个条件变量表示资金充足。
+
+```java
+class Bank {
+  private double[] accounts;
+  private ReentranLock bankLock = new ReentranLock();
+  private Condition sufficientFunds;
+
+  public Bank() { 
+    sufficientFunds = bankLock.newCondition();
+  }
+
+  public void transfer(int from, int to, int amount) {
+    bankLock.lock();
+    try {
+      while (accounts[from] < amount) 
+        sufficientFunds.await();
+      accounts[from] -= amount;
+      accounts[to] += amount;
+      sufficientFunds.signalAll();  
+    } finally {
+      bankLock.unlock();
+    }
+  }
+}
+```
+
+上面的transfer方法中，当资金少于转账金额时，就会调用sufficientFunds.await()使该线程阻塞。直到其他资金充足的线程调用sufficientFunds.signalAll()将其唤醒，再次检查条件，直到满足条件执行完毕。
 
 ### Atomic
 
