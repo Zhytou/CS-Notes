@@ -14,14 +14,16 @@
       - [Lock Prefix Instructions](#lock-prefix-instructions)
       - [CAS](#cas)
   - [Thread](#thread)
+    - [Java Thread Basis](#java-thread-basis)
     - [Java Thread API](#java-thread-api)
-    - [Thread Pool](#thread-pool)
+    - [Java Thread Pool](#java-thread-pool)
   - [Synchronization](#synchronization)
     - [Synchronized Key Word](#synchronized-key-word)
     - [Lock](#lock)
       - [ReentranLock](#reentranlock)
       - [ReentranReadWriteLock](#reentranreadwritelock)
       - [StampedLock](#stampedlock)
+      - [Other](#other)
     - [Condition](#condition)
     - [Atomic](#atomic)
   - [Thread-Safe Data Structures](#thread-safe-data-structures)
@@ -65,35 +67,45 @@
 
 #### Memory Barrier
 
-内存栅栏是一种硬件指令，用于确保特定的内存操作按照指定的顺序执行，防止编译器和处理器的优化导致数据可见性问题。内存栅栏分为读屏障（Load Barrier）和写屏障（Store Barrier），可以防止指令重排序。例如，mfence指令在x86架构中用于实现全内存屏障，确保在屏障前后的读写操作按照正确的顺序执行。
+内存栅栏是一种硬件指令，用于确保特定的内存操作按照指定的顺序执行，防止编译器和处理器的优化导致数据可见性问题。内存栅栏分为读屏障(Load Barrier)和写屏障(Store Barrier)，可以防止指令重排序。例如，mfence指令在x86架构中用于实现全内存屏障，确保在屏障前后的读写操作按照正确的顺序执行。
 
 #### Lock Prefix Instructions
 
 #### CAS
 
-CAS的全称是Compare And Swap。它指的是计算机的一种原子指令，可以实现无锁同步。该指令一般涉及三个操作数：
+CAS的全称是Compare And Swap。狭义上，它指的是计算机的一种原子指令，可以实现无锁同步；广义上，它则是指基于CAS指令实现的无锁同步算法。对于CAS指令来说，它一般涉及三个操作数：
 
 - V：要更新的变量值
 - E：预期值
 - N：拟写入的值
 
-它允许原子地比较内存中的值并进行交换。如果内存中的值与预期值相等，CAS会将内存中的值更新为新值；如果不相等，它不会做任何修改。比如，`lock cmpxchg`指令就是x86体系下的CAS指令，所以我们可以使用Inline ASM实现如下效果。
+如果内存中要更新的变量值与预期值相等，CAS会将内存中的值更新为新值；如果不相等，它不会做任何修改。比如，`lock cmpxchg`指令就是x86体系下的CAS指令，所以我们可以使用Inline ASM实现如下效果。
 
 ```java
-
+int cmpxchg(int* val, int expected, int newval) {
+    __asm__ volatile(
+        "lock cmpxchg %2, %0\n\t"
+        : "+m" (*val), "+a" (expected)
+        : "r" (newval)
+        : "rax", "memory"
+    );
+    return expected;
+}
 ```
 
-此外，GCC也提供了。
+此外，C语言头文件<stdatomic.h>和GCC扩展函数也直接支持CAS操作。
 
 **ABA问题**：
 
+如果一个值从A变为B，然后又变回A，CAS算法可能会错误地认为值没有发生改变，因为它只检查值是否与预期值相同。为了解决这个问题，可以使用版本号或时间戳来跟踪值的变化。
+
 **Atomic与乐观锁**：
 
-由于CAS指令能够原子的更新某个变量，所以它可以很方便的实现原子类。那么CAS指令和乐观锁有什么关系呢？
+由于CAS指令能够原子的更新某个变量，所以它可以很方便的实现原子类，即将针对该类变量的更新操作都使用CAS指令完成。那么CAS指令和乐观锁有什么关系呢？
 
 ## Thread
 
-### Java Thread API
+### Java Thread Basis
 
 **Java线程模型**：
 
@@ -111,6 +123,8 @@ CAS的全称是Compare And Swap。它指的是计算机的一种原子指令，�
 - Terminated：线程已终止。
 
 注意区分阻塞和等待的区别，前者是被动的，而后者是主动的。
+
+### Java Thread API
 
 **创建和运行线程**：
 
@@ -171,7 +185,7 @@ Runnable r = () {
 
 通过调用Thread.setDaemon(true)方法，可以将线程设置为守护线程。但是守护线程并不会阻止程序的退出，即使还有守护线程在运行，只要非守护线程都结束，程序就会终止。
 
-### Thread Pool
+### Java Thread Pool
 
 Java的java.util.concurrent包提供了ExecutorService和ThreadPoolExecutor，用于管理线程池，提高线程的复用性和系统资源利用率。线程池可以控制线程的创建、调度和销毁，避免频繁创建和销毁线程的开销。
 
@@ -220,6 +234,8 @@ ReentrantLock实现了Lock接口，是一个可重入且独占式的锁，和`sy
 #### StampedLock
 
 StampedLock是JDK1.8引入的性能更好的读写锁，不可重入且不支持条件变量Condition。
+
+#### Other
 
 ### Condition
 
