@@ -5,6 +5,10 @@
     - [Concurrency Definition](#concurrency-definition)
     - [Concurrency Model](#concurrency-model)
     - [Synchronization Primitives](#synchronization-primitives)
+      - [Mutex](#mutex)
+      - [Semaphore](#semaphore)
+      - [Condition Variable](#condition-variable)
+      - [Monitor](#monitor)
   - [Thread](#thread)
     - [Java Thread API](#java-thread-api)
     - [Thread Pool](#thread-pool)
@@ -29,6 +33,26 @@
 ![进程 vs 线程](https://blog.kennycoder.io/2020/05/16/%E9%80%B2%E7%A8%8B-Process-%E3%80%81%E7%B7%9A%E7%A8%8B-Thread-%E3%80%81%E5%8D%94%E7%A8%8B-Coroutine-%E7%9A%84%E6%A6%82%E5%BF%B5%E8%AC%9B%E8%A7%A3/cover.png)
 
 ### Synchronization Primitives
+
+同步原语是操作系统向其用户提供的简单软件机制，用于支持线程或进程同步。它们通常使用较低级别的机制（例如内存屏障、自旋锁、上下文切换等）和硬件原子指令（例如测试并设置、比较并交换等）构建。
+
+#### Mutex
+
+互斥量是一种简单的同步原语，用于保护共享资源，确保同一时刻只有一个线程访问。当一个线程持有互斥量时，其他试图获取该互斥量的线程将被阻塞，直到持有者释放。互斥量通常用于实现互斥访问，防止数据竞争。
+
+#### Semaphore
+
+信号量是一种更复杂的同步原语，它可以控制多个线程对共享资源的访问。信号量有两种类型：互斥信号量（类似于互斥量，但可以被多个线程持有）和计数信号量。计数信号量可以控制同时访问资源的线程数量，当计数值为0时，线程会被阻塞，直到其他线程释放信号量。
+
+#### Condition Variable
+
+条件变量允许线程在满足特定条件时等待，而不是简单地阻塞。线程可以释放锁并等待，直到其他线程改变条件并唤醒它。条件变量通常与互斥量一起使用，确保线程在等待和唤醒时的正确同步。
+
+#### Monitor
+
+管程(Monitor)是更高级的一种同步原语。它指的是使用一个互斥量以及一个或多个条件变量管理共享数据并发的方法，即结合了数据结构（共享数据）和控制结构（如互斥量和条件变量）来实现线程间的同步和通信。因此，和前面提到的其他同步原语相比，管程是一种更高层次的抽象。而Java中的`synchronized`关键字就可以看作是管程的一种实现。
+
+关于同步原语更详细的介绍，可以参考stackoverflow的讨论[Definition of "synchronization primitive"](https://stackoverflow.com/questions/8017507/definition-of-synchronization-primitive)以及CMPSCI 377的[课件](https://lass.cs.umass.edu/~shenoy/courses/fall16/lectures/Lec09.pdf)
 
 ## Thread
 
