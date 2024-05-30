@@ -381,6 +381,92 @@ for (String s : set) {
 
 ### Constructor
 
+在Java中，构造器（Constructor）是一种特殊的方法，用于初始化新创建的对象。构造器与类同名，没有返回类型，包括默认构造器（无参数构造器）和带参数的构造器。构造器的主要作用是在创建对象时设置对象的初始状态，或者执行必要的初始化操作。
+
+**默认构造器**：
+当没有显式定义任何构造器时，Java会自动提供一个无参数的默认构造器。默认构造器不执行任何操作，只是调用父类的默认构造器（如果有的话）。
+
+**构造器重载**：
+
+Java允许开发者根据需要定义一个或多个带参数的构造器，以便在创建对象时传入初始值。这些构造器可以用来设置对象的成员变量，或者执行特定的初始化操作。只要这些构造器的参数数量、类型或顺序不同，这就是构造器重载。
+
+**调用另一个构造器**：
+
+在同一个类中，一个构造器可以调用另一个构造器，使用this()或this(args)。这允许共享构造器的代码，避免重复。
+
+**super和this**：
+
+super：super关键字用于引用父类的成员。它可以用于调用父类的构造器（super()或super(args)）、字段或方法。例如，super.someMethod()调用父类的someMethod()方法，super.someField引用父类的someField字段。
+this：this关键字用于引用当前对象的成员。它可以用于调用当前类的构造器（this()或this(args)）、字段或方法。例如，this.someMethod()调用当前类的someMethod()方法，this.someField引用当前类的someField字段。
+
+**继承链与构造器**：
+
+当一个类继承自另一个类时，子类的构造器通常需要调用父类的构造器，以确保父类的状态也被正确初始化。这可以通过super()或super(args)来实现，其中super()调用无参数的父类构造器，super(args)调用带参数的父类构造器。
+
+**静态工厂**：
+
+类似C++，Java中也可以将构造器设为private从而实现单例模式。比如：
+
+``` java
+class Item {
+  private static Item item = new Item();
+  private Item() {}
+
+  public static getItem() {
+    return item;
+  }
+}
+```
+
+**字段初始化**：
+
+在Java中，如果在构造器中没有为字段设置初值，那么它们就会自动地被赋予默认值。比如：数值为0、布尔值为false、对象引用为null。另外，在调用构造器之前，也可以直接在类定义中直接为每个字段设置初值，且这个初值不一定是常量值，也可以使用new或静态方法初始化。比如：
+
+```java
+class Employee {
+  private static int nextId;
+  private int id = assignId();
+  private String name = "";
+
+  private static assignId() {
+    int r = nextId;
+    nextId += 1；
+    return r;
+  }
+}
+```
+
+**初始化块**：
+
+除了上述提到的两种字段初始化方式：
+
+- 在构造器中设置值；
+- 在声明中赋值。
+
+Java还提供了第三种机制，称为初始化块。在一个类的声明中，可以包含多个代码块。只要构造这个类的对象，这些块就会被执行。比如：
+
+```java
+class Employee{
+  private static int nextId;
+  private int id;
+  private String name = "";
+
+  {
+    id = nextId;
+    nextId++;
+  }
+}
+```
+
+此外，还有以static关键字标识的静态初始化块的代码块。它用于初始化类的静态成员，且无论创建多少个类的实例，它都只执行一次。值得一提的是，静态初始化块的执行顺序取决于它们在类中的位置，但通常在非静态初始化块和构造器之前执行。
+
+**初始化顺序**：
+
+- 首先，执行静态初始化块（如果有）。
+- 然后，执行父类的构造器（如果有的话）。
+- 接着，执行实例初始化块（如果有）。
+- 最后，执行构造器。
+
 ### Modifier
 
 前面代码示例中提到的关键字`public`是一个修饰符(Modifier)。在Java中，修饰符是一种用于修改类、方法、变量和其他实体的访问权限、行为或特性的关键字。一般来说，它们可以分为两类：
