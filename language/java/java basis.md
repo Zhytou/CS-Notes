@@ -19,6 +19,7 @@
     - [Modifier](#modifier)
     - [Abstraction](#abstraction)
     - [Polymorphism](#polymorphism)
+    - [Inner Class](#inner-class)
     - [Package](#package)
   - [Java Reflection](#java-reflection)
   - [Java Generics](#java-generics)
@@ -492,6 +493,8 @@ volatile：只能修饰属性和方法，表示访问时必须从主存中读取
 
 ### Abstraction
 
+**抽象类**：
+
 在Java中，抽象类(Abstract Class)和接口(Interface)都是用于实现数据抽象的概念。其中，抽象类就是使用关键字`abstract`修饰的类。它可以包含纯虚函数，即用关键字`abstract`修饰的无函数体函数。比如：
 
 ```java
@@ -513,6 +516,8 @@ class Pig extends Animal {
   }
 }
 ```
+
+**接口**：
 
 至于接口，则是一组无函数体函数的集合。它其实类似C++中纯虚类的概念，即只包含纯虚函数的类。相比抽象类，接口是层次更高的抽象类型。比如：
 
@@ -544,6 +549,15 @@ class Pig implements Animal {
 
 更详细的介绍参考geeksforgeeks上的讨论[Difference between Abstract Class and Interface in Java](https://www.geeksforgeeks.org/difference-between-abstract-class-and-interface-in-java/)。
 
+**Java 8的接口新特性**：
+
+Java 8在接口中引入了两个新特性，分别是：
+
+- 允许在接口中定义默认方法（Default Methods），即允许在接口中定义了一个或多个default关键字声明的带有方法体的方法。此外，如果一个实现类继承了两个接口，且接口中有同名默认方法，那么该实现类就必须重写该默认方法，否则就会编译报错。
+- 引入了静态方法，即允许接口包含静态方法，这些方法与接口的实现无关，可以直接通过接口名调用。此外，接口无法在实现类中重写。
+
+此外，Java 8还引入了一个@FunctionalInterface注解来将接口标记为函数式接口，即有且只有一个抽象方法的接口。这种接口可以被lambda表达式实现，因此十分方便。
+
 ### Polymorphism
 
 在OOP中，多态(Polymorphism)指的是多个对象的同一方法表现出不同结果。类似C++，Java的多态也分为静态多态和动态多态，也被称为编译期多态(Compile-time Polymorphism)和运行时多态(Run-time Polymorphism)。其中，前者依赖方法重载(Overload)；后者依赖方法重写(Override)。
@@ -551,6 +565,8 @@ class Pig implements Animal {
 方法重载指的是同一个类中允许出现多个同名函数的情况，这些函数往往拥有不同数量或不同类型的参数。编译器会根据方法签名(方法名+参数列表)来确定实际调用函数。而方法重写则是指子类重新定义了从父类继承的一个方法。除了函数签名必须与父类一致外，重写允许将返回类型修改原返回类型的一个子类。当调用一个对象的属性或方法时，真正执行的方法仅在运行期才能确定，这就也就是动态多态。
 
 关于二者更详细的异同，可以参考geeksforgeeks的讨论[Difference Between Method Overloading and Method Overriding in Java](https://www.geeksforgeeks.org/difference-between-method-overloading-and-method-overriding-in-java/)。至于这两个概念在C++和Java中差异，则可以参考Quora的讨论[What is the difference between method overloading in Java and C++?](https://www.quora.com/What-is-the-difference-between-method-overloading-in-Java-and-C)。
+
+### Inner Class
 
 ### Package
 
