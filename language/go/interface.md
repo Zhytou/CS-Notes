@@ -23,8 +23,8 @@ Go 语言中接口的实现都是*隐式的*，一个类型如果拥有一个接
 
 Go 语言根据接口类型是否包含一组方法将接口类型分成了两类：
 
-使用 runtime.iface 结构体表示包含方法的接口
-使用 runtime.eface 结构体表示不包含任何方法的 interface{} 类型
+- 使用 runtime.iface 结构体表示包含方法的接口
+- 使用 runtime.eface 结构体表示不包含任何方法的 interface{} 类型
 
 **数据结构**：
 

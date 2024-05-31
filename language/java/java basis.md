@@ -562,7 +562,9 @@ Java 8在接口中引入了两个新特性，分别是：
 
 在OOP中，多态(Polymorphism)指的是多个对象的同一方法表现出不同结果。类似C++，Java的多态也分为静态多态和动态多态，也被称为编译期多态(Compile-time Polymorphism)和运行时多态(Run-time Polymorphism)。其中，前者依赖方法重载(Overload)；后者依赖方法重写(Override)。
 
-方法重载指的是同一个类中允许出现多个同名函数的情况，这些函数往往拥有不同数量或不同类型的参数。编译器会根据方法签名(方法名+参数列表)来确定实际调用函数。而方法重写则是指子类重新定义了从父类继承的一个方法。除了函数签名必须与父类一致外，重写允许将返回类型修改原返回类型的一个子类。当调用一个对象的属性或方法时，真正执行的方法仅在运行期才能确定，这就也就是动态多态。
+方法重载指的是同一个类中允许出现多个同名函数的情况，这些函数往往拥有不同数量或不同类型的参数。编译器会根据方法签名(方法名+参数列表)来确定实际调用函数。此外，如果两个方法在擦除泛型信息后，具有相同的参数类型，但返回值不一样，同样可以进行重载。
+
+而方法重写则是指子类重新定义了从父类继承的一个方法。除了函数签名必须与父类一致外，重写允许将返回类型修改原返回类型的一个子类。当调用一个对象的属性或方法时，真正执行的方法仅在运行期才能确定，这就也就是动态多态。
 
 关于二者更详细的异同，可以参考geeksforgeeks的讨论[Difference Between Method Overloading and Method Overriding in Java](https://www.geeksforgeeks.org/difference-between-method-overloading-and-method-overriding-in-java/)。至于这两个概念在C++和Java中差异，则可以参考Quora的讨论[What is the difference between method overloading in Java and C++?](https://www.quora.com/What-is-the-difference-between-method-overloading-in-Java-and-C)。
 
