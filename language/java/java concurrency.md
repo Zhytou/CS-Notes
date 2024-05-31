@@ -189,9 +189,85 @@ Runnable r = () {
 
 ### Java Thread Pool
 
-Java的java.util.concurrent包提供了ExecutorService和ThreadPoolExecutor，用于管理线程池，提高线程的复用性和系统资源利用率。线程池可以控制线程的创建、调度和销毁，避免频繁创建和销毁线程的开销。
+Java的java.util.concurrent包提供了ExecutorService和ThreadPoolExecutor等线程池。它可以控制线程的创建、调度和销毁，避免频繁创建和销毁线程的开销。
 
 ### Java ThreadLoacl Variable
+
+ThreadLoacl是Java中的一个类，它允许每个线程都有自己的ThreadLocal变量副本。这些副本都存储在每个线程的本地存储区中，这涉及到JVM内存模型。它相较于基于锁或原子类的并发编程更简单易读，且变量相互在线程间隔离受JVM管理。
+
+**ThreadLocal例子**：
+
+通常来说，一个方法中的局部变量都是线程安全的。因此，ThreadLocal主要用于类的成员变量，尤其是当这些成员变量需要在多个方法中使用，并且需要在多线程环境下保持独立状态时。比如：用ThreaLocal类管理Session或数据库连接。
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class ConnectionManager {
+  private static final ThreadLocal<Connection> dbConnectionLocal = new ThreadLocal<Connection>() {
+    @Override
+    protected Connection initialValue() {
+      try {
+        return DriverManager.getConnection("", "", "");
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+      return null;
+    }
+  };
+
+  public Connection getConnection() {
+    return dbConnectionLocal.get();
+  }
+}
+```
+
+例子中的initialValue方法是Java中的匿名内部类和抽象方法实现的结合。匿名内部类用于创建`ThreadLocal<Connection>`的实例，同时重写了initialValue方法。这种语法在Java中很常见，用于简化代码并避免创建额外的类。或者也可以不重写initialValue函数，而将初始化工作放到getConnection函数中。
+
+```java
+public class ConnectionManager {
+  private static final ThreadLocal<Connection> dbConnectionLocal = new ThreadLocal<Connection>();
+
+  public Connection getConnection() {
+    Connection connection = dbConnectionLocal.get();
+    if (connection == null) {
+      try {
+        connection = DriverManager.getConnection("", "", "");
+        dbConnectionLocal.set(connection);
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    return connection;
+  }
+}
+```
+
+**ThreadLocal函数**：
+
+ThreadLocal类提供了以下函数：
+
+- void set(T value)：为当前线程设置ThreadLocal变量的值。
+- T get()：返回当前线程的ThreadLocal变量的值。
+- void remove()：移除当前线程的ThreadLocal变量。
+- T initialValue()：返回当前线程的ThreadLocal变量的初始值，通常通过重写此方法来设置默认值。
+
+**ThreadLocal原理**：
+
+ThreadLocal依靠其静态内部类ThreadLocalMap实现。它是一个定制的哈希表，用于高效地存储每个线程的ThreadLocal变量副本。
+
+ThreadLocalMap的每个条目（Entry）也是一个内部类，它继承自`WeakReference<ThreadLocal<T>>`，而值则是需要ThreadLocal存储的变量类型T。这意味着ThreadLocalMap的键是弱引用，即当ThreadLocal对象不再被其他地方引用时，垃圾收集器可以回收它。
+
+对于ThreadLocal类中get()方法获取当前线程变量副本的过程如下：
+
+- ThreadLocal.get()方法首先获取当前线程（Thread.currentThread()）。
+- 然后，它查找当前线程的ThreadLocalMap。每个线程都有一个ThreadLocalMap，存储了所有ThreadLocal变量的副本。
+- 在ThreadLocalMap中，使用ThreadLocal实例作为键（key）查找对应的值（value）。如果找到了，就返回这个值；如果没找到，get()方法会返回null。
+
+**ThreadLocal问题**：
+
+尽管ThreadLocal在设计尽量保证不会出现内存泄漏，但使用不当仍会出现严重的问题。比如：在使用线程池（如ExecutorService）时，线程可能会被重用。如果一个线程在执行完一个任务后没有清除ThreadLocal变量，那么在执行下一个任务时，前一个任务的ThreadLocal变量可能会被意外访问，导致数据不一致。
 
 ## Synchronization
 
@@ -288,10 +364,88 @@ public class ReentrantExample {
 
 **和synchronized的异同**：
 
-- 在Java中，synchronized和ReentrantLock都是可重入锁。
-- ReentrantLock的lockInterruptibly()方法允许线程在等待锁时被中断，而synchronized无法中断等待锁的线程。
-- ReentrantLock提供了tryLock()方法，可以尝试获取锁而不阻塞。
-- ReentranLock可以在初始化时提供一个boolen参数指定构建一个采用公平或非公平策略的锁。（公平锁总是倾向于等待时间最长的锁，但这有可能严重影响效率）
+在Java中，synchronized和ReentrantLock都是可重入锁，且二者都可以使用条件变量，但ReentrantLock可以和多个条件变量关联。此外，ReentrantLock的lockInterruptibly()方法允许线程在等待锁时被中断，而synchronized无法中断等待锁的线程。比如：
+
+```java
+public class LockTest {
+
+  private Lock lock = new ReentrantLock();
+
+  public void doBussiness() {
+    String name = Thread.currentThread().getName();
+
+    try {
+      System.out.println(name + " 开始获取锁");
+      lock.lockInterruptibly();
+      System.out.println(name + " 得到锁");
+      System.out.println(name + " 开工干活");
+      for (int i=0; i<5; i++) {
+        Thread.sleep(1000);
+        System.out.println(name + " : " + i);
+      }
+    } catch (InterruptedException e) {
+      System.out.println(name + " 被中断");
+      System.out.println(name + " 做些别的事情");
+    } finally {
+      try {
+        lock.unlock();
+        System.out.println(name + " 释放锁");
+      } catch (Exception e) {
+        System.out.println(name + " : 没有得到锁的线程运行结束");
+      }
+    }
+  }
+
+
+  public static void main(String[] args) throws InterruptedException {
+    LockTest lockTest = new LockTest();
+    Thread t0 = new Thread(
+      new Runnable() {
+        public void run() {
+          lockTest.doBussiness();
+        }
+      }
+    );
+
+    Thread t1 = new Thread(
+      new Runnable() {
+        public void run() {
+          lockTest.doBussiness();
+        }
+      }
+    );
+
+    // 启动线程t1
+    t0.start();
+    Thread.sleep(10);
+    // 启动线程t2
+    t1.start();
+    Thread.sleep(100);
+    // 线程t1没有得到锁，中断t1的等待
+    t1.interrupt();
+  }
+}
+```
+
+其运行结果如下：
+
+```txt
+Thread-0 开始获取锁
+Thread-0 得到锁
+Thread-0 开工干活
+Thread-1 开始获取锁
+Thread-1 被中断
+Thread-1 做些别的事情
+Thread-1 : 没有得到锁的线程运行结束
+Thread-0 : 0
+Thread-0 : 1
+Thread-0 : 2
+Thread-0 : 3
+Thread-0 : 4
+Thread-0 释放锁
+```
+
+可见，使用lockInterruptibly()方法允许线程在等待锁时被中断，从而通过捕获InterruptedException异常的方式时线程转而去做一些其他事情。此外，ReentrantLock提供了tryLock()方法，可以尝试获取锁而不阻塞。tryLock()方法会立刻返回一个布尔值，表示获取成功与否。最后，ReentranLock可以在初始化时提供一个布尔值参数指定构建一个采用公平或非公平策略的锁。（公平锁总是倾向于等待时间最长的锁，但这有可能严重影响效率）
 
 #### ReentranReadWriteLock
 
