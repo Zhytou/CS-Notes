@@ -8,10 +8,13 @@
     - [Heap](#heap)
     - [Method Area](#method-area)
     - [Runtime Constant Pool](#runtime-constant-pool)
-    - [CG](#cg)
-  - [Class Loader](#class-loader)
-    - [Class File](#class-file)
-    - [Class](#class)
+  - [Java Class File](#java-class-file)
+    - [Class File Structure](#class-file-structure)
+    - [ByteCode Instruction](#bytecode-instruction)
+  - [Class Loading Mechanism](#class-loading-mechanism)
+    - [Class Loading Process](#class-loading-process)
+    - [Class Loader](#class-loader)
+  - [CG](#cg)
 
 ## JVM Runtime Data Areas
 
@@ -68,33 +71,31 @@ Java本地接口(Java Native Interface)
 
 ### Method Area
 
-方法区是 JVM 中存储类和接口定义的共享数据区域。它在 JVM 启动时创建，并且仅在 JVM 退出时销毁。
-
-具体来说，类加载器加载类的字节码并将其传递给 JVM。然后，JVM 创建类的内部表示，用于在运行时创建对象和调用方法。此内部表示收集有关类和接口的字段、方法和构造函数的信息。
-
-此外，让我们指出，方法区是一个逻辑概念。因此，在具体的 JVM 实现中，它可能是堆的一部分。
-
-再次，JVM 规范没有定义方法区的大小，也没有定义 JVM 处理内存块的方式。
+方法区(Method Area)与堆一样，是各个线程共享的内存区域。它用于存储已被虚拟机加载的类型信息、常量、静态变量、即时编译器编译后的代码缓存等数据。
 
 ### Runtime Constant Pool
 
-运行时常量池是方法区内的一个区域，其中包含对类和接口名称、字段名称和方法名称的符号引用。
+运行时常量池(Runtime Constant Pool)是方法区的一部分。Class文件中除了有类的版本、字段、方法、接口等描述信息外，还有一项信息是常量池表(Constant Pool Table)，用于存放编译期生
+成的各种字面量与符号引用，这部分内容将在类加载后存放到方法区的运行时常量池中。
 
-JVM 利用方法区中类或接口表示的创建来同时为该类创建运行时常量池。
+## Java Class File
 
-创建运行时常量池时，如果 JVM 需要的内存多于方法区中可用的内存，则会引发 OutOfMemory 错误。
+了解Java编译流程可知，Java程序并非类似C++的编译型语言，而是一种半编译语言。它会先将源程序编译成字节码文件(ByteCode File)也即Class文件，再交由JVM执行。可见，Java实现平台无关性的基础就是JVM和字节码存储格式。JVM不与包括Java语言在内的任何程序语言绑定，它只与Class文件这种特定的二进制文件格式所关联，而Class文件中则包含了JVM指令集、符号表以及若干其他辅助信息。值得一提的是，如果一个Java源文件中有多个类，那么编译后会生成除内部类之外的每个类对应的Class文件。
 
-### CG
+### Class File Structure
 
-## Class Loader
+**Magic Number**：
 
-### Class File
+每个Class文件的头4个字节被称为魔数(Magic Number)，它的唯一作用就是标识文件是否是一个Java字节码文件。
 
-了解Java编译流程可知，Java程序并非类似C++的编译型语言，而是一种半编译语言。它会先将源程序编译成字节码文件，再使用解释器一行行执行。它往往包含：
+**Version**：
 
-魔数（Magic Number）：标识文件是一个Java字节码文件。
-版本号（Version）：包含Java虚拟机版本和类文件版本。
-常量池（Constant Pool）：存储各种常量，如字符串、类名、方法名、字段名等。
+紧接着魔数的4个字节存储的是Class文件的版本号(Version)。
+
+**Constant Pool**：
+
+版本号之后是常量池，它存储各种常量，如字符串、类名、方法名、字段名等。
+
 访问标志（Access Flags）：标识类或接口的访问权限和特性。
 类索引（This Class）：指向常量池中的类或接口全名。
 父类索引（Super Class）：如果类不是接口，指向父类的全名。
@@ -103,26 +104,37 @@ JVM 利用方法区中类或接口表示的创建来同时为该类创建运行�
 方法表集合（Methods）：类或接口的方法信息。
 属性表集合（Attributes）：类、字段或方法的额外信息，如注解、源文件名等。
 
-### Class
+### ByteCode Instruction
 
-类加载过程
-类加载器种类
-内存管理
-堆内存
-方法区/元空间
-栈内存
-垃圾收集
-GC 算法
-GC 收集器
-GC 调优
-JIT 编译
-热点代码
-编译过程
-调优工具
-JVisualVM
-JMC
-JMH
-JVM 监控
-JMX
-JVM 参数
-JVM 日志
+## Class Loading Mechanism
+
+JVM把描述类的数据从Class文件加载到内存，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的Java类型，这个过程被称作虚拟机的类加载机制。
+
+与那些在编译时需要进行连接的语言不同，在Java语言里面，类型的加载、连接和初始化过程都是在程序运行期间完成的，这种策略让Java语言进行提前编译会面临额外的困难，也会让类加载时稍微增加一些性能开销，但是却为Java应用提供了极高的扩展性和灵活性，Java天生可以动态扩展的语言特性就是依赖运行期动态加载和动态连接这个特点实现的。例如，编写一个面向接口的应用程序，可以等到运行时再指定其实际的实现类，用户可以通过Java预置的或自定义类加载器，让某个本地的应用程序在运行时从网络或其他地方上加载一个二进制流作为其程序代码的一部分。
+
+**类生命周期**：
+
+一个类型从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期将会经历加载(Loading)、验证(Verification)、准备(Preparation)、解析(Resolution)、初始化(Initialization)、使用(Using)和卸载(Unloading)七个阶段，其中验证、准备、解析三个部分统称为连接（Linking）。上述7个阶段发生顺序如图所示。
+
+![类生命周期](https://pdai.tech/images/jvm/java_jvm_classload_2.png)
+
+**加载和初始化的时机**：
+
+关于在什么情况下需要开始类加载过程的第一个阶段“加载”，《Java虚拟机规范》中并没有进行强制约束，这点可以交给虚拟机的具体实现来自由把握。但是对于初始化阶段，《Java虚拟机规范》则是严格规定了有且只有六种情况必须立即对类进行初始化：
+1）遇到new、getstatic、putstatic或invokestatic这四条字节码指令时，如果类型没有进行过初始
+化，则需要先触发其初始化阶段。能够生成这四条指令的典型Java代码场景有：
+·使用new关键字实例化对象的时候。
+·读取或设置一个类型的静态字段（被final修饰、已在编译期把结果放入常量池的静态字段除外）
+的时候。
+·调用一个类型的静态方法的时候。
+
+### Class Loading Process
+
+在加载阶段，Java虚拟机需要完成以下三件事情：
+1）通过一个类的全限定名来获取定义此类的二进制字节流。
+2）将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构。
+3）在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口
+
+### Class Loader
+
+## CG
