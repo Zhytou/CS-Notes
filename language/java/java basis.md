@@ -570,6 +570,74 @@ Java 8在接口中引入了两个新特性，分别是：
 
 ### Inner Class
 
+在Java中，可以将一个类定义在另一个类或者方法里，这样的类称为内部类。常见的内部类包括：成员内部类、静态内部类和匿名内部类等。
+
+**成员内部类**：
+
+成员内部类是最普通的内部类，它的定义为位于另一个类的内部。比如，想要创建一个内部类对象。
+
+```java
+public class OuterClass {
+  class InnerClass {
+    // 内部类的代码
+  }
+}
+
+// 创建内部类
+OuterClass outer = new OuterClass();
+OuterClass.InnerClass inner = outer.new InnerClass();
+```
+
+不同于一个普通的类，内部类也能被访问限定符修饰。如果不希望外部对象访问该内部类，就可以使用private关键字修饰它。此外，成员内部类可以无条件访问外部类的所有成员属性和成员方法（包括private成员和静态成员）。不过要注意的是，当成员内部类拥有和外部类同名的成员变量或者方法时，会发生隐藏现象，即默认情况下访问的是成员内部类的成员。如果要访问外部类的同名成员，需要使用`OuterClass.this.method or OuterClass.this.variable`的形式进行访问。比如：
+
+```java
+public class OuterClass {
+  int id = 0;
+  class InnerClass {
+    int id = 1;
+
+    void test () {
+      System.out.println(id); // 1
+      System.out.println(OuterClass.this.id); // 0
+    }
+  }
+}
+```
+
+虽然成员内部类可以无条件的访问外部类的成员，而外部类想要访问内部类的成员却必须要先创建一个内部类对象，再通过该对象进行访问。
+
+**静态内部类**：
+
+静态内部类也是定义在另一个类里面的类，只不过在类的前面多了一个关键字static。静态内部类对象的创建就不需要依赖外部类对象，它可以直接使用外部类名创建。比如：
+
+```java
+public class OuterClass {
+    static class StaticInnerClass {
+        // 静态内部类的代码
+    }
+}
+
+// 创建内部类
+OuterClass.StaticInnerClass inner = new OuterClass.StaticInnerClass();
+```
+
+类似成员内部类，它也可以访问外部类的成员变量和方法，不过仅限于static的变量和方法。这点很好理解，因为在没有外部类的对象的情况下，可以创建静态内部类的对象，如果允许访问外部类的非static成员就会产生矛盾，因为外部类的非static成员必须依附于具体的对象。
+
+**匿名内部类**：
+
+匿名内部类也就是没有名字的内部类。正因为没有名字，这种内部类只能使用一次。换句话说，它在定义时创建实例。一般来说，它用于简化代码，使用方法如下：
+
+```java
+// 1、匿名类用于实现接口
+new 实现接口() {
+
+}
+// 2、匿名类用于继承类
+new 父类构造器(实参列表) {
+
+}
+```
+
 ### Package
 
 Java允许使用包(Package)将类组织在一个集合中。一般来说，开发者使用包来避免命名冲突，并且更方便维护。在实际项目中，我们往往使用因特网域名的逆序形式作为包名，比如：com.example.demo。此外，值得一提的是从Java编译器的角度来说，嵌套的包之间没有任何关系。比如，java.util和java.util.jar就毫无关系，每个包都是独立的集合。
@@ -599,7 +667,7 @@ public class xxx {
 }
 ```
 
-但是值得注意的是，每个单独的文件中都只能有一个public类，且必须与该文件名完全匹配。如果在某个文件中有一个以上的public类，编译器就会给出出错信息。
+但是值得注意的是，每个单独的文件中都只能有一个public类，且必须与该文件名完全匹配。如果在某个文件中有一个以上的public类，编译器就会报错。换句话说，一个文件只能声明一个可以在其他包中访问的类。除该类之外，其他类只能在该包内访问。
 
 ## Java Reflection
 
