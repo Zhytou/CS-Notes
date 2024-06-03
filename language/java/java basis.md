@@ -91,6 +91,8 @@ System.out.println(a);
 
 装箱的原理是通过调用包装类的valueOf方法来实现。例如，对于Integer类型的装箱，可以通过调用Integer.valueOf(int)方法将int类型的值转换为对应的Integer对象。拆箱的原理是通过调用包装类的xxxValue方法（例如intValue、doubleValue等）来获取包装类中存储的基本数据类型的值。例如，对于Integer类型的拆箱，可以通过调用Integer.intValue()方法将Integer对象中的值转换为int类型的值。
 
+**缓存**：
+
 为了提高性能和节省内存，当使用相同值创建包装器对象时，JVM会返回一个相同的对象引用，而不是创建一个新的对象。比如，JVM对范围在[-128, 127]之间的整型包装器就使用了缓存。这也是为什么下面代码的返回值分别为true和false。
 
 ```java
@@ -135,7 +137,13 @@ byte[] bytes = {72, 101, 108, 108, 111};
 String str4 = new String(bytes);
 ```
 
-其中，使用new关键字创建的String和直接赋值创建的String实际存储位置不同。前置存于堆，后者则存于JVM常量池，更详细的介绍可参考JVM内存管理笔记。
+其中，使用new关键字创建的String和直接赋值创建的String实际存储位置不同。前置存于堆，后者则存于JVM常量池。更详细的介绍可参考JVM内存管理笔记。
+
+**String.intern**：
+
+类似包装器，JVM为了提高String加载速度同时节省内存，也对String进行了缓存。正如上一节提到，Java String可以使用字面量初始化，该字符串会直接存储在运行时常量池中，并在字节码文件加载时创建。如果该字面量已经存在于常量池中，那么不会创建新的对象，而是返回常量池中已有的引用。而使用`new String("Hello, World!")`创建的String则会创建两个对象。一是常量池中的String对象，而则是堆中的String对象。其中，后者无论是否有相同字符串，都会强制创建一个新的对象。关于创建String Literal和String Object的比较，可以参考geeksforgeeks的这篇讨论[String Literal Vs String Object in Java](https://www.geeksforgeeks.org/string-initialization-java-string-literal-vs-string-object/)。
+
+String.intern()方法会返回常量池中与当前字符串内容相等的字符串引用。如果常量池中不存在，它会将当前字符串添加到常量池中，并返回常量池中的引用。关于这一部分内容的更多介绍，可以参考美团技术团队的这篇文章[深入解析String#intern](https://tech.meituan.com/2014/03/06/in-depth-understanding-string-intern.html)。
 
 **Useful Functions**：
 
@@ -636,6 +644,18 @@ new 实现接口() {
 new 父类构造器(实参列表) {
 
 }
+```
+
+比如：用匿名内部类启动一个线程。
+
+```java
+Thread th = new Thread(new Runnable() {
+  @Override
+  public void run() {
+    System.out.println("Hello World");
+  }
+});
+th.start();
 ```
 
 ### Package
