@@ -13,11 +13,15 @@
       - [Memory Barrier](#memory-barrier)
       - [Lock Prefix Instructions](#lock-prefix-instructions)
       - [CAS](#cas)
-  - [Thread](#thread)
+  - [Multi Thread Promgramming](#multi-thread-promgramming)
     - [Java Thread Basis](#java-thread-basis)
     - [Java Thread API](#java-thread-api)
     - [Java Thread Pool](#java-thread-pool)
     - [Java ThreadLoacl Variable](#java-threadloacl-variable)
+  - [Java Memory Model](#java-memory-model)
+    - [CPU Cache \& Instruction Reorder](#cpu-cache--instruction-reorder)
+    - [JMM](#jmm)
+    - [Happens-Before](#happens-before)
   - [Synchronization](#synchronization)
     - [Synchronized Key Word](#synchronized-key-word)
     - [Lock](#lock)
@@ -25,10 +29,11 @@
       - [ReentranReadWriteLock](#reentranreadwritelock)
       - [StampedLock](#stampedlock)
     - [Condition](#condition)
+    - [AQS](#aqs)
     - [Atomic](#atomic)
     - [Volatile](#volatile)
     - [Final](#final)
-  - [Thread-Safe Data Structures](#thread-safe-data-structures)
+  - [Java Thread-Safe Data Structures](#java-thread-safe-data-structures)
 
 ## Concurency Basis
 
@@ -73,6 +78,8 @@
 
 #### Lock Prefix Instructions
 
+![On multicore x86 systems, are mutexes implemented using a LOCK'd instruction?](https://stackoverflow.com/questions/6868007/on-multicore-x86-systems-are-mutexes-implemented-using-a-lockd-instruction)
+
 #### CAS
 
 [CAS](https://en.wikipedia.org/wiki/Compare-and-swap#Implementations)的全称是Compare And Swap。狭义上，它指的是计算机的一种原子指令，可以实现无锁同步；广义上，它则是指基于CAS指令实现的无锁同步算法。对于CAS指令来说，它一般涉及三个操作数：
@@ -105,7 +112,7 @@ int cmpxchg(int* val, int expected, int newval) {
 
 由于CAS指令能够原子的更新某个变量，所以它可以很方便的实现原子类，即将针对该类变量的更新操作都使用CAS指令完成。那么CAS指令和乐观锁有什么关系呢？
 
-## Thread
+## Multi Thread Promgramming
 
 ### Java Thread Basis
 
@@ -268,6 +275,46 @@ ThreadLocalMap的每个条目（Entry）也是一个内部类，它继承自`Wea
 **ThreadLocal问题**：
 
 尽管ThreadLocal在设计尽量保证不会出现内存泄漏，但使用不当仍会出现严重的问题。比如：在使用线程池（如ExecutorService）时，线程可能会被重用。如果一个线程在执行完一个任务后没有清除ThreadLocal变量，那么在执行下一个任务时，前一个任务的ThreadLocal变量可能会被意外访问，导致数据不一致。
+
+## Java Memory Model
+
+### CPU Cache & Instruction Reorder
+
+在现代中央处理器中，每个核心都有自己的计算单元、寄存器组以及一些列高速缓存。这些高速缓存用于存储主存中的数据副本，以提高访问速度。然而，这引入了数据一致性问题，因为不同核心的缓存可能包含不同版本的数据。为了解决数据一致性问题，操作系统
+
+此外，为了提升执行速度/性能，计算机在执行程序代码的时候可能会对指令进行重排序。常见的指令重排序包括：
+
+- 编译器在不改变单线程程序语义的前提下，重新安排语句的执行顺序。
+- 现代处理器采用了指令级并行技术(Instruction-Level Parallelism，ILP)来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序。
+
+### JMM
+
+由于Java是运行在多个
+
+Java内存模型（JMM）是为了应对CPU缓存和指令重排序带来的问题，它定义了线程如何访问和修改共享变量的规则，确保在多线程环境中的正确性。JMM的主要目标是：
+
+内存可见性：确保一个线程对共享变量的修改对其他线程可见。
+原子性：保证某些操作不会被中断，要么全部完成，要么不完成。
+有序性：限制处理器的指令重排序，以确保程序的正确性。
+JMM通过synchronized、volatile关键字以及java.util.concurrent包中的原子类来实现这些目标。
+
+**JMM vs JVM Runtime Memory**：
+
+### Happens-Before
+
+Happens-Before是JMM中的一个概念，它定义了两个操作之间的顺序关系，即使这些操作在不同的线程中。如果一个操作A happens-before 操作B，那么B可以观察到A的所有副作用。这个关系是JMM保证并发正确性的关键。
+
+Happens-Before关系可以通过以下方式建立：
+
+程序次序：在一个线程中，按照程序的顺序，前面的操作happens-before后面的操作。
+volatile变量规则：写操作happens-before后续的读操作。
+synchronized块/方法：一个线程释放锁（通过退出synchronized块或方法）happens-before另一个线程获取同一个锁（通过进入synchronized块或方法）。
+线程启动规则：线程的启动（Thread.start()）happens-before该线程的任何操作。
+线程中断规则：线程的中断请求（Thread.interrupt()）happens-before中断检查（Thread.isInterrupted()）。
+线程终结规则：线程的终结happens-before后续对Thread.join()的返回。
+终结器（Finalizer）规则：对象的构造函数完成happens-before该对象的终结器（finalize()）方法。
+
+[JMM详解](https://javaguide.cn/java/concurrent/jmm.html#jmm-java-memory-model)
 
 ## Synchronization
 
@@ -486,6 +533,8 @@ class Bank {
 
 上面的transfer方法中，当资金少于转账金额时，就会调用sufficientFunds.await()使该线程阻塞。直到其他资金充足的线程调用sufficientFunds.signalAll()将其唤醒，再次检查条件，直到满足条件执行完毕。
 
+### AQS
+
 ### Atomic
 
 Java的java.util.concurrent包除了提供锁和条件变量之外，还提供了一组原子操作的封装类。以AtomicInteger为例，它提供的主要操作有：
@@ -509,4 +558,4 @@ volatile关键字用于修饰变量。它表示总是从内存而不是寄存器
 
 final关键字用于声明一个不可变的变量，一旦赋值后就不能再改变。对于类的成员变量，final可以防止子类覆盖。对于方法，final可以防止子类重写。对于final变量，如果在多线程环境中，如果在初始化后被正确地赋值，那么所有线程都能看到一致的值。但是，final关键字本身并不提供线程安全性，它只是保证了不可变性。
 
-## Thread-Safe Data Structures
+## Java Thread-Safe Data Structures
