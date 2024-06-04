@@ -7,8 +7,9 @@
   - [实现](#实现)
   - [使用](#使用)
     - [联合索引和最左匹配原则](#联合索引和最左匹配原则)
+    - [索引下推](#索引下推)
     - [索引失效](#索引失效)
-  - [优化](#优化)
+    - [优化](#优化)
 
 ## 简介
 
@@ -128,22 +129,31 @@ B+树是B树的一个变种，相比之下有更优秀的性能。B+树的数据
 
 而使用联合索引最重要的规则就是遵循最左匹配原则。最左匹配原则指的是在查询时，可以只使用索引中的一部分，但只能是最左侧的部分。例如，如果索引是(a, b, c)，那么可以支持a、a,b、a,b,c三种组合进行查找，但不支持b,c进行查找。当使用最左侧的字段时，索引的效果最好。
 
+### 索引下推
+
+索引下推(Index Condition Pushdown, ICP)是MySQL 5.6版本中提供的一项索引优化功能，它允许存储引擎在索引遍历过程中，执行部分WHERE字句的判断条件，直接过滤掉不满足条件的记录，从而减少回表次数，提高查询效率。比如，有一个名为user的表，其中包含id, username,zipcode和birthdate 4个字段，创建了联合索引(zipcode, birthdate)。
+
+```sql
+CREATE TABLE `user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `zipcode` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `birthdate` date NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_username_birthdate` (`zipcode`,`birthdate`) ) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4;
+
+/* 查询 zipcode 为 431200 且生日在 3 月的用户 */
+/* birthdate 字段使用函数索引失效 */
+SELECT * FROM user WHERE zipcode = '431200' AND MONTH(birthdate) = 3;
+```
+
+当在没有索引下推功能的情况下进行查询时，即使zipcode字段利用索引可以帮助我们快速定位到zipcode = '431200'的用户，但我们仍然需要对每一个找到的用户进行回表操作，获取完整的用户数据，再去判断。而有了索引下推之后进行查询时，存储引擎会在使用zipcode字段索引查找zipcode = '431200'的用户时，同时判断MONTH(birthdate) = 3。这样，只有同时满足条件的记录才会被返回，减少了回表次数。
+
 ### 索引失效
 
-当我们使用左或者左右模糊匹配的时候，也就是 like %xx 或者 like %xx%这两种方式都会造成索引失效；
-当我们在查询条件中对索引列使用函数，就会导致索引失效。
-当我们在查询条件中对索引列进行表达式计算，也是无法走索引的。
-MySQL 在遇到字符串和数字比较的时候，会自动把字符串转为数字，然后再进行比较。如果字符串是索引列，而条件语句中的输入参数是数字的话，那么索引列会发生隐式类型转换，由于隐式类型转换是通过 CAST 函数实现的，等同于对索引列使用了函数，所以就会导致索引失效。
-联合索引要能正确使用需要遵循最左匹配原则，也就是按照最左优先的方式进行索引的匹配，否则就会导致索引失效。
-在 WHERE 子句中，如果在 OR 前的条件列是索引列，而在 OR 后的条件列不是索引列，那么索引会失效。
+### 优化
 
-- 如果mysql估计使用全表扫描要比使用索引快,则不使用索引
-
-## 优化
-
-用explain 命令查看执行计划，然后针对性的修改sql语句
-
-这里说一下几种常见优化索引的方法：
+除了使用用explain命令查看执行计划，然后针对性的修改sql语句这种常规优化手段之外，下面再介绍几种常见优化索引的方法：
 
 前缀索引优化；
 覆盖索引优化；
