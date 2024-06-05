@@ -22,6 +22,8 @@
     - [Hardware Efficiency And Consistency](#hardware-efficiency-and-consistency)
     - [Main Memory And Working Memory](#main-memory-and-working-memory)
     - [JMM Operation](#jmm-operation)
+    - [JMM Non-Atomic Treatment Of 64bit Variables](#jmm-non-atomic-treatment-of-64bit-variables)
+    - [JMM Volatile](#jmm-volatile)
     - [JMM Feature](#jmm-feature)
     - [Happens-Before](#happens-before)
   - [Synchronization](#synchronization)
@@ -324,7 +326,27 @@ JMM规定所有变量都存储在主内存中。每个线程还有自己的工�
 - store：：作用于工作内存的变量，它把工作内存中一个变量的值传送到主内存中，以便随后的write操作使用。
 - write：作用于主内存的变量，它把store操作从工作内存中得到的变量的值放入主内存的变量中。
 
-因此，如果要把一个变量从主内存拷贝到工作内存，那就要按顺序执行read和load操作，如果要把变量从工作内存同步回主内存，就要按顺序执行store和write操作。
+因此，如果要把一个变量从主内存拷贝到工作内存，那就要按顺序执行read和load操作，如果要把变量从工作内存同步回主内存，就要按顺序执行store和write操作。但是JMM只要求上述两个操作必须按顺序执行，但不要求是连续执行。也就是说read和load之间、store和write之间是可以插入其他指令的。
+
+### JMM Non-Atomic Treatment Of 64bit Variables
+
+JMM要求lock、unlock、read、load、assign、use、store、write这八种操作都具有原子性，但是对于64位的数据类型long和double，在模型中特别定义了一条宽松的规定：允许虚拟机将没有被volatile修饰的64位数据的读写操作划分为两次32位的操作来进行，即允许虚拟机实现自行选择是否要保证64位数据类型的load、store、read和write这四个操作的原子性。这也就是所谓的long和double的非原子性协定。
+
+### JMM Volatile
+
+关键字volatile是Java提供的最轻量级同步机制。当一个变量被定义成volatile之后，它将具备两项特性：
+
+- 一是保证此变量对所有线程可见性；
+- 二是禁止涉及该变量的指令重排序优化。
+
+**可见性**：
+
+关于volatile变量的可见性，经常会出现以下错误描述：因为volatile变量对所有线程是立即可见的，所以基于volatile变量的运算在并发下是线程安全的。这句话的论据部分并没有错，但是由其论据并不能得出“基于volatile变量的运算在并发下是线程安全的”这样的结论。volatile变量在各个线程的工作内存中是不存在一致性问题的（从物理存储的角度看，各个线程的工作内存中volatile变量也可以存在不一致的情况，但由于每次使用之前都要先刷新，执行引擎看不到不一致的情况，因此可以认为不存在一致性问题），但是Java里面的运算操作符并非原子操作，这导致volatile变量的运算在并发下一样是不安全的。比如，对volatile变量使用自增运算符。
+
+因此，即便使用volatile修饰变量，但在其不符合下述两条规则的运算场景中，仍要通过加锁保证原子性：
+
+- 运算结果并不依赖变量当前值，或者能够确保只有单一的线程修改变量的值。
+- 变量不需要与其他状态变量共同参与不变约束。
 
 ### JMM Feature
 
@@ -452,7 +474,6 @@ public class ReentrantExample {
 
 ```java
 public class LockTest {
-
   private Lock lock = new ReentrantLock();
 
   public void doBussiness() {
