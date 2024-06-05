@@ -350,28 +350,35 @@ JMM要求lock、unlock、read、load、assign、use、store、write这八种操�
 
 ### JMM Feature
 
-JMM是为了应对CPU缓存和指令重排序带来的问题，它定义了线程如何访问和修改共享变量的规则，确保在多线程环境中的正确性。JMM的主要目标是：
+JMM是为了应对CPU缓存和指令重排序带来的问题，它定义了线程如何访问和修改共享变量的规则，确保在多线程环境中的正确性。换言之，JMM是围绕着并发过程中处理原子性、可见性和有序性三个特征建立的。
 
-内存可见性：确保一个线程对共享变量的修改对其他线程可见。
-原子性：保证某些操作不会被中断，要么全部完成，要么不完成。
-有序性：限制处理器的指令重排序，以确保程序的正确性。
-JMM通过synchronized、volatile关键字以及java.util.concurrent包中的原子类来实现这些目标。
+**原子性**：
 
-**JMM vs JVM Runtime Memory**：
+JMM可以通过read、load、assign、use、store和write这6个操作保证基本数据类型（除了某些情况下的long和double）的访问、读写都具备原子性。这是因为每个线程在其工作内存中都有共享变量的副本。对于基本类型其修改是直接发生在该副本上的，而对于引用类型其修改则是发生在其指向的实际内存。
+
+然而，尽管基本变量本身是线程安全的，但如果代码中包含更复杂的逻辑，那么就仍然存在线程不安全问题。因为，JMM无法保证普通变量的指令执行顺序。此时，就需要使用基于JMM提供的lock和unlock操作的同步原语，比如：volatile和synchronized关键字等。的此外，如果应用场景需要一个更大范围的原子性保证，JMM还提供了lock和unlock来满足需求。
+
+**可见性**：
+
+可见性就是指当一个线程修改共享变量的值之后，其他线程能够立即得知这个修改。除了前面提到的volatile之外，Java还提供了两个关键字实现可见性，分别是synchronized和final。其中，synchronized的可见性是由“对一个变量执行unlock操作之前，必须先把此变量同步回主内存中（执行store、write操作）”这条规则获得的。而final关键字的可见性是指：被final修饰的字段在构造器中一旦被初始化完成(final变量无法修改)，那么在其他线程中就能看见final字段的值。
+
+**有序性**：
+
+Java语言提供了volatile和synchronized两个关键字来保证线程之间操作的有序性，volatile关键字本身就包含了禁止指令重排序的语义，而synchronized则是由“一个变量在同一个时刻只允许一条线程对其进行lock操作”这条规则获得的，这个规则决定了持有同一个锁的两个同步块只能串行地进入。
 
 ### Happens-Before
 
-Happens-Before是JMM中的一个概念，它定义了两个操作之间的顺序关系，即使这些操作在不同的线程中。如果一个操作A happens-before 操作B，那么B可以观察到A的所有副作用。这个关系是JMM保证并发正确性的关键。
+Happens-Before是JMM中的一个概念，它定义了两个操作之间的顺序关系，即使这些操作在不同的线程中。如果一个操作A happens-before 操作B，那么B可以观察到A的所有副作用。Happens-Before原则表达的意义其实并不是一个操作发生在另外一个操作的前面，虽然这从程序员的角度上来说也并无大碍。更准确地来说，它更想表达的意义是前一个操作的结果对于后一个操作是可见的，无论这两个操作是否在同一个线程里。
 
 Happens-Before关系可以通过以下方式建立：
 
-程序次序：在一个线程中，按照程序的顺序，前面的操作happens-before后面的操作。
-volatile变量规则：写操作happens-before后续的读操作。
-synchronized块/方法：一个线程释放锁（通过退出synchronized块或方法）happens-before另一个线程获取同一个锁（通过进入synchronized块或方法）。
-线程启动规则：线程的启动（Thread.start()）happens-before该线程的任何操作。
-线程中断规则：线程的中断请求（Thread.interrupt()）happens-before中断检查（Thread.isInterrupted()）。
-线程终结规则：线程的终结happens-before后续对Thread.join()的返回。
-终结器（Finalizer）规则：对象的构造函数完成happens-before该对象的终结器（finalize()）方法。
+- 程序次序：在一个线程中，按照程序的顺序，前面的操作happens-before后面的操作。
+- volatile变量规则：写操作happens-before后续的读操作。
+- synchronized块/方法：一个线程释放锁（通过退出synchronized块或方法）happens-before另一个线程获取同一个锁（通过进入synchronized块或方法）。
+- 线程启动规则：线程的启动（Thread.start()）happens-before该线程的任何操作。
+- 线程中断规则：线程的中断请求（Thread.interrupt()）happens-before中断检查（Thread.isInterrupted()）。
+- 线程终结规则：线程的终结happens-before后续对Thread.join()的返回。
+- 终结器（Finalizer）规则：对象的构造函数完成happens-before该对象的终结器（finalize()）方法。
 
 [JMM详解](https://javaguide.cn/java/concurrent/jmm.html#jmm-java-memory-model)
 
