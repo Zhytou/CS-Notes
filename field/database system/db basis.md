@@ -177,19 +177,83 @@ MySQL支持多种数据类型，大致可以分为数值、日期/时间和字�
 
 **数值类型**：
 
-其中，数值类型又可分为整数、浮点数和定点数三类。
+MySQL支持所有标准SQL数字数据类型。这些类型包括：
+
+- 精确数字类型（整型和定点数）：INTEGER、SMALLINT、MEDIUMINT、BIGINT和DECIMAL；
+- 近似数字类型（浮点数）：REAL、FLOAT和DOUBLE PERCISION；
+- 位置类型：BIT。
+
+为了书写方便，MySQL给数值类型提供了一些同义词。比如，INT就是INTEGER的同义词；DEC和FIXED就是DECIMAL的同义词；DOUBLE则是DOUBLE PERCISION的同义词。
+
+对于浮点和定点数据类型，可以提供参数M和N，用于指定存储的总位数和小数点后位数，比如：`DECIMAL(10, 2)`表示可以存储总位数为10，小数点后位数为2的小数；而对于整数来说，则只能提供一个参数M用于指定显示宽度，比如：`INT(2)`表示至少可以看到2个数字，若没满两位则前补零。此外，对于定点数来说，它占字节数受M和N影响，一般是min(M, N)+2字节；而对于浮点数和整数，其大小则是固定的，比如：FLOAT和INT都是4字节，DOUBLE则是8字节。值得一提的是，可以在整型后添加UNSIGNED关键字指定存储无符号型数，比如：`INT UNSIGNED`。
+
+关于数值类型更多的语法介绍，可以参考MySQL官方手册中13.1.1小节[Numeric Data Type Syntax](https://dev.mysql.com/doc/refman/8.4/en/numeric-type-syntax.html)。
 
 **日期/时间类型**：
 
+在MySQL中，用于表示时间值的日期和时间数据类型为DATE、TIME、DATETIME、TIMESTAMP和YEAR。每种时间类型都有一系列有效值，以及一个用于表示无法表示的无效零值。
+
+其中，DATE用于存储日期，格式为'YYYY-MM-DD'，范围是'1000-01-01'到'9999-12-31'；TIME用于存储时间，格式为'HH:MM:SS'，范围是'-838:59:59'到'838:59:59'；YEAR用于存储年份，可以是2位或4位格式，范围是'1901'到'2155'。
+
+至于DATETIME和TIMESTAMP则均用于存储日期和时间，且格式均为'YYYY-MM-DD HH:MM:SS'，并且都能够自动初始化或更新。不过，二者能够表示的范围不同，前者范围是'1000-01-01 00:00:00'到'9999-12-31 23:59:59'；后者但范围更小，其存储年份不能早于1970或晚于2037。此外，DATETIME存储本地时间，占8个字节；而TIMESTAMP使用UTC时间因而可以快速切换时区，占4-8个字节。
+
+关于TIMESTAMP和DATETIME自动初始化或更新的详细介绍，可以参考MySQL手册13.25小节[Automatic Initialization and Updating for TIMESTAMP and DATETIME](https://dev.mysql.com/doc/refman/8.4/en/timestamp-initialization.html)。比如：
+
+```sql
+/* 当新纪录插入时，ts列会自动设置为当前时间记录。当记录被更新时，ts列也会自动更新为当前时间。*/
+CREATE TABLE t1 (
+ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+);
+```
+
 **字符类型**：
 
-至于字符类型，它们也可以按存储对象分成字符串、文本和二进制类型。其中，CHAR和VARCHAR都用于存储字符串。只不过前者的特点是有固定长度限制，在存储时会填充空格保持长度；而后者则是可变长度，可以节省空间。此外，二者在使用时都需要传入一个字符长度参数。比如，`CHAR(M)`和`VARCHAR(M)`。前者表示可存储最大M个字符的固定长度字符串，M范围0-255；而后者表示可存储最大M个字符的可变长度字符串，M范围0-65535。
+至于字符类型，它们也可以按存储对象分成字符串、文本、二进制和字符串集合类型。其中，CHAR和VARCHAR都用于存储字符串。只不过前者的特点是有固定长度限制，在存储时会填充空格保持长度；而后者则是可变长度，可以节省空间。此外，二者在使用时都需要传入一个字符长度参数。比如，`CHAR(M)`和`VARCHAR(M)`。前者表示可存储最大M个字符的固定长度字符串，M范围0-255；而后者表示可存储最大M个字符的可变长度字符串，M范围0-65535。
 
-文本类型则通常使用TEXT说。
+此外，大段的文本文件如评论、文章等可用文本类型存储。它分为TINYTEXT、TEXT、MEDIUMTEXT和LONGTEXT四种，分别可以存储的最大长度为255个字符、65535个字符、16777215个字符和4294967295个字符
+
+二进制类型数据如图片、视频、文件等可用TINYBLOB、BLOB、MEDIUMBLOB和LONGBLOB存储。它们分别可以存储的最大长度为255字节、65535字节、16777215字节和4294967295字节。
+
+最后，MySQL还提供了ENUM和SET类型来存储字符串集合数据。两者都只能用于存储不同的元素，不过SET列可用存储集合中一个或多个值，而ENUM只能存储集合中一个值。此外，ENUM可用用元素序号指定值。比如：
+
+```sql
+CREATE TABLE t1 (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  keywords SET('tech', 'finance', 'health')
+);
+
+/* 可用插入('tech', 'finance', 'health')的组合('tech, finance') */
+INSERT INTO t1 (keywords) VALUES ('tech, finance');
+
+CREATE TABLE t2 (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sex` enum('男','女') DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4;
+
+/* 可用序号指定插入的值，序号从1开始 */
+INSERT INTO t2(sex) VALUES('男');  // sex = 男
+INSERT INTO t2(sex) VALUES(2); // sex = 女
+```
 
 ### MySQL Function
 
 SQL(Structured Query Language)是一种用于处理关系数据库的标准语言。它提供了查询、更新、插入和删除数据的功能。为了进一步简化SQL编写复杂度，MySQL还提供了大量的函数。它们扩展了SQL的功能，提供了大量丰富的操作。
+
+**COUNT()**：
+
+此外，关于COUNT()函数的不同使用手段的性能差异，其结论如下：
+
+![COUNT()函数结论](https://cdn.xiaolincoding.com//mysql/other/af711033aa3423330d3a4bc6baeb9532.png)
+
+更详细的介绍可以参考这篇小林Coding的文章[count(*) 和 count(1)有什么区别？哪个性能最好？](https://xiaolincoding.com/mysql/index/count.html)。
+
+**CONCAT()**：
+
+```sql
+SELECT CONCAT(Address, " ", PostalCode, " ", City) AS Address
+FROM Customers;
+```
 
 ### MySQL Architecture
 
@@ -216,10 +280,12 @@ MySQL查询的执行流程可以分为以下几个步骤，从客户端开始：
 
 ### Storage Engine
 
-InnoDB：
-默认存储引擎，支持事务处理、行级锁定和外键约束，适合需要事务安全和并发性能的场景。
-使用聚集索引，数据和索引存储在一起。
+**InnoDB vs MyISAM**：
 
-MyISAM：
-早期的默认存储引擎，不支持事务，但读取速度快，占用空间少。
-使用非聚集索引，数据和索引分开存储。
+![InnoDB vs MyISAM](https://www.runoob.com/w3cnote/mysql-different-nnodb-myisam.html)
+
+**InnoDB Architecture**：
+
+![InnoDB结构](https://images.app.goo.gl/fFLDRvsF1UuW2VkL7)
+
+**Buffer Pool**：
