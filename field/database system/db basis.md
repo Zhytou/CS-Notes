@@ -9,8 +9,10 @@
   - [RDBMS](#rdbms)
     - [E-R Model](#e-r-model)
     - [Normalization](#normalization)
+    - [Join](#join)
   - [MySQL Basis](#mysql-basis)
     - [Data Type](#data-type)
+    - [SQL](#sql)
     - [MySQL Function](#mysql-function)
     - [MySQL Architecture](#mysql-architecture)
     - [Workflow](#workflow)
@@ -46,7 +48,12 @@ NoSQL数据库虽然解决了高并发读写、多结构化数据存储等问题
 
 **DBMS vs OS File System**：
 
-？
+数据库管理系统(Database Management System, DBMS)和操作系统文件系统(Operating System File System, OSFS)都是用于存储和管理数据的系统，但它们在设计目标、数据组织和访问方式上存在显著差异。相比文件系统，数据库有很多优势包括：
+
+- 支持事务，进而保证数据一致性；
+- 可以非常方便的实现数据冗余和复制，提高可用性和容错性；
+- 使用SQL查询语言，提供了强大的查询和分析能力；
+- 支持多种数据结构，方便数据组织和查询。
 
 **分布式数据库 vs 集中式数据库集群**：
 
@@ -160,12 +167,44 @@ E-R模型是一种概念数据模型，用于描述现实世界中的实体、�
 - 第三范式(3NF)：在2NF的基础上，消除传递依赖，确保非主属性只依赖于主键。
 - BC范式(Boyce-Codd范式)：在3NF的基础上，进一步消除对任何非候选键的依赖。
 
+**Functional Dependency**：
+
 其中，上述范式定义中涉及到函数依赖、部分函数依赖以及函数依赖传递的概念。
 
 - 若在一张表中，在属性（或属性组）X 的值确定的情况下，必定能确定属性 Y 的值，那么就可以说 Y 函数依赖于 X，写作 X → Y。
 - 如果 X→Y，并且存在 X 的一个真子集 X0，使得 X0→Y，则称 Y 对 X 部分函数依赖。比如学生基本信息表 R 中（学号，身份证号，姓名）当然学号属性取值是唯一的，在 R 关系中，（学号，身份证号）->（姓名），（学号）->（姓名），（身份证号）->（姓名）；所以姓名部分函数依赖于（学号，身份证号）；
 - 在一个关系中，若某个非主属性数据项依赖于全部关键字称之为完全函数依赖。比如学生基本信息表 R（学号，班级，姓名）假设不同的班级学号有相同的，班级内学号不能相同，在 R 关系中，（学号，班级）->（姓名），但是（学号）->(姓名)不成立，（班级）->(姓名)不成立，所以姓名完全函数依赖与（学号，班级）；
 - 在关系模式 R(U)中，设 X，Y，Z 是 U 的不同的属性子集，如果 X 确定 Y、Y 确定 Z，且有 X 不包含 Y，Y 不确定 X，（X∪Y）∩Z=空集合，则称 Z 传递函数依赖(transitive functional dependency) 于 X。传递函数依赖会导致数据冗余和异常。传递函数依赖的 Y 和 Z 子集往往同属于某一个事物，因此可将其合并放到一个表中。比如在关系 R(学号 , 姓名, 系名，系主任)中，学号 → 系名，系名 → 系主任，所以存在非主属性系主任对于学号的传递函数依赖。
+
+**Closure**：
+
+闭包(Closure)
+
+### Join
+
+Join是数据库中重要的操作之一。其语法如下`... FROM table1 JOIN table ON condition`，用于将两张表按某种条件连接。比如，查询表A和B中id相同的数据。
+
+```sql
+SELECT * FROM A INNER JOIN B ON A.name = B.name;
+```
+
+**Classification**：
+
+根据连接时行为不同，可将Join分为：
+
+- Inner Join：只保留两个表中都有的数据。
+- Right(Left) Outter Join：无论右(左)表中数据是否有满足条件的匹配，都保留。对于没有匹配的行，补NULL即可。
+- Cross Join：得到两个表的笛卡尔积。
+
+**Join Algorithms**：
+
+常见用于实现Join的算法如下：
+
+- Nested Loop Join
+- Blocked Nested Loop Join
+- Index Nested Loop Join
+- Merge Join
+- Hash Join
 
 ## MySQL Basis
 
@@ -236,9 +275,13 @@ INSERT INTO t2(sex) VALUES('男');  // sex = 男
 INSERT INTO t2(sex) VALUES(2); // sex = 女
 ```
 
+### SQL
+
+SQL(Structured Query Language)是一种用于处理关系数据库的标准语言。它提供了查询、更新、插入和删除数据的功能。关于SQL的详细介绍请查看这篇[总结](https://github.com/Zhytou/CS-Notes/blob/main/field/database%20system/sql.md)。
+
 ### MySQL Function
 
-SQL(Structured Query Language)是一种用于处理关系数据库的标准语言。它提供了查询、更新、插入和删除数据的功能。为了进一步简化SQL编写复杂度，MySQL还提供了大量的函数。它们扩展了SQL的功能，提供了大量丰富的操作。
+为了进一步简化SQL编写复杂度，MySQL还提供了大量的函数。它们扩展了SQL的功能，提供了大量丰富的操作。
 
 **COUNT()**：
 
