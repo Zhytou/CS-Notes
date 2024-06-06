@@ -282,10 +282,14 @@ MySQL查询的执行流程可以分为以下几个步骤，从客户端开始：
 
 **InnoDB vs MyISAM**：
 
-![InnoDB vs MyISAM](https://www.runoob.com/w3cnote/mysql-different-nnodb-myisam.html)
+[InnoDB vs MyISAM](https://www.runoob.com/w3cnote/mysql-different-nnodb-myisam.html)
 
 **InnoDB Architecture**：
 
-![InnoDB结构](https://images.app.goo.gl/fFLDRvsF1UuW2VkL7)
+![InnoDB结构](https://dev.mysql.com/doc/refman/8.4/en/images/innodb-architecture-8-0.png)
 
 **Buffer Pool**：
+
+为了提高存储效率并减少磁盘I/O次数，InnoDB存储引擎设计了缓存。其中，最重要的缓存就是Buffer Pool。它位于内存，默认大小为128MB，并将其分为了多个页。类似MySQL的磁盘存储单位，缓存页大小也是16KB。不过MySQL还为每个缓存页也开辟额外的一些空间，用来描述对应的缓存页的一些信息，例如：数据页所属的表空间，数据页号等。
+
+和所有缓存一致，Buffer Pool也实现了其缓存更新策略。它使用Free List管理空闲缓存页，表示Buffer Pool中未分配的页；Flush List管理脏缓存页，后台线程从其中取出页号执行写入磁盘流程。当Buffer Pool中无空闲页时，它使用LRU List移除最不常访问的页。
