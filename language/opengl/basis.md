@@ -36,6 +36,8 @@ OpenGL的模式分为核心模式(Core Profile)和立即渲染模式(Immediate M
 - 片元着色器阶段：该阶段对每个像素执行光照、纹理映射、混合等操作，生成最终的像素颜色值。
 - 帧缓冲阶段：该阶段将处理后的像素输出到帧缓冲区中，最终在屏幕上显示出来。
 
+在《Real TimeRendering》一书中，渲染管线被划分为以下四个阶段：应用程序阶段(Application)、几何处理阶段(Geometry Processing)、光栅化(Rasterization)和像素处理阶段(Pixel Processing)。其中，应用阶段通常是在CPU端进行处理，包括碰撞检测、动画物理模拟以及视椎体剔除等任务，这个阶段会将数据送到渲染管线中；几何处理阶段主要执行顶点着色器、投影变换、裁剪和屏幕映射的功能；光栅化阶段和我们上面讨论的差不多，都是将图元离散化片段的过程；像素处理阶段包括像素着色和混合的功能。我们可以发现，虽然管线的划分粒度不一样，但是每个阶段的具体功能其实是差不多的，原理也是一样的，并没有太大的差异。
+
 ### Context
 
 在应用程序调用任何OpenGL API之前，首先需要创建⼀个OpenGL的上下文。它是一个状态机保存了OpenGL中的各种信息，同时也是调用OpenGL函数的前提。事实上，OpenGL函数是类似C语言⼀样的面向过程的函数，使用这些函数本质上都是对OpenGL上下文这个庞大的状态机中的某个状态或者对象进行操作。当然在对其进行操作之前，得先把这个对象设置为当前对象。
@@ -52,9 +54,10 @@ OpenGL的模式分为核心模式(Core Profile)和立即渲染模式(Immediate M
 
 ``` c++
 GLuint VBO;
-// 创建vbo对象（1是序号，第1个vbo）
+// 创建大小为1的vbo缓存对象
 glGenBuffers(1, &VBO);  
-// 绑定（由于时将顶点保存到缓存，因此使用GL_ARRAY_BUFFER类型）
+// 绑定，即定义该缓存对象用途（由于时将顶点数据保存到缓存，因此使用GL_ARRAY_BUFFER类型）
+// 其他的类型还包括：纹理缓存GL_TEXTURE_BUFFER、顶点索引缓存GL_ELEMENT_ARRAY_BUFFER等
 glBindBuffer(GL_ARRAY_BUFFER, VBO)
 ```
 
@@ -75,7 +78,7 @@ glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 使用顶点数组对象管理顶点缓存对象：
 
-我们需要使用`顶点数组对象(Vertex Array Object, VAO)`来管理VBO并解释VBO中顶点数据的含义。其创建和绑定和VBO类似。至于，向OpenGL解释传入顶点数据的含义，具体可以使用`glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)`指明传入数据的含义。
+我们需要使用`顶点数组对象(Vertex Array Object, VAO)`来管理VBO并解释VBO中顶点数据的含义。其创建和绑定和VBO类似。至于，向OpenGL解释传入顶点数据的含义，具体可以使用`glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)`指明传入数据的含义。此外，还可以通过glVertexAttribPointer的第三个参数指定顶点数据是否归一化。
 
 例如：
 
@@ -94,7 +97,19 @@ glBindVertexArray(0);
 
 编译链接着色器程序：
 
-OpenGL主要提供了两个函数`glLinkProgram(GLuint program)`和`glUseProgram(GLuint program)`。其中，一般在初始化时，调用`glLinkProgram(GLuint program)`将着色器程序链接；在实际渲染时，调用`glUseProgram(GLuint program)`。
+`着色器Shader`是OpenGL中一个最重要的概念，它是图形硬件设备所执行的一类特殊函数。简单来说，可以将其理解成一种GPU能够编译和执行的一种小型程序。一个简单的顶点着色器如下：
+
+```glsl
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+void main()
+{
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}
+```
+
+OpenGL主要提供了两个函数`glLinkProgram(GLuint program)`和`glUseProgram(GLuint program)`来调用提前编译好的着色器程序。其中，一般在初始化时，调用`glLinkProgram(GLuint program)`将着色器程序链接；在实际渲染时，调用`glUseProgram(GLuint program)`。
 
 绘制：
 
@@ -127,7 +142,17 @@ glEnableVertexAttribArray(0);
 // 4. 解绑VAO
 glBindVertexArray(0);
 
-// 5. 绘图
+// 5. 创建并编译顶点着色器程序
+unsigned int vertexShader;
+vertexShader = glCreateShader(GL_VERTEX_SHADER);
+
+unsigned int shaderProgram;
+shaderProgram = glCreateProgram();
+glAttachShader(shaderProgram, vertexShader);
+glAttachShader(shaderProgram, fragmentShader);
+glLinkProgram(shaderProgram);
+
+// . 绘图
 glUseProgram(shaderProgram);
 glBindVertexArray(VAO);
 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)
