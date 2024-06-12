@@ -7,29 +7,17 @@
   - [unique\_ptr](#unique_ptr)
   - [weak\_ptr](#weak_ptr)
 
-**原生指针的问题**：
+在C++11标准中规定了四个智能指针:std::auto_ptr, std::unique_ptr, std::shared_ptr, 以及std::weak_ptr。它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。
 
-原生指针是一款很强大的工具，但是依据进数十年的经验，可以确定的一点是:稍有不慎，这
-个工具就会反噬它的使用者。
-终于，来解决上述难题的智能指针出现了，智能指针表现起来很像原生指针，它相当于是原
-生指针的一层再包装(wrapper)，但是规避了许多使用原生指针带来的陷阱。你应该尽量使用
-智能指针，它几乎能做到原生指针能做到的所有功能，却很少给你犯错的机会。
-
-在C++11标准中规定了四个智能指针:std::auto_ptr, std::unique_ptr, std::shared_ptr, 以及std::weak_ptr.它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。
-
-指针创建时，申请内存；指针销毁时，释放内存。此外，`shared_ptr`和`unique_ptr`的构造函数都是`explicit`的，即：必须直接使用（new返回的）普通指针直接赋值。
-
-智能指针的API有着显著的区别，他们之间唯一共同的一点功能就是默认的构造方法。
+此外，shared_ptr和unique_ptr的构造函数都是explicit的，即：必须直接使用（new返回的）普通指针直接赋值。
 
 ## shared_ptr
 
-`std::shared_ptr<T>`是一种智能指针，它能够记录多少个`std::shared_ptr<T>`共同指向一个对象，从而消除显式的调用delete，当引用计数变为零的时候就会将对象自动删除。
+std::shared_ptr<>是一种智能指针，它能够记录多少个std::shared_ptr<>共同指向一个对象，从而消除显式的调用delete，当引用计数变为零的时候就会将对象自动删除。
 
 ### make_shared
 
-但还不够，因为使用`std::shared_ptr<T>`仍然需要使用new来调用，这使得代码出现了某种程度上的不对称。
-
-`std::make_shared`就能够用来消除显式的使用new，所以`std::make_shared`会分配创建传入参数中的对象， 并返回这个对象类型的`std::shared_ptr<T>`指针。
+std::make_shared能够用来消除显式的使用new初始化shared_ptr，比如。
 
 ```c++
 // 使用make_shared
@@ -89,20 +77,23 @@ private:
 };
 ```
 
-- `_refCount`应该使用`int*`而不是`int`或`static int`，因为使用`int`修改会很复杂，而使用`static int`则会出现这种情况：
-  - 多个不同的对象使用`SharedPtr`引用，只要不全部析构，则所有对象都不会析构，即：所有类共享了一个`_refCount`。
+- _refCount应该使用int*而不是int或static int，因为使用int修改会很复杂，而使用static int则会出现这种情况：
+  - 多个不同的对象使用SharedPtr引用，只要不全部析构，则所有对象都不会析构，即：所有类共享了一个_refCount。
 - 构造函数有两种：参数为普通指针的和参数为智能指针的。
 - 赋值运算符重载主要分两个步骤实现：
-  - （*this）指针不再指向之前内存区域，所以赋值前`_refCount`要自减；
-  - （*this）指针指向other指针，所以other指针的`_refCount`要自增。
-- 析构函数只有在`_refCount == 0`时，才执行。
+  - （*this）指针不再指向之前内存区域，所以赋值前_refCount要自减；
+  - （*this）指针指向other指针，所以other指针的_refCount要自增。
+- 析构函数只有在_refCount == 0时，才执行。
 
 ## unique_ptr
 
-- The `unique_ptr<>` template holds a pointer to an object and deletes this object when the `unique_ptr<>` object is deleted.
-- 由于`unique_ptr`拥有它指向的对象，因此`unique_ptr`不支持普通的拷贝或赋值操作。
-- 但不能拷贝`unique_ptr`的规则有一个例外：我们可以拷贝或赋值一个将要被消耗的`unique_ptr`。
+- The unique_ptr<> template holds a pointer to an object and deletes this object when the unique_ptr<> object is deleted.
+- 由于unique_ptr拥有它指向的对象，因此unique_ptr不支持普通的拷贝或赋值操作。
+- 但不能拷贝unique_ptr的规则有一个例外：我们可以拷贝或赋值一个将要被消耗的unique_ptr。
 
 ## weak_ptr
 
-`std::weak_ptr` is a smart pointer that holds a non-owning ("weak") reference to an object that is managed by `std::shared_ptr`. It must be converted to `std::shared_ptr` in order to access the referenced object.
+std::weak_ptr是C++11引入的一种智能指针，主要与std::shared_ptr配合使用。它最主要的两个作用是：
+
+- 解决循环引用问题：当两个或多个std::shared_ptr对象互相引用时，会导致循环引用。这种情况下，这些对象的引用计数永远不会变为0，从而导致内存泄漏。std::weak_ptr可以打破这种循环引用，因为它不会增加引用计数。只需要将其中一个对象的std::shared_ptr替换为std::weak_ptr，即可解决循环引用问题。
+- 一切应该不具有对象所有权，又想安全访问对象的情况都应该使用std::weak_ptr进行访问。
