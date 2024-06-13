@@ -178,6 +178,17 @@ int length = str.length(); // 返回13
 /** 转换为大写/小写 */
 String upper = str.toUpperCase(); // "HELLO, WORLD!"
 String lower = str.toLowerCase(); // "hello, world!"
+
+/** 转换成char数组方便修改 */
+char[] s = str.toCharArray();
+
+/** 遍历 */
+for (int i = 0; i < str.length(); i++) {
+  char ch = str.charAt(i)
+}
+for (char ch : str.toCharArray()) {
+  //
+}
 ```
 
 ### Java Array

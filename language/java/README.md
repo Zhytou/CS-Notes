@@ -77,11 +77,21 @@
 
 **内嵌容器**：
 
+- Spring Boot可以内嵌Tomcat、Jetty或Undertow等容器，无需部署WAR包即可以作为独立程序运行。
+
 **Stater依赖**：
+
+- starter原理
+- 特殊的spring-boot-starter-parent
 
 **自动配置**：
 
+- @SpringBootApplication注解
+
 **Spring Boot配置**：
+
+- properties与yaml的区别
+- profile功能
 
 ### Spring Cloud
 
