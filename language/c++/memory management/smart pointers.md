@@ -1,23 +1,89 @@
-# 智能指针
+# Smart Pointer
 
-- [智能指针](#智能指针)
-  - [shared\_ptr](#shared_ptr)
-    - [make\_shared](#make_shared)
-    - [实现自己的shared\_ptr](#实现自己的shared_ptr)
+- [Smart Pointer](#smart-pointer)
+  - [auto\_ptr](#auto_ptr)
   - [unique\_ptr](#unique_ptr)
+  - [shared\_ptr](#shared_ptr)
   - [weak\_ptr](#weak_ptr)
 
-在C++11标准中规定了四个智能指针:std::auto_ptr, std::unique_ptr, std::shared_ptr, 以及std::weak_ptr。它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。
+在C++11标准中规定了四个智能指针std::auto_ptr，std::unique_ptr，std::shared_ptr以及std::weak_ptr。它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。其中，auto_ptr是C++98提出的，C++11已将其摒弃，并提出了unique_ptr替代auto_ptr。而shared_ptr和weak_ptr则是C+11从准标准库Boost中引入的两种智能指针。
 
-此外，shared_ptr和unique_ptr的构造函数都是explicit的，即：必须直接使用（new返回的）普通指针直接赋值。
+总体来说，C++的智能指针能够像原生指针一样工作，因为它重载了解引用运算符和箭头运算符，即`*`和`->`运算符。此外，它还提供了get、release和reset三个函数丰富其功能。
+
+其中，**get**函数用于获取托管资源地址，它会返回一个原生指针。由于智能指针重载了引用运算符和箭头运算符，所以一般情况下都很少使用该函数。而**release**函数则用于取消托管资源，即智能指针不再对该资源进行管理，改由管理员进行管理。
+
+至于**reset**函数则用于重置智能指针托管的内存地址。当为传入地址时，它直接释放掉托管资源；而当传入地址不一致时，它则会先释放掉旧资源，再更新为传入地址。
+
+## auto_ptr
+
+> 尽管auto_ptr已被弃用，但了解其用法仍有意义。它能帮助我们认识到其不足之处以及后续改进手段，从而对整个智能指针技术有更好的认识。
+
+auto_ptr是C++98中引入的第一个智能指针。它在构造时获取原始指针的所有权，在析构时自动释放所管理的对象。它支持拷贝构造和赋值操作，但这两个操作会发生"所有权转移"，即源对象会被置空。由于auto_ptr这种不常用的复制语义，它很难和STL容器配合使用。比如：
+
+```c++
+auto_ptr<int> sp1(new int(42));
+auto_ptr<int> sp2(new int(100));
+// 42 100
+cout << *sp1 << ' ' << *sp2 << endl;
+sp1 = sp2;
+// Segmentation fault，p2为空
+cout << *sp1 << ' ' << *sp2 << endl;
+```
+
+## unique_ptr
+
+unique_ptr是C++11引入的新的独占式(单一所有权)智能指针。相比auto_ptr，它改进了以下几点：
+
+- 禁止了拷贝构造和拷贝赋值，避免了所有权转移的问题。
+- 支持移动构造和移动赋值，即仍保留了auto_ptr抢夺资源所有权的特性，只不过需要程序员显式注明`std::move`，否则编译无法通过。
+- 支持管理数组对象。
+
+**初始化**：
+
+unique_ptr提供了多种赋值方法，总体包括：
+
+```c++
+int* p = new int(42);
+// 使用原生指针赋值
+// 声明时赋值
+unique_ptr<int> sp1(p);
+// reset函数为声明为空的unique_ptr赋值
+unique_ptr<int> sp2;
+sp2.reset(new int(43));
+
+// 使用移动语义赋值
+// 声明时赋值
+unique_ptr<int> sp3(move(sp1));
+// 移动赋值运算符
+unique_ptr<int> sp4;
+sp4 = move(sp2);
+
+// make_unique函数赋值
+unique_ptr<int> sp5 = make_unique<int>(100);
+
+// 值得一提的是，对于同一个原生指针，若赋值给多个unique_ptr则会出错
+// 此外，被抢夺资源后的旧指针不应该在使用，否则就会报错。
+```
 
 ## shared_ptr
 
-std::shared_ptr<>是一种智能指针，它能够记录多少个std::shared_ptr<>共同指向一个对象，从而消除显式的调用delete，当引用计数变为零的时候就会将对象自动删除。
+shared_ptr是C++11引入的另一种智能指针。它和unique_ptr相比实现了共享所有权的概念。多个shared_ptr实例可以指向同一个对象，内部通过引用计数来控制对象的生命周期。当最后一个引用被销毁时，对象的内存也会被自动释放。它的初始化方式和unique_ptr以及auto_ptr类似，比如：
 
-### make_shared
+```c++
+// 使用原生指针初始化
+shared_ptr<int> sp1(new int(123));
 
-std::make_shared能够用来消除显式的使用new初始化shared_ptr，比如。
+// 复制
+shared_ptr<int> sp2 = sp1;
+
+// reset
+shared_ptr<int> sp3;
+sp3.reset(new int(456));
+```
+
+**make_shared**：
+
+此外，shared_ptr也有一个名为make_shared的函数能够用于初始化，比如：
 
 ```c++
 // 使用make_shared
@@ -28,7 +94,7 @@ type *raw = new type(args);
 shared_ptr<type> p(raw); 
 ```
 
-### 实现自己的shared_ptr
+**shared_ptr实现**：
 
 ``` c++
 using namespace std;
@@ -84,12 +150,6 @@ private:
   - （*this）指针不再指向之前内存区域，所以赋值前_refCount要自减；
   - （*this）指针指向other指针，所以other指针的_refCount要自增。
 - 析构函数只有在_refCount == 0时，才执行。
-
-## unique_ptr
-
-- The unique_ptr<> template holds a pointer to an object and deletes this object when the unique_ptr<> object is deleted.
-- 由于unique_ptr拥有它指向的对象，因此unique_ptr不支持普通的拷贝或赋值操作。
-- 但不能拷贝unique_ptr的规则有一个例外：我们可以拷贝或赋值一个将要被消耗的unique_ptr。
 
 ## weak_ptr
 
