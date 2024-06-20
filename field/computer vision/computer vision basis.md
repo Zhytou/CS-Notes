@@ -1,7 +1,7 @@
 # 计算机视觉基础
 
 - [计算机视觉基础](#计算机视觉基础)
-  - [特征检测与描述](#特征检测与描述)
+  - [特征检测与描述 Detector and Descriptor](#特征检测与描述-detector-and-descriptor)
     - [边缘检测](#边缘检测)
       - [边缘检测算子](#边缘检测算子)
       - [滤波器基础](#滤波器基础)
@@ -11,19 +11,25 @@
       - [Harris-Laplace](#harris-laplace)
     - [斑点检测](#斑点检测)
       - [LoG](#log)
-    - [DoG](#dog)
+      - [DoG](#dog)
     - [特征描述](#特征描述)
       - [SIFT](#sift)
       - [SURF](#surf)
-  - [曲线](#曲线)
-    - [曲线拟合与哈夫变换](#曲线拟合与哈夫变换)
+  - [拟合与对齐 Fitting and Alignment](#拟合与对齐-fitting-and-alignment)
+    - [霍夫变换](#霍夫变换)
     - [RANSAC](#ransac)
+    - [应用——图像融合](#应用图像融合)
+  - [分类和识别 Categorization and Object Recognition](#分类和识别-categorization-and-object-recognition)
+    - [聚类分析](#聚类分析)
+    - [语义分割](#语义分割)
+    - [人脸识别](#人脸识别)
+      - [PCA](#pca)
   - [其他](#其他)
     - [连通域分析](#连通域分析)
     - [阈值处理](#阈值处理)
   - [参考](#参考)
 
-## 特征检测与描述
+## 特征检测与描述 Detector and Descriptor
 
 在计算机视觉领域中，常见的[特征](https://en.wikipedia.org/wiki/Feature_(computer_vision))可分为三类，分别是：
 
@@ -129,13 +135,15 @@ Harris角点检测的原理是，使用指定大小的窗口中在图片各个�
 
 ### 斑点检测
 
+斑点是图像中具有一致性特征的区域，这些特征可能是亮度、颜色或者纹理等。一般来说，斑点通常是图像中的局部极值点，即在某个邻域内有显著不同于周围像素的点。斑点检测的目的是找出这些极值点及其所在的区域。
+
 #### LoG
 
-高斯拉普拉斯(Laplacian of Gaussian, LoG)算子首先将图片与高斯核进行卷积以平滑影像，然后应用拉普拉斯算子，斑点在拉普拉斯响应达到显著值的点处被检测出来。
+高斯拉普拉斯(Laplacian of Gaussian, LoG)算子是最常见的斑点检测算法。它首先将图片与高斯核进行卷积以平滑影像，然后应用拉普拉斯算子，斑点在拉普拉斯响应达到显著值的点处被检测出来。
 
-### DoG
+#### DoG
 
-高斯差(Differential of Guassian)算子
+高斯差(Differential of Guassian)算子是一种近似LoG的斑点检测算法。它通过计算两个不同标准差的高斯平滑图像的差值来近似LoG的效果。
 
 ### 特征描述
 
@@ -143,25 +151,58 @@ Harris角点检测的原理是，使用指定大小的窗口中在图片各个�
 
 #### SIFT
 
-尺度不变特征变换(Scale Invariant Feature Transform, SIFT)
+尺度不变特征变换(Scale Invariant Feature Transform, SIFT)是计算机视觉中一种检测、描述和匹配图像局部特征点的方法，通过在不同的尺度空间中检测极值点或特征点 (Conrner Point, Interest Point) ，提取出其位置、尺度和旋转不变量，并生成特征描述子，最后用于图像的特征点匹配。也就是说，和Harris、FAST这类特征点检测算法相比，SIFT算法不仅能够检测还能够描述进而用于后续的匹配操作，比如图像融合等。
+
+**Scale Space**：
+
+尺度空间(Scale Space)
 
 #### SURF
 
-## 曲线
+## 拟合与对齐 Fitting and Alignment
 
-### 曲线拟合与哈夫变换
+> 关于拟合和对齐概念层面更详细的介绍，可以参考UIUC CS 543的[课件](https://courses.engr.illinois.edu/cs543/sp2015/lectures/Lecture%2009%20-%20Fitting%20and%20Registration%20-%20Vision_Spring2015.pdf)。
 
-曲线拟合和哈夫变换常用于从图像中检测特定的几何形状,如直线、圆等。
+拟合和对齐是计算机视觉中两项重要的技术。拟合指的是找到一个模型的参数，使其能够最好的适应数据；而对齐则是找到一个变换的参数，使得匹配的点能够最佳对齐。二者的解决方法类似，都需要设计一个描述相似度的损失函数，并且设计一个优化方式来避免局部最优解，同时确保运算速度足够快。
 
-曲线拟合
-曲线拟合的基本思想是根据一些采样点,利用最小二乘法或其他优化方法估计出最佳拟合曲线的参数方程。对于简单的几何形状,通常可以利用其解析方程进行拟合,如用两点法拟合直线方程、代入圆方程求解半径和圆心坐标等。
+常见的拟合与对齐手段包括：
 
-哈夫变换
-哈夫变换则是通过将图像从图像空间变换到参数空间,使得同一个曲线上的点在参数空间内具有相同的参数值。利用参数空间上的累加器统计每个参数值出现的频率,最大频率处即为所求形状的方程参数。哈夫变换的经典应用是从边缘像素中检测直线和圆形等。
+- 全局优化/参数搜索（Global Optimization / Search for Parameters）：
+  - 最小二乘拟合（Least Squares Fit）：通过最小化误差的平方和来找到最佳拟合参数。
+  - 鲁棒最小二乘（Robust Least Squares）：针对存在噪声和异常值的数据，通过加权最小二乘法或其他鲁棒技术来提高拟合的准确性。
+  - 迭代最近点算法（Iterative Closest Point, ICP）：用于两组点云的对齐，通过反复迭代寻找最近点对，来优化变换参数。
+- 假设与检验（Hypothesize and Test）：
+  - 广义霍夫变换（Generalized Hough Transform）：通过投票机制在参数空间中寻找最佳参数。
+  - 随机抽样一致性（RANSAC）：通过随机抽样和迭代优化找到鲁棒的变换参数。
+
+对于假设和检验方法来说，其具体步骤可分为四步：
+
+- 提出参数（Propose Parameters）：尝试所有可能的参数。每个点对所有一致的参数进行投票。反复采样足够多的点以求解参数。
+- 对参数进行评分（Score the Given Parameters）：计算一致点的数量，并可能根据距离进行加权。
+- 选择参数（Choose from Among the Set of Parameters）：选择得分最高的参数，可以是全局或局部最大值。
+- 参数细化（Possibly Refine Parameters Using Inliers）：使用内点对参数进行进一步优化。
+
+### 霍夫变换
+
+霍夫变换(Hough Transform)则是通过将图像从图像空间变换到参数空间,使得同一个曲线上的点在参数空间内具有相同的参数值。利用参数空间上的累加器统计每个参数值出现的频率,最大频率处即为所求形状的方程参数。哈夫变换的经典应用是从边缘像素中检测直线和圆形等。
 
 ### RANSAC
 
 随机抽样一致算法(Random Sample Consensus, RANSAC)采用迭代的方式从一组包含离群的被观测数据中估算出数学模型的参数。
+
+### 应用——图像融合
+
+图像的对齐和拼接(Image Alignment and Stitching)是模型匹配最重要的应用，
+
+## 分类和识别 Categorization and Object Recognition
+
+### 聚类分析
+
+### 语义分割
+
+### 人脸识别
+
+#### PCA
 
 ## 其他
 
@@ -171,5 +212,6 @@ Harris角点检测的原理是，使用指定大小的窗口中在图片各个�
 
 ## 参考
 
+- [UIUC cs543 Computer Vision](https://courses.engr.illinois.edu/cs543/sp2015/)
 - [Princeton COS 429 - Computer Vision](https://www.cs.princeton.edu/courses/archive/fall17/cos429/cos429.html)
 - [浙江大学计算机视觉](https://qsctech.github.io/zju-icicles/%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/)
