@@ -7,9 +7,14 @@
       - [滤波器基础](#滤波器基础)
       - [Canny算法](#canny算法)
     - [角点检测](#角点检测)
-    - [极值点检测](#极值点检测)
-  - [特征描述](#特征描述)
-    - [SIFT](#sift)
+      - [Harris](#harris)
+      - [Harris-Laplace](#harris-laplace)
+    - [斑点检测](#斑点检测)
+      - [LoG](#log)
+    - [DoG](#dog)
+    - [特征描述](#特征描述)
+      - [SIFT](#sift)
+      - [SURF](#surf)
   - [曲线](#曲线)
     - [曲线拟合与哈夫变换](#曲线拟合与哈夫变换)
     - [RANSAC](#ransac)
@@ -23,7 +28,7 @@
 在计算机视觉领域中，常见的[特征](https://en.wikipedia.org/wiki/Feature_(computer_vision))可分为三类，分别是：
 
 - Edge
-- Corner/Interest Points
+- Corner/Interest Points/Key Points
 - Blob/Region Of Interest Points
 
 ### 边缘检测
@@ -61,28 +66,86 @@
 
 #### Canny算法
 
-尽管使用边缘检测算子得到灰度值梯度之后
+尽管使用边缘检测算子得到灰度值梯度之后，可以直接用其梯度幅度二值化得到边缘二值图像，但是这样做有两个缺点：
 
-由多步骤组成,包括高斯滤波、计算梯度幅值和方向、非极大值抑制、双阈值检测和边缘连接等,是目前公认的最优边缘检测算法。
-不同的边缘检测算子适用于不同的场景。一阶导数算子对噪声有一定抗性,适合检测灰度跳变较大的边缘。二阶导数算子通过求极值点定位边缘位置,适合检测灰度变化平缓的边缘。在实际应用时,需要针对具体问题选择合适的算子并调整参数。
+- 没有充分利用梯度的方向信息；
+- 仅简单使用单阈值进行处理。
+
+因此，Canny边缘检测算法被提出了。它针对上面两个缺点提出了改进，分别是：
+
+- 基于边缘梯度方向的非极大值抑制；
+- 双阈值的滞后阈值处理。
+
+具体来说，Canny算法的步骤为：
+
+- 噪声抑制：在梯度计算之前，Canny算法先进行高斯滤波以平滑图像，有效地减少了噪声对边缘检测的影响。
+- 非极大值抑制：Canny算法在梯度幅值图上进行非极大值抑制，确保边缘的精确定位。简单来说，它会去寻找像素点局部最值。在每一点上，领域中心与沿着其对应的梯度方向的两个像素相比，若中心像素为最大值，则保留；否则中心置0。这样可以抑制非极大值，保留局部梯度最大的点，以细化边缘。
+- 双阈值检测：Canny算法使用双阈值检测来区分强边缘和弱边缘。
+  - 如果某一像素位置的幅值超过高阈值，该像素为强边缘像素，将会被保留。
+  - 如果某一像素位置的幅值小于低阈值，该像素被排除。
+  - 如果某一像素位置的幅值在两个阈值之间，该像素为弱边缘像素，按和强边缘的连通性选择是否保留。
+- 边缘连接：Canny算法根据弱边缘和强边缘的连通性选择是否保留弱边缘。
 
 ### 角点检测
 
-角点可以简单的认为是两条边的交点，比较严格的定义则是在邻域内具有两个主方向的特征点。换句话说，角点的灰度在两个方向上有剧烈变换。
+在计算机视觉领域中，关键点，也被称为兴趣点或角点，是指图像中独特且重要的点或特征。它们的特点是，在任意方向上的一个微小变化造成其灰度的剧烈变化。一般来说，角点通常位于两条或多条边缘的交汇处。
 
-Harris
+#### Harris
 
-### 极值点检测
+**基本原理**：
 
-**LoG**：
+Harris角点检测的原理是，使用指定大小的窗口中在图片各个方向上平移，观察窗口内容的相似程度。其判定方法和示例图如下：
 
-## 特征描述
+- 当沿任意方向窗口内部图像均基本无变化时，判定为Flat；
+- 当且仅当沿某方向窗口内部图像基本无变化时，判定为edge；
+- 当沿任意方向窗口内部图像均发生变化时，判定为Corner。
+
+![flat、edge、corner图例](https://ooo.0o0.ooo/2017/06/28/5953a445031a0.jpg)
+
+**数学推导**：
+
+当站在数学角度进行严格推导时，该算法使用自相关函数去描述平移后窗口w(x, y)内图片I(x, y)的相似程度，其公式如下：$E(u, v)=\Sigma_x\Sigma_yw(x, y)[I(x+u, y+v)-I(x, y)]^2$。
+
+当平移量u和v很小时，可以对E(u, v)进行泰勒展开，其公式如下：$E(u, v)=[I(x, y)+uI_x+vI_y-I(x, y)]^2=u^2I_x^2+v^2I_y^2+2uvI_xI_y$。
+
+对于上述自相关函数E(u, v)，可以进一步对其使用特征分解得到特征值$\lambda_1, \lambda_2$，而使用该特征值进行判定的方法如下图。
+
+![特征值判断方法](https://ooo.0o0.ooo/2017/06/28/5953b3774c2f2.png)
+
+然而在实际运用中，无需具体计算特征值，而使用一个量化指标R去判断。该指标的计算方法如下：$R=det(M)-trace(M)^2$。其中det(M)和trace(M)分别为矩阵M的行列式和迹。
+
+- 当R大于零，且其绝对值很大时，为角点；
+- 当R小于零，且其绝对值也很大时，为边。
+
+**算法特点**：
+
+- 旋转、平移不变性；
+- 图像有偏置时极值点不变；
+- 无尺度不变性。 ——> Solution: Harris-Laplace / SIFT
+
+关于Harris角点检测的详细介绍，可以参考博客[图像特征之Harris角点检测](https://senitco.github.io/2017/06/18/image-feature-harris/)。
+
+#### Harris-Laplace
+
+### 斑点检测
+
+#### LoG
+
+高斯拉普拉斯(Laplacian of Gaussian, LoG)算子首先将图片与高斯核进行卷积以平滑影像，然后应用拉普拉斯算子，斑点在拉普拉斯响应达到显著值的点处被检测出来。
+
+### DoG
+
+高斯差(Differential of Guassian)算子
+
+### 特征描述
 
 > ![What is the difference between feature detectors and feature descriptors?](https://dsp.stackexchange.com/questions/24346/what-is-the-difference-between-feature-detectors-and-feature-descriptors)
 
-### SIFT
+#### SIFT
 
 尺度不变特征变换(Scale Invariant Feature Transform, SIFT)
+
+#### SURF
 
 ## 曲线
 
@@ -108,4 +171,5 @@ Harris
 
 ## 参考
 
-[Princeton COS 429 - Computer Vision](https://www.cs.princeton.edu/courses/archive/fall17/cos429/cos429.html)
+- [Princeton COS 429 - Computer Vision](https://www.cs.princeton.edu/courses/archive/fall17/cos429/cos429.html)
+- [浙江大学计算机视觉](https://qsctech.github.io/zju-icicles/%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/)
