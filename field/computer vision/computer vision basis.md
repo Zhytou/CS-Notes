@@ -21,9 +21,15 @@
       - [霍夫圆变换](#霍夫圆变换)
     - [RANSAC](#ransac)
     - [应用——图像融合](#应用图像融合)
-  - [分类和识别 Categorization and Object Recognition](#分类和识别-categorization-and-object-recognition)
+  - [聚类和分割 Clustering and Segmentation](#聚类和分割-clustering-and-segmentation)
     - [聚类分析](#聚类分析)
-    - [语义分割](#语义分割)
+      - [Hierarchical Clustering](#hierarchical-clustering)
+      - [K-means](#k-means)
+      - [Mean Shift](#mean-shift)
+    - [图像分割](#图像分割)
+      - [居于聚类分析的分割](#居于聚类分析的分割)
+      - [超像素算法](#超像素算法)
+  - [分类和识别 Categorization and Object Recognition](#分类和识别-categorization-and-object-recognition)
     - [人脸识别](#人脸识别)
       - [PCA](#pca)
   - [其他](#其他)
@@ -242,17 +248,86 @@ Harris角点检测的原理是，使用指定大小的窗口中在图片各个�
 
 ### 应用——图像融合
 
-图像的对齐和拼接(Image Alignment and Stitching)是模型匹配最重要的应用，
+图像的对齐和拼接(Image Alignment and Stitching)是模型匹配最重要的应用，它的一般流程是：
 
-## 分类和识别 Categorization and Object Recognition
+- 检测关键点；
+- 建立SIFT描述子；
+- SIFT特征匹配；
+- 根据匹配的特征点对计算变换矩阵；
+- 图像混合。
+
+## 聚类和分割 Clustering and Segmentation
 
 ### 聚类分析
 
-### 语义分割
+聚类分析(Clustering)是一种无监督学习方法，旨在将数据集中的样本划分为若干组（簇），使得同一组内的样本具有较高的相似度，而不同组间的样本差异较大。
+
+#### Hierarchical Clustering
+
+层次性聚类(Hierarchical Clustering)是一种不需要预先指定簇数量的聚类方法，通过构建层次树来表示数据的聚类结构。具体步骤如下：
+
+- 初始化：每个数据点作为一个单独的簇。
+- 合并簇：根据某种距离度量（如最小距离、最大距离、平均距离）合并最相似的两个簇。
+- 迭代：重复步骤2，直到所有数据点被合并到一个簇中。
+
+一般来说，层次性聚类分为两种类型：
+
+- 自底向上（Agglomerative）：从个体开始，不断合并簇。
+- 自顶向下（Divisive）：从整体开始，不断拆分簇。
+
+#### K-means
+
+K-means是一种常见的聚类算法，其核心思想是将数据点分配到K个簇中，使得每个簇内的数据点与该簇的中心（质心）之间的距离平方和最小。具体步骤如下：
+
+- 初始化：随机选择K个质心。
+- 分配数据点：将每个数据点分配到最近的质心所在的簇中。
+- 更新质心：重新计算每个簇的质心。
+- 迭代：重复步骤2和3，直到质心不再发生变化或达到预设的迭代次数。
+
+**KNN vs K-means**：
+
+值得一提的是，KNN算法往往会和K-means算法混淆。因为二者不管是名字，还是实现步骤都非常相似。但两者有一个最显著的区别，就是它们分属监督学习和无监督学习。这也是分类和聚类最主要的区别。对于监督学习中的KNN来说，它根据实现定义好的标准，根据数据特征将其归类到某一类别中，即：数据有标签；而对于无监督学习中的K-means来说，它是直接根据数据的相似性将其分为指定数量的组，其数据是无标签的。
+
+**Bag of Visual Words**：
+
+Bag of Visual Words（BoVW）是一种将图像表示为视觉词袋的方法，如下图所示。
+
+![BoVW](https://customers.pyimagesearch.com/wp-content/uploads/2015/09/bovw_image_example.jpg)
+
+BoVW常用于图像分类和检索任务，因为它能够将图像转化为固定长度的特征向量，方便后续的分类器训练。一般来说，它的生成步骤如下：
+
+- 特征提取：从图像中提取局部特征（如SIFT、SURF）。
+- 词汇生成：通过聚类算法（如K-means）将局部特征聚类为视觉词汇。
+- 直方图表示：将每个图像表示为视觉词汇的直方图，即每个词汇在图像中出现的频率。
+
+![BoVW Workflow](https://kr.mathworks.com/help/vision/ug/bagoffeatures_visualwordsoverview.png)
+
+#### Mean Shift
+
+Mean Shift是一种基于密度的聚类算法，其核心思想是通过迭代移动数据点到高密度区域的均值中心，最终形成簇。具体步骤如下：
+
+- 初始化：对于每个数据点，初始化一个窗口。
+- 计算均值：在窗口内计算所有数据点的均值。
+- 移动窗口：将窗口中心移动到计算出的均值位置。
+- 迭代：重复步骤2和3，直到窗口中心不再发生显著变化。
+
+相比K-means算法，Mean Shift算法的优势是不需要指定簇的数量K，且能够识别任意形状的簇，而不是像K-means倾向生成球形簇。
+
+### 图像分割
+
+#### 居于聚类分析的分割
+
+#### 超像素算法
+
+## 分类和识别 Categorization and Object Recognition
 
 ### 人脸识别
 
+人脸识别是一种重要的计算机视觉任务，涉及从图像中检测并识别个人身份。常见的方法包括主成分分析（PCA）、线性判别分析（LDA）、卷积神经网络（CNN）等。
+
 #### PCA
+
+主成分分析(Principal Component Analysis, PCA)是一种降维技术，旨在通过线性变换将高维数据投影到低维空间，同时尽可能保留数据的方差。在人脸识别中，PCA常用于提取图像的主要特征，以减少计算复杂度并提高识别性能。
 
 ## 其他
 
