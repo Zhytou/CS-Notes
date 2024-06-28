@@ -44,7 +44,7 @@
       - [VJ and HoG+SVM](#vj-and-hogsvm)
       - [DPM](#dpm)
       - [R-CNN](#r-cnn)
-      - [YOLO and SSD](#yolo-and-ssd)
+      - [YOLO](#yolo)
     - [目标追踪](#目标追踪)
       - [光流法](#光流法)
       - [卡尔曼滤波器](#卡尔曼滤波器)
@@ -419,9 +419,7 @@ PCA的主要思想是将n维特征映射到k维上，这k维是全新的正交�
 
 ![基于特征的传统方法流程](https://img-blog.csdnimg.cn/c10b2e7fd04c4ef4bc38d36ae431f0ca.jpeg#pic_center)
 
-2012年之后随着算力及数据的提升，大量的深度学习模型涌现。最开始的模型主要采用的是以RCNN为首的two-stage目标检测模型。但随着移动端对目标检测效率要求的提高，16年之后模型开始往以YOLO为首的one-stage模型发展。但前面两种模型都比较依赖anchor的设定，即预先定义的边界框。这两类一并被称为anchor-based目标检测方法，其特点就是在同一像素点上生成多个不同大小和比例的候选框
-
-因此，为减少anchor对模型的影响，18年以后开始兴起了对以CornerNet为首的anchor-free研究。17年底谷歌推出了Transformers模型，随后在19年开始大火并快速地应用于CV领域。在20年时，Facebook AI团队首次将Transformers模型应用于目标检测领域，开启了目标检测新的研究浪潮。
+2012年之后随着算力及数据的提升，大量的深度学习模型涌现。最开始的模型主要采用的是以RCNN为首的two-stage目标检测模型。但随着移动端对目标检测效率要求的提高，16年之后模型开始往以YOLO为首的one-stage模型发展。但前面两种模型都比较依赖anchor的设定，即预先定义的边界框。为减少anchor对模型的影响，18年以后开始兴起了对以CornerNet为首的anchor-free研究。17年底谷歌推出了Transformers模型，随后在19年开始大火并快速地应用于CV领域。在20年时，Facebook AI团队首次将Transformers模型应用于目标检测领域，开启了目标检测新的研究浪潮。
 
 #### VJ and HoG+SVM
 
@@ -435,17 +433,29 @@ PCA的主要思想是将n维特征映射到k维上，这k维是全新的正交�
 
 #### R-CNN
 
-区域卷积神经网络(Region-CNN, R-CNN)是第一个将深度学习应用到目标检测的算法。它整体上类似基于特征的传统方法，同样是生成提取框，对每个框提取特征、图像分类、非极大值抑制四个步骤进行目标检测。只不过在提取特征这一步，将传统的特征方法(如SIFT、HoG等)换成了深度卷积网络。
+区域卷积神经网络(Region-CNN, R-CNN)是第一个将深度学习应用到目标检测的算法。它整体上类似基于特征的传统方法，同样是生成提取框，对每个框提取特征、图像分类、非极大值抑制四个步骤进行目标检测。只不过在提取特征这一步，将传统的特征方法(如SIFT、HoG等)换成了深度卷积网络。具体来说，R-CNN首先使用Selective Search方法生成大约2000个大小不同的提取框。接着，使用AlexNet对每一个提取框进行特征提取，并将这些提取到的特征交给SVM分类器判断，得到每个区域中每个物品类别的概率。最后，使用非极大值抑制(Non Maximum Suppression, NMS)方法来剔除冗余和重叠的候选区，最终得到每一个类别得分最高一些区域。
 
-具体来说，R-CNN首先使用Selective Search方法生成大约2000个大小不同的提取框。接着，使用AlexNet对每一个提取框进行特征提取，并将这些提取到的特征交给SVM分类器判断，得到每个区域中每个物品类别的概率。最后，使用非极大值抑制(Non Maxium Supperssion, NMS)方法来剔除冗余和重叠的候选区，最终得到每一个类别得分最高一些区域。
+**Region Proposal Algorithm**：
 
-其中，Selective Search是一种候选区域生成方法(Region Proposal Algorithm)
+其中，Selective Search是一种候选区域生成方法(Region Proposal Algorithm)。它结合了穷举搜索和图片分割的优势。它首先使用Felzenszwalb and Huttenlocher的[方法](https://cs.brown.edu/people/pfelzens/papers/seg-ijcv.pdf)快速分割方法生成初始小区域，然后使用贪婪算法根据相似性迭代合并这些小区域，从而生成区域层次结构。除了Selective Search之外，常见的区域生成方法还有区域生成网络(Region Proposal Network, RPN)。它也正是后续Fast RCNN针对RCNN的改进。它使用深度神经网络来生成区域。
 
-后续Fast RCNN则使用(Region Proposal Network, RPN)
+**Non Maximum Suppression**：
 
-#### YOLO and SSD
+非极大值抑制(Non Maximum Suppression, NMS)是一种去除非极大值的算法，在计算机视觉任务中得到了广泛的应用，例如边缘检测、人脸检测、目标检测。尽管它在不同应用中的具体实现不太一样，它的思想都是搜素局部最大值。
 
-YOLO(You Only Look Once)是由Joseph Redmon等人在2015年提出的一种快速、高效的目标检测算法。相比于R-CNN这类二阶段算法，YOLO不需要滑动窗口依次判定而是直接对整张图像进行目标检测和分类，并输出每个目标框的位置和类别概率。
+在目标检测中，NMS算法是用来消除重叠候选区，保留最优提取框的。一般来说，它的计算流程如下：
+
+- 假设有N个框，每个框被分类器计算得到的分数为Si, 1<=i<=N。
+- 建造一个存放待处理候选框的集合H，初始化为包含全部N个框；另建造一个存放最优框的集合M，初始化为空集。
+- 将所有集合H中的框进行排序，选出分数最高的框m，并将其从集合H移到集合M。
+- 遍历集合H中的框，分别与框m计算交并比(Interection-over-union，IoU)，如果高于某个阈值（一般为0~0.5），则认为此框与m重叠，将此框从集合H中去除。
+- 回到第1步进行迭代，直到集合H为空，得到最优框集合M。
+
+#### YOLO
+
+YOLO(You Only Look Once)是由Joseph Redmon等人在2015年提出的一种快速、高效的目标检测算法。相比于R-CNN这类二阶段算法，YOLO不需要像DPM那样使用滑动窗口依次判定或是像R-CNN那样使用Selective Search生成大量候选区，而是直接对整张图像进行目标检测和分类，并输出每个目标框的位置和类别概率。事实上，YOLO并没有去除候选区，只是大大减少了候选区的数量。在[YOLO v1论文](https://arxiv.org/pdf/1506.02640)中，它将图片分成7×7的网格，每个网格允许生成2个候选区，即共98个候选区。
+
+![YOLO v1](https://img-blog.csdnimg.cn/direct/e88d62fe328f4e95bcfd0f35e24e540c.png)
 
 ### 目标追踪
 
