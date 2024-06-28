@@ -40,9 +40,14 @@
       - [SVM](#svm)
       - [决策树](#决策树)
   - [检测和追踪 Detection and Tracking](#检测和追踪-detection-and-tracking)
-    - [DPM](#dpm)
-    - [R-CNN](#r-cnn)
-    - [YOLO and SSD](#yolo-and-ssd)
+    - [目标检测](#目标检测)
+      - [VJ and HoG+SVM](#vj-and-hogsvm)
+      - [DPM](#dpm)
+      - [R-CNN](#r-cnn)
+      - [YOLO and SSD](#yolo-and-ssd)
+    - [目标追踪](#目标追踪)
+      - [光流法](#光流法)
+      - [卡尔曼滤波器](#卡尔曼滤波器)
   - [其他](#其他)
     - [连通域分析](#连通域分析)
     - [阈值处理](#阈值处理)
@@ -402,15 +407,51 @@ PCA的主要思想是将n维特征映射到k维上，这k维是全新的正交�
 
 ## 检测和追踪 Detection and Tracking
 
-不同于物体识别(Object Regconition)，物体检测(Object Detection)并非图片层面。前者只关注一张图片中是否包含某种特定类别物品即可，而后者不仅识别图像中是否存在特定物体，还要确定物体的位置和大小，通常以边界框的形式表示，例如在一张图片中同时检测人、车、猫等。
+不同于目标识别(Object Regconition)，目标检测(Object Detection)并非图片层面。前者只关注一张图片中是否包含某种特定类别物体即可，而后者不仅识别图像中是否存在特定物体，还要确定物体的位置和大小，通常以边界框的形式表示，例如在一张图片中同时检测人、车、猫等。
 
-至于物体追踪(Object Tracking)，则是指在连续的视频帧中跟踪特定物体的过程。换句话说，物体追踪就是连续的物体检测。
+至于目标追踪(Object Tracking)，则是指在连续的视频帧中跟踪特定物体的过程。此外，目标追踪可以在不识别出场景中物品的前提下，仅依靠动作特点识别。关于二者的区别，可以参考Quora的讨论[What is the difference between object detection and object tracking?](https://www.quora.com/What-is-the-difference-between-object-detection-and-object-tracking)。
 
-### DPM
+### 目标检测
 
-### R-CNN
+![时间轴线图](https://img-blog.csdnimg.cn/280feeef699349399f84b3ca40fecb1d.jpeg#pic_center)
 
-### YOLO and SSD
+整个目标检测技术的发展历史如上图所示。这些方法可按2012年AlexNet的出现前后分成传统方法和深度学习方法。其中，传统方法主要分为基于特征和基于分割两类。前者通过诸如Harr、HoG和SIFT等特征来找到目标对象，后者则通过检测边缘或区域来实现。对于基于特征的目标检测方法来说，它大体上可将步骤按下图划分。
+
+![基于特征的传统方法流程](https://img-blog.csdnimg.cn/c10b2e7fd04c4ef4bc38d36ae431f0ca.jpeg#pic_center)
+
+2012年之后随着算力及数据的提升，大量的深度学习模型涌现。最开始的模型主要采用的是以RCNN为首的two-stage目标检测模型。但随着移动端对目标检测效率要求的提高，16年之后模型开始往以YOLO为首的one-stage模型发展。但前面两种模型都比较依赖anchor的设定，即预先定义的边界框。这两类一并被称为anchor-based目标检测方法，其特点就是在同一像素点上生成多个不同大小和比例的候选框
+
+因此，为减少anchor对模型的影响，18年以后开始兴起了对以CornerNet为首的anchor-free研究。17年底谷歌推出了Transformers模型，随后在19年开始大火并快速地应用于CV领域。在20年时，Facebook AI团队首次将Transformers模型应用于目标检测领域，开启了目标检测新的研究浪潮。
+
+#### VJ and HoG+SVM
+
+2004年Paul Viola和MichaelJones在CVPR上发表了一篇跨时代意义的文章《Robust Real-Time Face Detection》，后人将文章中的人脸检测算法称之为VJ算法。它极为有限的计算资源下第一次实现了人脸的实时检测，速度是同期检测算法的几十甚至上百倍，极大程度地推动了人脸检测应用商业化的进程。
+
+具体来说，VJ算法由三个核心步骤组成，即Haar-like特征和积分图、Adaboost分类器和级联分类器。
+
+#### DPM
+
+(Deformable Part Model, DPM)
+
+#### R-CNN
+
+区域卷积神经网络(Region-CNN, R-CNN)是第一个将深度学习应用到目标检测的算法。它整体上类似基于特征的传统方法，同样是生成提取框，对每个框提取特征、图像分类、非极大值抑制四个步骤进行目标检测。只不过在提取特征这一步，将传统的特征方法(如SIFT、HoG等)换成了深度卷积网络。
+
+具体来说，R-CNN首先使用Selective Search方法生成大约2000个大小不同的提取框。接着，使用AlexNet对每一个提取框进行特征提取，并将这些提取到的特征交给SVM分类器判断，得到每个区域中每个物品类别的概率。最后，使用非极大值抑制(Non Maxium Supperssion, NMS)方法来剔除冗余和重叠的候选区，最终得到每一个类别得分最高一些区域。
+
+其中，Selective Search是一种候选区域生成方法(Region Proposal Algorithm)
+
+后续Fast RCNN则使用(Region Proposal Network, RPN)
+
+#### YOLO and SSD
+
+YOLO(You Only Look Once)是由Joseph Redmon等人在2015年提出的一种快速、高效的目标检测算法。相比于R-CNN这类二阶段算法，YOLO不需要滑动窗口依次判定而是直接对整张图像进行目标检测和分类，并输出每个目标框的位置和类别概率。
+
+### 目标追踪
+
+#### 光流法
+
+#### 卡尔曼滤波器
 
 ## 其他
 
