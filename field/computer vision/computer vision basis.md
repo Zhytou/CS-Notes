@@ -46,8 +46,9 @@
       - [R-CNN](#r-cnn)
       - [YOLO](#yolo)
     - [目标追踪](#目标追踪)
-      - [光流法](#光流法)
-      - [卡尔曼滤波器](#卡尔曼滤波器)
+      - [Lucas-Kanade光流法](#lucas-kanade光流法)
+      - [卡尔曼滤波](#卡尔曼滤波)
+      - [核方法](#核方法)
   - [其他](#其他)
     - [连通域分析](#连通域分析)
     - [阈值处理](#阈值处理)
@@ -407,11 +408,9 @@ PCA的主要思想是将n维特征映射到k维上，这k维是全新的正交�
 
 ## 检测和追踪 Detection and Tracking
 
-不同于目标识别(Object Regconition)，目标检测(Object Detection)并非图片层面。前者只关注一张图片中是否包含某种特定类别物体即可，而后者不仅识别图像中是否存在特定物体，还要确定物体的位置和大小，通常以边界框的形式表示，例如在一张图片中同时检测人、车、猫等。
-
-至于目标追踪(Object Tracking)，则是指在连续的视频帧中跟踪特定物体的过程。此外，目标追踪可以在不识别出场景中物品的前提下，仅依靠动作特点识别。关于二者的区别，可以参考Quora的讨论[What is the difference between object detection and object tracking?](https://www.quora.com/What-is-the-difference-between-object-detection-and-object-tracking)。
-
 ### 目标检测
+
+不同于目标识别(Object Regconition)，目标检测(Object Detection)并非图片层面。前者只关注一张图片中是否包含某种特定类别物体即可，而后者不仅识别图像中是否存在特定物体，还要确定物体的位置和大小，通常以边界框的形式表示，例如在一张图片中同时检测人、车、猫等。
 
 ![时间轴线图](https://img-blog.csdnimg.cn/280feeef699349399f84b3ca40fecb1d.jpeg#pic_center)
 
@@ -459,13 +458,49 @@ YOLO(You Only Look Once)是由Joseph Redmon等人在2015年提出的一种快速
 
 ### 目标追踪
 
-#### 光流法
+目标追踪(Object Tracking)是指在连续的视频帧中跟踪特定物体的过程。不同于目标检测，目标追踪可以在不识别出场景中物品的前提下，仅依靠动作特点识别。关于二者的区别，可以参考Quora的讨论[What is the difference between object detection and object tracking?](https://www.quora.com/What-is-the-difference-between-object-detection-and-object-tracking)。
 
-#### 卡尔曼滤波器
+一般来说，目标追踪的方法可分成生成式目标追踪算法(Generative Object Trackinng)和鉴别式目标追踪算法(Discriminative Object Tracking)。前者包括光流法、MeanShift算法等，它们首先建立目标模型或者提取目标特征，在后续帧中进行相似特征搜索，逐步迭代实现目标定位。而后者通过对比目标模型和背景信息的差异，将目标模型提取出来，从而得到当前帧中的目标位置。
+
+#### Lucas-Kanade光流法
+
+Lucas-Kanade光流法实际是通过检测图像像素点的强度随时间的变化进而推断出物体移动速度及方向的方法。它实现依赖三个基本假设：
+
+- 亮度恒定：目标像素的强度在相邻帧发生的变化足够小；
+- 空间一致：相邻像素拥有相似的运动；
+- 时间规律：相邻帧的时间间隔足够短。
+
+#### 卡尔曼滤波
+
+卡尔曼滤波(Kalman Filter)是一种能够对目标的位置进行有效预测的算法。它建立状态方程，将观测数据进行状态输入，对方程参数进行优化。通过对前n帧数据的输入，可以有效地预测第n帧中目标的位置，Kalman 估计也叫最优估计。因此，在目标跟踪过程中，当目标出现遮挡或者消失时，加入Kalman滤波可以有效地解决这种问题。缺点是是Kalman滤波只适合于线性系统，适用范围小。
+
+针对Kalman滤波适用范围小这一问题，人们提出了粒子滤波的方法。粒子滤波的思想源于蒙特卡洛思想，它利用特征点表示概率模型。这种表示方法可以在非线性空间上进行计算，其思想是从后验概率中选取特征表达其分布。最近，人们也提出了改进平方根容积卡尔曼滤波的方法来减小误差，从而实现精准跟踪。
+
+#### 核方法
 
 ## 其他
 
 ### 连通域分析
+
+连通域分析(Connectivity Analysis)是根据指定的起始和终止结点，分析两点之间是否连通；或根据指定多个点，分析多个点之间是否互通。在图像处理领域或计算机视觉领域，连通性分析其实就是寻找具有相同灰度值的相邻像素组成的区域。它可根据连通规则分为4邻域连通和8邻域连通，如下图所示。
+
+![4-connectivity vs 8-connectivity](https://www.researchgate.net/profile/Basem-Elhalawany/publication/351128700/figure/fig3/AS:1061053387526144@1629986249369/The-types-of-connectivity-a-A-4-connectivity-pixel-b-An-8-connectivity-pixel.ppm)
+
+**Two Pass and Flood Fill**：
+
+常见的连通域标记算法包括[Two Pass算法](https://zh.wikipedia.org/zh-cn/%E8%BF%9E%E9%80%9A%E5%88%86%E9%87%8F%E6%A0%87%E8%AE%B0)和[Flood Fill算法](https://zh.wikipedia.org/wiki/Flood_fill)。其中，Two Pass算法正如其名，需要扫描两次图片来完成标记。以使用它做8连通分析为例，它接收一个二值图片作为输入，然后从左至右依次遍历每一个像素。当它遇到灰度值为0的像素时，不做处理；当它遇到灰度值为1的像素时，分析其已被扫描的8邻域像素点，即左边、左上、上和右上这四个方向的像素值：
+
+- 如果这四个方向的值都是0，那么该位置就创建一个新的标号（在原标号上加1）；
+- 如果这四个方向的非0值（即标号）都一样，那么该位置标号就是其领域的非0标号；
+- 如果这四个方向的非0值有两个不同的标号，那么该位置标号就选其中之一，并记录这两个不同的标号（因为这两个标号是连通的，故视为等同的标号）；
+
+完成第一次扫描后，会得到初步标好号的图以及哪些标号是相同的信息。此时，进行第二次扫描，根据连通的标号信息，合并这些相同的标号得到最终结果。
+
+至于Flood Fill算法，它其实就是依次遍历每一个像素，对灰度值为1的像素进行深度优先搜索或广度优先搜索，然后将其标号，并使用额外的一个数组标记这些已被深度优先搜索或广度优先搜索访问的位置。当下次再遍历时，直接跳过即可。依靠这种方法，最终也可以得到一张被标记好连通域的图片。
+
+**Library Support**：
+
+常见的图像处理工具都提供了连通域标记函数，比如python-opencv提供的cv2.connectedComponents函数、scikit-image提供的skimage.measure.label函数、scipy提供的scipy.ndimage.measurements.label等。
 
 ### 阈值处理
 
