@@ -26,7 +26,7 @@
     - [聚类分析](#聚类分析)
       - [Hierarchical Clustering](#hierarchical-clustering)
       - [K-means](#k-means)
-      - [Mean Shift](#mean-shift)
+      - [均值漂移](#均值漂移)
     - [图像分割](#图像分割)
       - [Watershed算法](#watershed算法)
   - [分类和识别 Categorization and Object Recognition](#分类和识别-categorization-and-object-recognition)
@@ -48,7 +48,7 @@
       - [Lucas-Kanade光流法](#lucas-kanade光流法)
       - [卡尔曼滤波](#卡尔曼滤波)
       - [核方法](#核方法)
-      - [其他目标追踪方法](#其他目标追踪方法)
+      - [相关滤波方法](#相关滤波方法)
   - [其他](#其他)
     - [连通域分析](#连通域分析)
     - [阈值处理](#阈值处理)
@@ -348,9 +348,9 @@ BoVW常用于图像分类和检索任务，因为它能够将图像转化为固�
 
 ![BoVW Workflow](https://kr.mathworks.com/help/vision/ug/bagoffeatures_visualwordsoverview.png)
 
-#### Mean Shift
+#### 均值漂移
 
-Mean Shift是一种基于密度的聚类算法，其核心思想是通过迭代移动数据点到高密度区域的均值中心，最终形成簇。具体步骤如下：
+均值漂移(Mean Shift)是一种基于密度的局部最优算法，可用于聚类、图像分割和目标追踪。其核心思想是通过迭代移动数据点到高密度区域的均值中心，最终形成簇。具体步骤如下：
 
 - 初始化：对于每个数据点，初始化一个窗口。
 - 计算均值：在窗口内计算所有数据点的均值。
@@ -476,21 +476,40 @@ YOLO(You Only Look Once)是由Joseph Redmon等人在2015年提出的一种快速
 
 #### Lucas-Kanade光流法
 
-Lucas-Kanade光流法实际是通过检测图像像素点的强度随时间的变化进而推断出物体移动速度及方向的方法。它实现依赖三个基本假设：
+**光流法基本假设**：
 
-- 亮度恒定：目标像素的强度在相邻帧发生的变化足够小；
-- 空间一致：相邻像素拥有相似的运动；
-- 时间规律：相邻帧的时间间隔足够短。
+光流法实际是通过检测视频帧像素点强度随时间的变化进而推断出物体移动速度及方向的方法。它的实现依赖两个最基本假设，分别是：
+
+- 亮度恒定：目标像素的强度在相邻帧发生的变化足够小，近似一致。这意味着如果一个像素在第一帧的位置是(x, y)，在第二帧的位置是I(x+dy, y+dy, t+dt)，那么它在两帧中的亮度应该相同，即：I(x, y, t)=I(x+dy, y+dy, t+dt)。
+- 时间规律：相邻帧的时间间隔足够短。光流假设像素的运动是连续的，即相邻帧之间的光流变化应该是平滑的。
+
+**光流法基本原理**：
+
+根据上述假设，可以将亮度恒定的公式进行泰勒展开，得到$I(x, y, t)=I(x, y, t)+\frac{\partial I}{\partial x}\frac{\partial x}{\partial t}+\frac{\partial I}{\partial y}\frac{\partial y}{\partial t}+\frac{\partial I}{\partial t}+O(\Delta t)$。忽略最后的佩亚诺余项，得到$\frac{\partial I}{\partial x}\frac{\partial x}{\partial t}+\frac{\partial I}{\partial y}\frac{\partial y}{\partial t}+\frac{\partial I}{\partial t}=0$，这就是光流法的约束方程。
+
+将其记为$I_xu+I_yv+I_t=0$，u和v代表两个方向(x方向和y方向)的移动速度，而$I_x, I_y, I_t$则代表了亮度在三个轴上的偏导（也就是梯度）。选择图像中某个特征点，使用上述基本约束方程，求解出其中的u和v，这就是光流法实现目标追踪的本质。其中，$I_x, I_y$可以通过指定位置像素强度之差得出，而$I_t$则可用通过指定位置前后两帧像素强度之差得出。但这仍不足以通过一个方程求出两个变量u和v，可见想要通过光流法实现目标追踪还需引入额外的假设。
+
+**Lucas-Kanade额外假设与计算方法**：
+
+Lucas-Kanade光流法在两个基本假设的基础上，额外添加了一个空间一致的假设，即：相邻像素拥有相似的运动。这意味着如果一个像素移动了，那么它周围的像素也倾向于以相似的速度和方向移动。因此，LK算法可以选择一个大小为m×n的窗口观察光流变化，由此得到m×n个约束等式，即：
+
+![LK约束不等式](../img/computer_vision_LK_optical_flow.png)
+
+因此，整个问题就被转化为，找到一组(u,v)，使其满足$x=\mathop{argmin}\limits_{x}||Ax-b||$。
+
+**孔径问题**：
+
+为了避免$I_x, I_y$其中一项为0，导致u和v中某项无法求解。在追光流的时候，选点通常会选目标的角点。这种因选点不合理，而产生的x或y方向梯度为0的问题也被称为孔径问题。
 
 #### 卡尔曼滤波
 
 卡尔曼滤波(Kalman Filter)是一种能够对目标的位置进行有效预测的算法。它建立状态方程，将观测数据进行状态输入，对方程参数进行优化。通过对前n帧数据的输入，可以有效地预测第n帧中目标的位置，Kalman 估计也叫最优估计。因此，在目标跟踪过程中，当目标出现遮挡或者消失时，加入Kalman滤波可以有效地解决这种问题。缺点是是Kalman滤波只适合于线性系统，适用范围小。
 
-针对Kalman滤波适用范围小这一问题，人们提出了粒子滤波的方法。粒子滤波的思想源于蒙特卡洛思想，它利用特征点表示概率模型。这种表示方法可以在非线性空间上进行计算，其思想是从后验概率中选取特征表达其分布。最近，人们也提出了改进平方根容积卡尔曼滤波的方法来减小误差，从而实现精准跟踪。
+针对Kalman滤波适用范围小这一问题，人们提出了粒子滤波的方法。粒子滤波(Particle Filter)的思想源于蒙特卡洛思想，它利用特征点表示概率模型。这种表示方法可以在非线性空间上进行计算，其思想是从后验概率中选取特征表达其分布。最近，人们也提出了改进平方根容积卡尔曼滤波的方法来减小误差，从而实现精准跟踪。
 
 #### 核方法
 
-#### 其他目标追踪方法
+#### 相关滤波方法
 
 以上介绍的三种方法就是目标追踪最经典的方法
 
@@ -500,7 +519,7 @@ Lucas-Kanade光流法实际是通过检测图像像素点的强度随时间的�
 
 连通域分析(Connectivity Analysis)是根据指定的起始和终止结点，分析两点之间是否连通；或根据指定多个点，分析多个点之间是否互通。在图像处理领域或计算机视觉领域，连通性分析其实就是寻找具有相同灰度值的相邻像素组成的区域。它可根据连通规则分为4邻域连通和8邻域连通，如下图所示。
 
-![4-connectivity vs 8-connectivity](https://www.researchgate.net/profile/Basem-Elhalawany/publication/351128700/figure/fig3/AS:1061053387526144@1629986249369/The-types-of-connectivity-a-A-4-connectivity-pixel-b-An-8-connectivity-pixel.ppm)
+![4-connectivity vs 8-connectivity](../img/computer_vision_connectivity.jpg)
 
 **Two Pass and Flood Fill**：
 
