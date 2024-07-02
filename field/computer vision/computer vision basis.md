@@ -172,7 +172,7 @@ Harris角点检测的原理是，使用指定大小的窗口中在图片各个�
 
 ### 特征描述
 
-> ![What is the difference between feature detectors and feature descriptors?](https://dsp.stackexchange.com/questions/24346/what-is-the-difference-between-feature-detectors-and-feature-descriptors)
+> [What is the difference between feature detectors and feature descriptors?](https://dsp.stackexchange.com/questions/24346/what-is-the-difference-between-feature-detectors-and-feature-descriptors)
 
 #### SIFT
 
@@ -452,13 +452,11 @@ PCA的主要思想是将n维特征映射到k维上，这k维是全新的正交�
 
 #### VJ and HoG+SVM
 
-2004年Paul Viola和MichaelJones在CVPR上发表了一篇跨时代意义的文章《Robust Real-Time Face Detection》，后人将文章中的人脸检测算法称之为VJ算法。它极为有限的计算资源下第一次实现了人脸的实时检测，速度是同期检测算法的几十甚至上百倍，极大程度地推动了人脸检测应用商业化的进程。
-
-具体来说，VJ算法由三个核心步骤组成，即Haar-like特征和积分图、Adaboost分类器和级联分类器。
+2004年Paul Viola和MichaelJones在CVPR上发表了一篇跨时代意义的文章《Robust Real-Time Face Detection》，后人将文章中的人脸检测算法称之为VJ算法。它极为有限的计算资源下第一次实现了人脸的实时检测，速度是同期检测算法的几十甚至上百倍，极大程度地推动了人脸检测应用商业化的进程。具体来说，VJ算法由三个核心步骤组成，即Haar-like特征和积分图、Adaboost分类器和级联分类器。
 
 #### DPM
 
-(Deformable Part Model, DPM)
+基于部件的可变形模型(Deformable Part Model, DPM)是一种常用的基于模型的目标检测方法，它将目标建模为根部和多个部件的结构，能够很好地处理目标形变。
 
 #### R-CNN
 
