@@ -2,6 +2,8 @@
 
 - [位运算](#位运算)
   - [异或](#异或)
+  - [gcc内置位运算函数](#gcc内置位运算函数)
+  - [bitset](#bitset)
   - [参考](#参考)
 
 ## 异或
@@ -46,6 +48,33 @@ public:
 ```
 
 n & (n−1)，其预算结果恰为把 n 的二进制位中的最低位的 1 变为 0 之后的结果。
+
+## gcc内置位运算函数
+
+> 更详细的介绍可以查看GeeksforGeeks的文章[Builtin functions of GCC compiler](https://www.geeksforgeeks.org/builtin-functions-gcc-compiler/)或者GNU的GCC文档[6.63 Other Built-in Functions Provided by GCC](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html)。
+
+- **__builtin_popcount()**：计算传入数字中二进制表示法中1的数量。比如，`__builtin_popcount(4)`结果为1。
+- **__builtin_clz()**：计算整型数字中前导0的数量，其中clz是count leading zero的缩写。比如，`__builtin_clz(16)`结果为27。
+- **__builtin_ctz()**：计算整型数字中尾随0的数量，其中ctz是count trailing zero的缩写。比如，`__builtin_clz(16)`结果为4。
+
+## bitset
+
+位数组(bitset)是C++标准库中的位集合容器，它提供了一种方便操作和存储位级数据的机制。它类似布尔类型的数组，但它每个元素只占一个bit，且大小在编译期确定不能修改。常见操作包括：
+
+```c++
+// 创建bitset
+std::bitset<16> bs;
+// 将所有位设置位1
+bs.set();
+// 重置所有位
+bs.resst();
+// 设置指定位
+bs[2] = 1; //  or bs.set(2);
+// 清除位
+bs.reset(2);
+// 获取位
+bool b = bs[2];
+```
 
 ## 参考
 
