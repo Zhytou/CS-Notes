@@ -56,7 +56,7 @@
 - ARP
 - ICMP
   - Ping/Traceroute
-- IGMP
 - NAT
+- DHCP
 
 ## 链路层
