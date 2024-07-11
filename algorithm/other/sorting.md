@@ -1,20 +1,21 @@
 # 排序
 
 - [排序](#排序)
-  - [基础概念](#基础概念)
-    - [快速排序 quick sort](#快速排序-quick-sort)
-    - [归并排序 merge sort](#归并排序-merge-sort)
-    - [堆排序 heap sort](#堆排序-heap-sort)
-    - [其他排序 other](#其他排序-other)
-  - [经典例题](#经典例题)
-    - [分类](#分类)
-    - [简单题](#简单题)
-    - [中等题](#中等题)
-    - [难题](#难题)
+  - [选择排序 Select Sort](#选择排序-select-sort)
+  - [冒泡排序 Bubble Sort](#冒泡排序-bubble-sort)
+  - [插入排序 Insert Sort](#插入排序-insert-sort)
+  - [快速排序 Quick Sort](#快速排序-quick-sort)
+  - [归并排序 Merge Sort](#归并排序-merge-sort)
+  - [堆排序 Heap Sort](#堆排序-heap-sort)
+  - [希尔排序 Shell Sort](#希尔排序-shell-sort)
 
-## 基础概念
+## 选择排序 Select Sort
 
-### 快速排序 quick sort
+## 冒泡排序 Bubble Sort
+
+## 插入排序 Insert Sort
+
+## 快速排序 Quick Sort
 
 - 简介：
   - 快速排序算法通过多次比较和交换来实现排序
@@ -49,7 +50,7 @@
 
 - 时间复杂度：`O(nlogn)`
 
-### 归并排序 merge sort
+## 归并排序 Merge Sort
 
 - 模板：
 
@@ -68,7 +69,7 @@
 
 - 时间复杂度：`O(nlogn)`
 
-### 堆排序 heap sort
+## 堆排序 Heap Sort
 
 - 简介：
   - 堆排序：是利用堆这种数据结构所设计的一种排序算法
@@ -164,74 +165,4 @@ class priority_queue {
 };
 ```
 
-### 其他排序 other
-
-## 经典例题
-
-### 分类
-
-| 算法     | 题目                                                         |
-| -------- | ------------------------------------------------------------ |
-| 快速排序 |                                                              |
-| 归并排序 | [148 排序链表](https://leetcode-cn.com/problems/sort-list/)  |
-| 堆排序   |                                                              |
-| 冒泡排序 | [969 煎饼排序](https://leetcode-cn.com/problems/pancake-sorting/) |
-
-### 简单题
-
-### 中等题
-
-[148 排序链表](https://leetcode-cn.com/problems/sort-list/)
-
-- 代码：
-
-  ``` c++
-  class Solution {
-  public:
-      ListNode* sortList(ListNode* head) {
-          if (head == nullptr)
-              return head;
-          vector<ListNode*> linkedList;
-          for (auto p = head; p != nullptr; p = p->next) 
-              linkedList.push_back(p);
-          sort(linkedList.begin(), linkedList.end(), [](ListNode* p1, ListNode* p2) {
-              return p1->val < p2->val; 
-          });
-          ListNode* ptr = linkedList[0];
-          for (int i = 1; i < linkedList.size(); i++) {
-              ptr->next = linkedList[i];
-              ptr = ptr->next;
-          }
-          ptr->next = nullptr;
-          return linkedList[0];
-      }
-  };
-  ```
-
-[969 煎饼排序](https://leetcode-cn.com/problems/pancake-sorting/)
-
-- 思路：根据题意，我们可以通过两次煎饼反转把一个元素放到数组尾部，因此我们可以把本题转换为冒泡排序
-
-- 代码：
-
-  ``` c++
-  class Solution {
-  public:
-      vector<int> pancakeSort(vector<int>& arr) {
-          vector<int> ret;
-          for (int n = arr.size(); n > 1; n--) {
-              int index = max_element(arr.begin(), arr.begin() + n) - arr.begin();
-              if (index == n - 1) {
-                  continue;
-              }
-              reverse(arr.begin(), arr.begin() + index + 1);
-              reverse(arr.begin(), arr.begin() + n);
-              ret.push_back(index + 1);
-              ret.push_back(n);
-          }
-          return ret;
-      }
-  };
-  ```
-
-### 难题
+## 希尔排序 Shell Sort
