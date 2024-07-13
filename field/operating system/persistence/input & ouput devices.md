@@ -16,7 +16,7 @@ I/O设备（Input/Output Device）即输入/输出设备，指的是可以与计
 
 我们现在来看一个抽象概念的I/O设备，来帮助我们理解其架构和交互机制。
 
-![图1 标准I/O设备](../img/operating_system_io_device.png)
+![图1 标准I/O设备](../../img/operating_system_io_device.png)
 
 由上图可知，它往往包含两部分组成。第一部分是向上暴露的硬件接口（Hardware Interface），允许上层应用通过该接口来控制它的操作；第二部分是它的内部结构（Internal Structure），负责实现接口展示的功能。它的内部结构通常包含简单的主控芯片、一些通用内存、设备相关的特定芯片以及它ROM上的固件（Firmware），以实现其功能。
 
