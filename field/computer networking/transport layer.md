@@ -12,6 +12,10 @@
     - [拥塞控制](#拥塞控制)
     - [沾包和拆包](#沾包和拆包)
   - [Socket](#socket)
+  - [其他](#其他)
+    - [端口](#端口)
+    - [多路复用](#多路复用)
+    - [TLS/SSL](#tlsssl)
 
 ## UDP
 
@@ -200,3 +204,27 @@ TCP协议是面向字节流的协议。虽然应用程序和TCP的交互是一�
 ## Socket
 
 套接字（Socket）实际是位于传输层和应用层之间的一个编程接口。
+
+## 其他
+
+### 端口
+
+在网络技术中，端口（Port）大致有两种意思：一是物理意义上的端口，比如，USB端口、串行端口等等；二是逻辑意义上的端口，一般是指TCP/IP协议中的端口，端口号的范围从0到65535，比如用于浏览网页服务的80端口，用于FTP服务的21端口等等。
+
+面向连接服务TCP协议和无连接服务UDP协议使用16bits端口号来表示和区别网络中的不同应用程序，网络层协议IP使用特定的协议号（TCP 6，UDP 17）来表示和区别传输层协议。换句话说，TCP和UDP的端口号范围都是0到65535，但是同一时间内同一端口只能被TCP或UDP中的一个使用。下面是一些常见应用的默认端口：
+
+- HTTP (Hypertext Transfer Protocol)：80
+- HTTPS (HTTP Secure)：443
+- FTP (File Transfer Protocol)：20（控制连接），21（数据连接）
+- SSH (Secure Shell)：22
+- SMTP (Simple Mail Transfer Protocol)：25
+- POP3 (Post Office Protocol version 3)：110
+- IMAP (Internet Message Access Protocol)：143
+- DNS (Domain Name System)：53
+- Telnet：23
+- MySQL：3306
+- PostgreSQL：5432
+
+### 多路复用
+
+### TLS/SSL
