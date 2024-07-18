@@ -159,4 +159,3 @@ SELECT * FROM user WHERE zipcode = '431200' AND MONTH(birthdate) = 3;
 覆盖索引优化；
 主键索引最好是自增的；
 防止索引失效；
-前缀索引优化

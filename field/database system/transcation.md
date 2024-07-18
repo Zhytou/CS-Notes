@@ -65,7 +65,7 @@ ACID和BASE是两种不同的数据库事务模型，它们确定数据库组织
 
 **脏读**：事务A读到了事务B未提交的数据。
 
-**不可重复读**：事务A第一次查询得到一行记录row1，事务B提交修改后，事务A第二次查询得到row1，但列内容发生了变化。
+**不可重复读**：事务A第一次查询得到一行记录row1，事务B提交修改后，事务A第二次查询同样得到row1，但列内容发生了变化。
 
 **幻读**：事务A第一次查询得到一行记录row1，事务B提交修改后，事务A第二次查询得到两行记录row1和row2。
 
@@ -159,10 +159,10 @@ MySQL中最重要的日志包括重做日志(redo Log)、回滚日志(undo log)�
 
 **回滚日志的存储**：
 
-一条记录的每一次更新操作产生的 undo log 格式都有一个 roll_pointer 指针和一个 trx_id 事务id：
+一条记录的每一次更新操作产生的undo log格式都有一个roll_pointer指针和一个 trx_id事务id：
 
-- 通过 trx_id 可以知道该记录是被哪个事务修改的；
-- 通过 roll_pointer 指针可以将这些 undo log 串成一个链表，这个链表就被称为版本链，比如。
+- 通过trx_id可以知道该记录是被哪个事务修改的；
+- 通过roll_pointer指针可以将这些undo log串成一个链表，这个链表就被称为版本链，比如。
 
 ![回滚日志版本链](https://cdn.xiaolincoding.com/gh/xiaolincoder/mysql/how_update/%E7%89%88%E6%9C%AC%E9%93%BE.png?image_process=watermark,text_5YWs5LyX5Y-377ya5bCP5p6XY29kaW5n,type_ZnpsdHpoaw,x_10,y_10,g_se,size_20,color_0000CD,t_70,fill_0)
 
