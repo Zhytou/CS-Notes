@@ -5,6 +5,7 @@
     - [回溯](#回溯)
     - [剪枝](#剪枝)
     - [记忆化搜索](#记忆化搜索)
+    - [时间复杂度](#时间复杂度)
   - [题型分类](#题型分类)
     - [子集](#子集)
     - [组合](#组合)
@@ -18,15 +19,60 @@
 
 ### 回溯
 
-回溯算法是一种基于深度优先搜索的算法，用于解决组合优化问题、排列问题、选择问题等。其思想是通过逐步地构建解，当发现当前构建的解不满足问题的约束条件时，就回溯到上一步进行调整，继续尝试其他的可能解，直到找到合适的解或所有可能的解都被尝试。
+回溯算法是一种基于深度优先搜索的算法，用于解决组合优化问题、排列问题、选择问题等。其思想是通过逐步地构建解，当发现当前构建的解不满足问题的约束条件时，就回溯到上一步进行调整，继续尝试其他的可能解，直到找到合适的解或所有可能的解都被尝试。一般来说，回溯问题可以使用选或不选以及选哪个的思路来思考。
 
 ### 剪枝
 
-剪枝(Pruning)是回溯算法中常用的优化技巧，通过提前排除不符合条件的选择，减少搜索的分支，从而提高算法的效率。
+剪枝(Pruning)是回溯算法中常用的优化技巧，通过提前排除不符合条件的选择，减少搜索的分支，从而提高算法的效率。比如说，子集回溯问题中针对重复元素的优化，就可以添加下面的剪枝代码。
+
+```c++
+void backtracking(vector<vector<int>>& res, const vector<int>& nums, vector<int>& subset, int start) {
+  res.push_back(subset);
+  for (int i = start; i < nums.size(); i++) {
+    if (i > start && nums[i-1] == nums[i]) {
+        continue;
+    }
+    subset.push_back(nums[i]);
+    backtracking(res, nums, subset, i + 1);
+    subset.pop_back();
+  }
+}
+```
 
 ### 记忆化搜索
 
 记忆化搜索(Memoization)是回溯算法中的另一种常用技巧，用于避免重复计算，提高算法的效率。记忆化搜索通过保存中间结果，避免重复的计算过程，当需要再次使用相同的结果时，直接从缓存中获取，避免了重复的计算。
+
+简单来说，记忆化搜索就是递归搜索（回溯）+保存中间结果的一种组合手段。它本质上和动态规划的思想是一致的，即找出规模较大的问题和其子问题的关系，将这些子问题的结果保存，以空间换时间的方式简化运算复杂度。只不过，记忆化搜索算是自顶向下解决问题，而动态规划则是自底向上解决问题。
+
+此外，使用记忆化搜索优化的回溯算法，一般不再将回溯结果放在参数，而是以返回值的形式存储。比如，[486 预测赢家](https://leetcode.cn/problems/predict-the-winner/description/)中使用回溯+记忆化搜索的方式解决问题。
+
+```c++
+bool predictTheWinner(vector<int>& nums) {
+    int tot = accumulate(nums.begin(), nums.end(), 0);
+    int n = nums.size();
+    vector<vector<int>> memo(n, vector<int>(n, -1));
+    // 返回在nums[i:j]时，能获取到的最大数字和。
+    function<int(int, int, int)> dfs = [&](int i, int j, int sum) {
+        if (i == j) {
+            return nums[i];
+        }
+        if (j - i == 1) {
+            return max(nums[i], nums[j]);
+        }
+        if (memo[i][j] == -1) {
+            memo[i][j] = sum-min(dfs(i+1, j, sum-nums[i]), dfs(i, j-1, sum-nums[j]));
+        }
+        return memo[i][j];
+    };
+    // 仅当能获取最大数字和大于全部数字总和的一半时，先选者胜利。
+    return 2*dfs(0, n-1, tot) >= tot;
+}
+```
+
+### 时间复杂度
+
+分析回溯问题的时间复杂度，有一个通用公式：路径长度×搜索树的叶子数。比如，子集回溯问题，每个元素无外乎取或不取，因此时间复杂度为O(n×2^n)。而排列回溯问题，叶子节点则有n!个，因此时间复杂度为O(n×n!)。
 
 ## 题型分类
 
@@ -36,6 +82,7 @@
 | 组合     | [组合](https://leetcode-cn.com/problems/combinations/)、[组合总和](https://leetcode-cn.com/problems/combination-sum/)、[组合的总和Ⅱ](https://leetcode-cn.com/problems/combination-sum-ii/) |
 | 排列     | [全排列](https://leetcode-cn.com/problems/permutations/)、[全排列Ⅱ](https://leetcode-cn.com/problems/permutations-ii/)、[字符串的全排列](https://leetcode-cn.com/problems/zi-fu-chuan-de-pai-lie-lcof/)、[字母大小写全排列](https://leetcode-cn.com/problems/letter-case-permutation/)、[活字印刷](https://leetcode.cn/problems/letter-tile-possibilities/description/)|
 | 搜索     | [二进制手表](https://leetcode-cn.com/problems/binary-watch/)、[解数独](https://leetcode-cn.com/problems/sudoku-solver/)、[单词搜索](https://leetcode-cn.com/problems/word-search/)、[N皇后](https://leetcode-cn.com/problems/eight-queens-lcci/)、[分割回文串](https://leetcode-cn.com/problems/palindrome-partitioning/) |
+| 记忆化搜索| [划分为k个相等的子集](https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/description/)、[大礼包](https://leetcode.cn/problems/shopping-offers/description/) |
 
 ### 子集
 
@@ -74,7 +121,7 @@ void backtracking(vector<vector<int>>& res, vector<int>& combination, const int&
 
 ### 排列
 
-![排列](../img/code_backtracking_permute.png)
+![排列](./img/code_backtracking_permute.png)
 
 ``` c++
   void backtracking(vector<vector<int>>& res, vector<int>& permutation, int idx) {
