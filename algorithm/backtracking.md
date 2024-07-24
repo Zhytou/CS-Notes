@@ -70,6 +70,38 @@ bool predictTheWinner(vector<int>& nums) {
 }
 ```
 
+又比如在[526 优美的排列](https://leetcode.cn/problems/beautiful-arrangement/description/)中，使用回溯+记忆化搜索+bitset状态压缩来解决问题。
+
+```c++
+int countArrangement(int n) {
+    unordered_map<bitset<15>, int> memo;
+    function<int(bitset<15>)> dfs = [&](bitset<15> state) {
+        if (state.count() == n) {
+            return 1;
+        }
+        if (memo.count(state)) {
+            return memo[state];
+        }
+        int res = 0;
+        int i = state.count()+1;
+        for (int perm_i = 1; perm_i <= n; perm_i++) {
+            if (state.test(perm_i-1)) {
+                continue;
+            }
+            if (i%perm_i == 0 || perm_i%i == 0) {
+                state.set(perm_i-1);
+                res += dfs(state);
+                state.reset(perm_i-1);
+            }
+        }
+        memo[state] = res;
+        return res;
+    };
+    bitset<15> state;
+    return dfs(state);
+}
+```
+
 ### 时间复杂度
 
 分析回溯问题的时间复杂度，有一个通用公式：路径长度×搜索树的叶子数。比如，子集回溯问题，每个元素无外乎取或不取，因此时间复杂度为O(n×2^n)。而排列回溯问题，叶子节点则有n!个，因此时间复杂度为O(n×n!)。
@@ -82,7 +114,7 @@ bool predictTheWinner(vector<int>& nums) {
 | 组合     | [组合](https://leetcode-cn.com/problems/combinations/)、[组合总和](https://leetcode-cn.com/problems/combination-sum/)、[组合的总和Ⅱ](https://leetcode-cn.com/problems/combination-sum-ii/) |
 | 排列     | [全排列](https://leetcode-cn.com/problems/permutations/)、[全排列Ⅱ](https://leetcode-cn.com/problems/permutations-ii/)、[字符串的全排列](https://leetcode-cn.com/problems/zi-fu-chuan-de-pai-lie-lcof/)、[字母大小写全排列](https://leetcode-cn.com/problems/letter-case-permutation/)、[活字印刷](https://leetcode.cn/problems/letter-tile-possibilities/description/)|
 | 搜索     | [二进制手表](https://leetcode-cn.com/problems/binary-watch/)、[解数独](https://leetcode-cn.com/problems/sudoku-solver/)、[单词搜索](https://leetcode-cn.com/problems/word-search/)、[N皇后](https://leetcode-cn.com/problems/eight-queens-lcci/)、[分割回文串](https://leetcode-cn.com/problems/palindrome-partitioning/) |
-| 记忆化搜索| [划分为k个相等的子集](https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/description/)、[大礼包](https://leetcode.cn/problems/shopping-offers/description/) |
+| 记忆化搜索| [优美的排列](https://leetcode.cn/problems/beautiful-arrangement/description/)、[划分为k个相等的子集](https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/description/)、[大礼包](https://leetcode.cn/problems/shopping-offers/description/)、[求出所有子序列的能量和](https://leetcode.cn/problems/find-the-sum-of-subsequence-powers/description/) |
 
 ### 子集
 
@@ -268,20 +300,7 @@ public:
 
 [79 单词搜索](https://leetcode-cn.com/problems/word-search/)
 
-- 简介：
-
-  - 题目就是要求在二维字符网格中找出一个字符串。
-    - 首先想到的肯定是用深度优先搜索去做，但深度优先搜索却始终迈不过 *[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]] "ABCB"* 的情况，因为深度优先搜索的visited数组是针对全局搜索的，而回溯搜索的visited数组确实针对当前这种策略，它会在**策略失败返回重置visited数组**而深度优先搜索却不可以
-    - 在明确使用回溯搜索解决本问题之后，难度就大大减小了
-
-- 思路：
-
-  - 要点：
-    - 用方向数组 directions 是一种简化搜索代码常规手段，需要记住
-    - visited 数组和整数 x、y 需要在当前回溯策略失败后重置
-  - 流程：略
-
-- 代码：
+题目就是要求在二维字符网格中找出一个字符串。我首先想到的肯定是用深度优先搜索去做，但深度优先搜索却始终迈不过 *[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]] "ABCB"* 的情况，因为深度优先搜索的visited数组是针对全局搜索的，而回溯搜索的visited数组确实针对当前这种策略，它会在**策略失败返回重置visited数组**而深度优先搜索却不可以。因此，本题使用回溯进行搜索。在明确使用回溯搜索解决本问题之后，难度就大大减小了。
 
 ``` c++
 class Solution {
