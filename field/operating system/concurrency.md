@@ -123,6 +123,36 @@ Linux系统中，IPC被分成三大类：
   - 信号量
   - 互斥量（一种特殊的信号量，只有锁定和非锁定两种状态）
 
+**管道 Pipeline**：
+
+管道（Pipeline）是一种用于在两个进程之间传递数据的通信机制。它本质上是两个文件句柄组成的，生产者从一个句柄中写入数据，消费者从另一端读出数据。比如，下面这段代码就是使用管道进行子父进程通信的例子。
+
+```c++
+#include<unistd.h>
+
+int main(int argc, char *argv[]) {
+  int fd[2];
+  if (pipe(fd) == -1) {
+    // 创建管道失败
+  }
+  int pid = fork();
+  if (pid == -1) {
+    // 子进程创建失败
+  }else if (pid == 0) {
+    // 子进程
+    close(pipefd[1]); // 关闭写端
+    read(pipefd[0], buffer, sizeof(buffer)); // 从管道中读取数据
+    printf("Child process received: %s\n", buffer);
+    close(pipefd[0]);
+  } else {
+    // 父进程
+    close(pipefd[0]); // 关闭读端
+    write(pipefd[1], "Hello, child\n", 14); // 向管道中写入数据
+    close(pipefd[1]);
+  }
+}
+```
+
 **套接字 Socket**：
 
 套接字（Socket）是一种Unix系统中进程间通信的机制。它提供了一组标准函数接口，隐藏了器底层实现协议，从而统一了不同的网络编程模型（流式和数据包式、面向连接和无连接、TCP和UDP）。套接字本质上是一个文件描述符（即字节流），允许连接双方向其中写入或读取数据，从而达到通信的目的。它常见的API包括：
@@ -141,6 +171,8 @@ Linux系统中，IPC被分成三大类：
 - 此时，服务器介绍到客户端请求，使用accept得到一个新套接字，先使用recv读取请求，接着使用send发送回复。
 - 接着，客户端使用recv接收到回复，使用close关闭连接。
 - 最后，服务器使用close关闭连接。
+
+关于其更详细的介绍可以查看[这篇笔记](https://github.com/Zhytou/CS-Notes/blob/main/field/computer%20networking/socket.md)。
 
 ### 进程调度 Process Scheduling
 
