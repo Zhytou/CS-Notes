@@ -239,6 +239,12 @@ TCP协议是面向字节流的协议。虽然应用程序和TCP的交互是一�
 
 多路复用（Multiplexing）是一个通信和计算机网络领域的专业术语，表示在一个信道上传输多路信号或数据流的过程和技术。它可根据使用的技术可以分为时分复用（TDM）、频分复用（FDM）、空分复用（SDM）和码分复用（CDM）。
 
+在TCP/UDP协议中，多路复用主要是体现在端口上。具体来说，服务器和客户端一旦建立一个连接之后，不同的应用可以同时在该连接上传输信息，并且用端口来进行区分。
+
+![多路复用和多路分用](https://miro.medium.com/v2/resize:fit:720/format:webp/1*XnpRIJVJWFDpXVW_r1u9_Q.png)
+
+值得注意的是，这一点和I/O模型中I/O复用（select/poll/epoll函数）是不同的。此处的多路复用描述的是传输层协议的一种特征，而I/O复用则是一种在服务端不引入多进程的前提下实现并发API服务的方法。关于I/O模型的具体介绍和编程实战，可以查看这两篇笔记[Socket](https://github.com/Zhytou/CS-Notes/blob/main/field/computer%20networking/socket.md)和[I/O设备](https://github.com/Zhytou/CS-Notes/blob/main/field/operating%20system/persistence/input%20%26%20ouput%20devices.md)
+
 ### TLS/SSL
 
 传输层安全性协议（Transport Layer Security, TLS），前身称为安全套接层（Secure Sockets Layer, SSL）是一种安全协议，目的是为互联网通信提供安全及数据完整性保障。它的优势是与高层的应用层协议（如HTTP、FTP、Telnet等）无耦合。应用层协议能透明地运行在TLS协议之上，由TLS协议进行建立加密通道需要的协商和认证。应用层协议传送的数据在通过TLS协议时都会被加密，从而保证通信的私密性。
