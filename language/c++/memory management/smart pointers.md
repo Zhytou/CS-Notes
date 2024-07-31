@@ -3,8 +3,14 @@
 - [Smart Pointer](#smart-pointer)
   - [auto\_ptr](#auto_ptr)
   - [unique\_ptr](#unique_ptr)
+    - [unique\_ptr初始化](#unique_ptr初始化)
+    - [unique\_ptr和shared\_ptr的差别](#unique_ptr和shared_ptr的差别)
   - [shared\_ptr](#shared_ptr)
+    - [make\_shared](#make_shared)
+    - [shared\_ptr实现](#shared_ptr实现)
+    - [shared\_ptr线程安全性](#shared_ptr线程安全性)
   - [weak\_ptr](#weak_ptr)
+    - [weak\_ptr的使用：lock函数](#weak_ptr的使用lock函数)
 
 在C++11标准中规定了四个智能指针std::auto_ptr，std::unique_ptr，std::shared_ptr以及std::weak_ptr。它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。其中，auto_ptr是C++98提出的，C++11已将其摒弃，并提出了unique_ptr替代auto_ptr。而shared_ptr和weak_ptr则是C+11从准标准库Boost中引入的两种智能指针。
 
@@ -38,7 +44,7 @@ unique_ptr是C++11引入的新的独占式(单一所有权)智能指针。相比
 - 支持移动构造和移动赋值，即仍保留了auto_ptr抢夺资源所有权的特性，只不过需要程序员显式注明`std::move`，否则编译无法通过。
 - 支持管理数组对象。
 
-**初始化**：
+### unique_ptr初始化
 
 unique_ptr提供了多种赋值方法，总体包括：
 
@@ -65,6 +71,12 @@ unique_ptr<int> sp5 = make_unique<int>(100);
 // 此外，被抢夺资源后的旧指针不应该在使用，否则就会报错。
 ```
 
+### unique_ptr和shared_ptr的差别
+
+- 二者都不支持隐式初始化（explicit）。
+- unique_ptr因为限定管理对象所有权，所以不支持拷贝构造和拷贝赋值之外。
+- shared_ptr在管理动态数组的时候，需要指定删除器删除器。（删除器不是shared_ptr类型的组成部分）
+
 ## shared_ptr
 
 shared_ptr是C++11引入的另一种智能指针。它和unique_ptr相比实现了共享所有权的概念。多个shared_ptr实例可以指向同一个对象，内部通过引用计数来控制对象的生命周期。当最后一个引用被销毁时，对象的内存也会被自动释放。它的初始化方式和unique_ptr以及auto_ptr类似，比如：
@@ -81,12 +93,13 @@ shared_ptr<int> sp3;
 sp3.reset(new int(456));
 ```
 
-**make_shared**：
+### make_shared
 
 此外，shared_ptr也有一个名为make_shared的函数能够用于初始化，比如：
 
 ```c++
 // 使用make_shared
+// 注意是直接传参数，而非raw指针，比如make_share<int>(10)就创建了一个指向10的智能指针。
 auto p = make_shared<type>(args); 
 
 // 等价于以下两步操作
@@ -94,7 +107,9 @@ type *raw = new type(args);
 shared_ptr<type> p(raw); 
 ```
 
-**shared_ptr实现**：
+和其他初始化方式相比，std::make_shared 通过单次内存分配同时分配对象和控制块（引用计数），避免了两次内存分配带来的性能开销。且由于其直接创建控制块并将对象的指针保存在其中，可以避免由于对象和控制块分开分配而可能导致的悬空指针问题。
+
+### shared_ptr实现
 
 ``` c++
 using namespace std;
@@ -151,9 +166,52 @@ private:
   - （*this）指针指向other指针，所以other指针的_refCount要自增。
 - 析构函数只有在_refCount == 0时，才执行。
 
+### shared_ptr线程安全性
+
+shared_ptr的线程安全隐患主要涉及以下几个方面：
+
+- 引用计数的加减操作是否线程安全。
+- 修改shared_ptr指向是否线程安全。
+- shared_ptr管理对象的并发操作的安全性，也应该被讨论。
+
+以下是shared_ptr的线程安全性的结论。注意，不涉及它管理的对象的线程安全性。
+
+- 一个shared_ptr对象可以被多个线程同时读取。因为读取操作只涉及到引用计数的增加和减少，而shared_ptr的引用计数又是原子操作，所以保证了在多线程环境下对引用计数的读取操作是线程安全的。
+- 一个shared_ptr对象不可以被多个线程同时写入。因为写操作涉及到引用计数和实际数据指针的修改，这个两个操作是无法做到线程安全的。比如：下面这个例子。
+
+![shared_ptr线程安全性例子](https://i-blog.csdnimg.cn/blog_migrate/f5c4b53e3d22d0023f7bed058b7156cb.png)
+
+关于这一点更多的讨论，可以查看[帖子](https://blog.csdn.net/weixin_42142630/article/details/121165649)。
+
 ## weak_ptr
 
 std::weak_ptr是C++11引入的一种智能指针，主要与std::shared_ptr配合使用。它最主要的两个作用是：
 
 - 解决循环引用问题：当两个或多个std::shared_ptr对象互相引用时，会导致循环引用。这种情况下，这些对象的引用计数永远不会变为0，从而导致内存泄漏。std::weak_ptr可以打破这种循环引用，因为它不会增加引用计数。只需要将其中一个对象的std::shared_ptr替换为std::weak_ptr，即可解决循环引用问题。
 - 一切应该不具有对象所有权，又想安全访问对象的情况都应该使用std::weak_ptr进行访问。
+
+### weak_ptr的使用：lock函数
+
+当我们创建一个weak_ptr时，需要用一个shared_ptr实例来初始化weak_ptr。但由于是弱共享，weak_ptr的创建并不会影响shared_ptr的引用计数值。因此，就可能存在weak_ptr指向的对象被释放掉这种情况。为此，C++标准库给weak_ptr提供了lock和expire函数用于帮助其访问。比如：
+
+```c++
+// lock函数返回一个shared_ptr
+// 若该weak_ptr指向对象已释放，则返回空shared_ptr
+shared_ptr<A> sp(new A());
+weak_ptr<A> wp(sp);
+if (shared_ptr<A> pa = wp.lock()) {
+  cout << pa->a << endl;
+}
+else {
+  cout << "wp指向对象为空" << endl;
+}
+```
+
+除此之外，weak_ptr还提供了expired()函数来判断所指对象是否已经被销毁。比如：
+
+```c++
+shared_ptr<A> sp(new A());
+weak_ptr<A> wp(sp);
+sp.reset(); // 此时sp被销毁
+cout << wp.expired() << endl;  // true表示已被销毁，否则为false
+```
