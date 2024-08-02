@@ -4,10 +4,16 @@
   - [标准I/O设备](#标准io设备)
   - [设备控制器与驱动](#设备控制器与驱动)
   - [轮询](#轮询)
+    - [轮询的流程](#轮询的流程)
   - [中断](#中断)
+    - [信号和软中断](#信号和软中断)
+    - [中断的处理流程](#中断的处理流程)
   - [DMA](#dma)
   - [总线](#总线)
-  - [I/O复用](#io复用)
+  - [I/O模型](#io模型)
+    - [select](#select)
+    - [poll](#poll)
+    - [epoll](#epoll)
   - [参考](#参考)
 
 I/O设备（Input/Output Device）即输入/输出设备，指的是可以与计算机交互的硬件设备。常见的I/O设备有：网卡、硬盘、键盘、鼠标、打印机等。一般来说，I/O设备可以分成字符设备（Character Device）、块设备（Block Device）和网络设备（Network Device）。其中，字符设备一般用于人机交互，比如：键盘、打印机、鼠标等。它们大多是以字符为单位发送和接收数据的。而块设备，一般用于持久化存储，比如：传统硬盘、固态硬盘、USB存储器等。它们大多是以块为单位进行传输的。
@@ -34,7 +40,7 @@ I/O设备（Input/Output Device）即输入/输出设备，指的是可以与计
 
 轮询（Polling）是一种系统与I/O设备交互机制。它描述的是一种系统反复访问设备，来第一时间得到设备就绪信息的机制。
 
-**轮询的流程**：
+### 轮询的流程
 
 - 首先，操作系统通过反复读取图1中设备的状态寄存器，等待设备进入可以接收命令的就绪状态。
 - 其次，操作系统下发数据到数据寄存器。例如，你可以想象如果这是一个磁盘，可能需要多次写入操作，将一个磁盘块传递给设备。如果主CPU参与数据移动，我们就称之为编程的I/O（Programmed I/O，PIO）。
@@ -49,7 +55,7 @@ I/O设备（Input/Output Device）即输入/输出设备，指的是可以与计
 
 一般来说，中断可以分为硬中断和软中断。其中，前者通常与外部事件相关并由硬件或外设产生，比如：时钟中断、I/O设备中断；而后者则是依靠CPU指令产生，比如：Intel CPU定义int等指令。实际上，系统调用就是使用软中断切换到内核态，进而执行相关操作的。
 
-**信号和软中断**：
+### 信号和软中断
 
 信号（Signal）作为进程间通信（InterProcess Communication，IPC）的方式之一，它也常常被当作是一种对中断的软件模拟。那么信号和软中断的关系是什么呢？它是否是依靠中断实现的呢？
 
@@ -57,7 +63,7 @@ I/O设备（Input/Output Device）即输入/输出设备，指的是可以与计
 
 > [知乎 软中断和信号是什么关系？](https://www.zhihu.com/question/33822078)
 
-**中断的处理流程**：
+### 中断的处理流程
 
 有了中断后，CPU不再需要不断轮询设备，而是向设备发出一个请求，然后就可以让对应进程睡眠，切换执行其他任务。当设备完成了自身操作，会抛出一个硬件中断，引发CPU跳转执行操作系统预先定义好的中断处理程序（Interrupt Handler）。
 
@@ -97,7 +103,177 @@ I/O设备（Input/Output Device）即输入/输出设备，指的是可以与计
 
 外部总线，也叫I/O总线，指的就是用于连接CPU和外部I/O设备的总线。
 
-## I/O复用
+## I/O模型
+
+以上是I/O设备的一些主要概念，为了进一步方便程序员理解，操作系统/编程语言等都引入其相应的I/O模型来描述I/O设备在执行其操作时的行为特征。一般来说，一个I/O操作的流程如下：
+
+- I/O调用：应用程序进程向操作系统内核发起调用。
+- I/O执行：操作系统内核完成I/O操作。即内核先等待I/O设备准备好数据，再将其从内核缓冲区拷贝到用户进程缓冲区。
+
+然而，操作系统可能针对不同I/O设备有不同处理机制，比如前面所介绍的轮询和中断机制。站在应用开发者的层面，这些机制包括：
+
+- **阻塞I/O BIO**：即中断机制。应用程序被阻塞（睡眠），直至内核将数据拷贝到用户进程缓存。
+- **非阻塞I/O NIO**：即轮询机制。应用程序不断检查I/O是否完成，直至不再接收到错误信息。
+- **I/O复用**：操作系统提供select/poll/epoll函数。它们可以同时监控多个I/O的操作，任何一个返回内核数据就绪，就通知应用程序去执行。
+- **信号驱动式I/O**：
+- **异步I/O**：
+
+具体来说，I/O复用技术的前提实际上是非阻塞I/O。因为其内部会会遍历集合中的每个文件描述符，判断其是否就绪。而关于就绪这一点，它表示的是套接字满足下述四个条件中任意一条即可。
+
+- 该套接字接受缓冲区中数据字节数大于
+
+### select
+
+```c++
+int select(int nfds, fd_set *restrict readfds, fd_set *restrict writefds, fd_set *restrict errorfds, struct timeval *restrict timeout);
+```
+
+select的函数原型如上所示。其中，nfds是用于指定要监视的文件描述符集合中最大的文件描述符值加1；readfds、writefds和errorfds三个指针分别指定要监视可读事件、可写事件和出错事件的文件描述符集合；tiemout用于指定等待时长。
+
+**fd_set和timeval**：
+
+此外，还需要补充的是fd_set类型以及timeval结构体的使用方法。前者实际是一个无符号整数，用其二进制形式中1的位置来表示已就绪文件符；而后者定义如下：
+
+```c++
+struct timeval {
+  long tv_sec;  //seconds
+  long tv_usec; // miscroseconds
+}
+```
+
+一般来说，通过设置不同的tv_sec和tv_usec的值，可以达成以下三种效果：
+
+- 永远等待下去：将timeout指针设为nullptr；
+- 等待一段固定时间：设置timeval结构体中秒数和微秒数来指定等待时间；
+- 根本不等待：将timeval结构体中秒数和微秒数均设为0.
+
+**select的最大描述符数**：
+
+select函数所能监视的文件描述符最大数目受`<sys/types.h>`中FD_SETSIZE宏大小的影响，目前一般是1024。如果想要增大这个最大值，除了修改这个宏之外，还需要重新编译内核。单单修改这个值是不够的。
+
+**pselect函数**：
+
+pselect函数由POSIX发明。它和select主要有两个区别：
+
+- 使用timespec指定等待时间，最小可精确到纳秒；
+- 增加了第六个参数：一个指向信号掩码的指针。
+
+### poll
+
+和select函数相比，poll函数除了没有最大监测文件符数量限制，几乎没有区别。二者都需要将待检测文件描述符从用户空间复制到内核空间。具体来说，poll函数原型如下：
+
+```c++
+int poll(struct pollfd *fds, unsigned int nfds, int timeout);
+```
+
+其中，fds是一个pollfd结构体类型的数组，表示需要监视的文件描述符；ndfs用于指定fds的大小，即文件描述符的数量；而timeout则用于指定等待毫秒数。同样的，poll函数的timeout同样可以达成三种效果，分别是：
+
+- timeout为负数时，它会无限等待，直到第一个文件描述符就绪发生。
+- timeout为零时，它会立刻轮询一次所有文件描述符，然后返回。
+- timeout为正数时，它则会在指定时间内轮询所有文件描述符，直到超时或文件符就绪才返回。
+
+**pollfd结构体**：
+
+此外，不同于select函数通过传入三个位图readfds、writefds和errorfds来分别指定需要监视的读、写和错误事件，poll函数使用pollfd结构体来表示每个文件描述符需要监视的事件。该结构的定义如下：
+
+```c++
+ struct pollfd {
+  int   fd;         /* file descriptor */
+  short events;     /* requested events */
+  short revents;    /* returned events */
+};
+```
+
+其中，fd代表该文件描述符，而events和revents则分别表示需要监视的事件实际发生的事件。它们的有效值包括：
+
+- POLLIN：有数据可读。
+- POLLRDNORM：有普通数据可读。
+- POLLRDBAND：有优先数据可读。
+- POLLPRI：有紧迫数据可读。
+- POLLOUT：写数据不会导致阻塞。
+- POLLWRNORM：写普通数据不会导致阻塞。
+- POLLWRBAND：写优先数据不会导致阻塞。
+- POLLMSGSIGPOLL：消息可用。
+
+值得注意的是，这些标志并不是互斥的：它们可能被同时设置，表示这个文件描述符的读取和写入操作都会正常返回而不阻塞。除此之外，revents还可能返回下列事件：
+
+- POLLER：指定的文件描述符发生错误。
+- POLLHUP：指定的文件描述符挂起事件。
+- POLLNVAL：指定的文件描述符非法。
+
+### epoll
+
+epoll是对select和poll的改进，它避免了性能开销大（待监视文件描述符从用户空间到内核空间的复制）和文件描述符数量少两个缺点，同时还提供了边缘触发和水平触发两种模式供开发者选择。不光如此，epoll实际使用一组函数来帮助管理文件描述符。
+
+**epoll_create函数**：
+
+epoll_create函数用于创建一个epoll实例。它会返回一个引用该实例的文件描述符，以便其他epoll的API通过该文件描述符操作epoll实例。其函数原型如下。
+
+```c++
+int epoll_create(int size);
+```
+
+其中，参数size用于告诉内核该epoll实例大致会监听的事件数目，而不是类似select中最大监听数量加一。在Linux最新的一些内核版本的实现中，这个size参数甚至没有任何意义。此外，在使用完epoll后，必须调用close(fd)关闭对应的文件描述符，否则可能导致fd被耗尽。
+
+**epoll_ctl函数**：
+
+epoll_ctl函数用于向已经创建好的epoll实例中添加、修改或删除需要监视的文件描述符，其函数原型如下。
+
+```c++
+int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+```
+
+其中，epfd用于指定epoll实例（即epoll_create函数返回的文件描述符）；fd用于指定需要监视的文件描述符；event用于指定需要监听的事件；op用于指定要对fd执行的操作，一般包括：
+
+- EPOLL_CTL_ADD：为fd添加一个监听事件。
+- EPOLL_CTL_MOD：修改已经注册的fd的监听事件。
+- EPOLL_CTL_DEL：删除fd的所有监听事件，这种情况下event参数没用。
+
+此外，epoll_event结构体的定义如下：
+
+```c++
+typedef union epoll_data {
+  void *ptr;
+  int fd;
+  __uint32_t u32;
+  __uint64_t u64;
+} epoll_data_t;
+
+struct epoll_event {
+  __uint32_t events; /* Epoll events */
+  epoll_data_t data; /* User data variable */
+};
+```
+
+**epoll_wait函数**：
+
+epoll_wait函数是epoll模型最核心的函数，功能相当于select和poll。其原型如下：
+
+```c++
+int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+```
+
+其中，epfd即epoll_create返回的文件描述符，指向一个epoll实例；events是一个数组，保存就绪状态的文件描述符，其空间由调用者负责申请；maxevents用于指定最多可保存的就绪文件描述符的大小，即events的最大数量；
+timeout类似于select中的timeout，它同样能达成三种效果：
+
+- timeout为负数时，它会无限等待，直到第一个文件描述符就绪发生。
+- timeout为零时，它会立刻轮询一次所有文件描述符，然后返回。
+- timeout为正数时，它则会在指定时间内轮询所有文件描述符，直到超时或文件符就绪才返回。
+
+此外，该函数的返回值为就绪文件符数量，最大不会超过maxevents。
+
+**epoll的优化原理**：
+
+尽管我们说epoll相比select/poll大大提升了性能，那它具体是怎么做的呢？第一点，也是最关键的一点，epoll不像select/poll需要轮询所有的文件描述符，而是要求内核将已就绪文件描述符放在一个就绪链表中，每次调用epoll_wait函数时就只需判断就绪链表是否为空即可。此外，epoll也不需要像select/poll每次调用都需要将待监视文件描述符从用户态复制到内核态，它只需要使用epoll_ctl函数注册一次即可。
+
+**边缘触发和水平触发**：
+
+epoll支持水平触发和边缘触发，而select/poll仅支持水平触发。
+
+- 水平触发（LT，Level Trigger）：当文件描述符就绪时，会触发通知，如果用户程序没有一次性把数据读/写完，下次还会发出可读/可写信号进行通知。
+- 边缘触发（ET，Edge Trigger）：仅当描述符从未就绪变为就绪时，通知一次，之后不会再通知。
+
+二者相比，边缘触发效率更高。因为它减少了事件被重复触发的次数，函数不会返回大量用户程序可能不需要的文件描述符。
 
 ## 参考
 
