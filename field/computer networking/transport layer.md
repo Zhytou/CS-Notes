@@ -239,11 +239,32 @@ TCP协议是面向字节流的协议。虽然应用程序和TCP的交互是一�
 
 多路复用（Multiplexing）是一个通信和计算机网络领域的专业术语，表示在一个信道上传输多路信号或数据流的过程和技术。它可根据使用的技术可以分为时分复用（TDM）、频分复用（FDM）、空分复用（SDM）和码分复用（CDM）。
 
-在TCP/UDP协议中，多路复用主要是体现在端口上。具体来说，服务器和客户端一旦建立一个连接之后，不同的应用可以同时在该连接上传输信息，并且用端口来进行区分。
+在TCP/UDP协议中，多路复用主要是体现在端口上。具体来说，服务器和客户端一旦建立一个连接之后，不同的应用可以同时在该连接上传输信息，并且用端口来进行区分。具体来说，运输层报文段中的数据交付到正确的套接字的工作称为多路分解，而在源主机中从不同套接字中收集数据块，并为每个数据块封装上首部信息从而生成报文段，然后将报文段传递到网络层，所有这些工作称为多路复用。
 
 ![多路复用和多路分用](https://miro.medium.com/v2/resize:fit:720/format:webp/1*XnpRIJVJWFDpXVW_r1u9_Q.png)
 
-值得注意的是，这一点和I/O模型中I/O复用（select/poll/epoll函数）是不同的。此处的多路复用描述的是传输层协议的一种特征，而I/O复用则是一种在服务端不引入多进程的前提下实现并发API服务的方法。关于I/O模型的具体介绍和编程实战，可以查看这两篇笔记[Socket](https://github.com/Zhytou/CS-Notes/blob/main/field/computer%20networking/socket.md)和[I/O设备](https://github.com/Zhytou/CS-Notes/blob/main/field/operating%20system/persistence/input%20%26%20ouput%20devices.md)
+对于无连接的多路复用来说，也就是UDP多路复用，服务端在使用recvform函数收到客户端发送来的数据之后（返回收到字节数），可以直接在用sendto函数向该socket写入发往客户端的信息。而TCP的多路复用则不同，它的服务端在使用accept函数收到客户端信息之后，会返回一个新socket用于和客户端通信。二者差异具体可由下代码显示：
+
+```c++
+// UDP
+int recvBytes = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&clientAddr, &len);
+if (recvBytes < 0) {
+    std::cerr << "Error receiving data" << std::endl;
+    break;
+}
+// 在buffer中写入信息
+// ...
+// 原样返回给客户端
+sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&clientAddr, len);
+
+// TCP
+clientSocket = accept(serverSocket, (struct sockaddr*) &clientAddr, &clientAddrLen);
+// 发送响应给客户端
+send(clientSocket, response.c_str(), response.size(), 0);
+close(clientSocket);
+```
+
+值得注意的是，这一点和I/O模型中I/O复用（select/poll/epoll函数）是不同的。此处的多路复用描述的是传输层协议的一种特征，而I/O复用则是一种在服务端不引入多进程的前提下实现并发API服务的方法。关于I/O模型的具体介绍和编程实战，可以查看这两篇笔记[Socket](https://github.com/Zhytou/CS-Notes/blob/main/field/computer%20networking/socket.md)和[I/O设备](https://github.com/Zhytou/CS-Notes/blob/main/field/operating%20system/persistence/input%20%26%20ouput%20devices.md)。
 
 ### TLS/SSL
 
