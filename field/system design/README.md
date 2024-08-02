@@ -1,13 +1,9 @@
 # [系统设计](https://github.com/donnemartin/system-design-primer)
 
 - [系统设计](#系统设计)
-  - [系统](#系统)
-    - [分类](#分类)
-      - [集中式系统 Centralized System](#集中式系统-centralized-system)
-      - [去中心化系统 Decentralized System](#去中心化系统-decentralized-system)
-      - [分布式系统 Distributed System](#分布式系统-distributed-system)
+  - [系统分类](#系统分类)
     - [扩展](#扩展)
-  - [系统的设计原则](#系统的设计原则)
+  - [系统的设计原则——CAP理论](#系统的设计原则cap理论)
     - [性能与可扩展性](#性能与可扩展性)
     - [延迟与吞吐量](#延迟与吞吐量)
     - [可用性与一致性](#可用性与一致性)
@@ -19,38 +15,14 @@
     - [可用模式](#可用模式)
       - [故障切换](#故障切换)
       - [复制](#复制)
-  - [重要组件的设计](#重要组件的设计)
+  - [常见系统组件](#常见系统组件)
   - [参考](#参考)
 
-## 系统
+## 系统分类
 
-### 分类
-
-#### 集中式系统 Centralized System
-
-**描述**：
-
-- Centralized systems are systems that use client/server architecture where one or more client nodes are directly connected to a central server.
-
-**实例**：
-
-- 维基百科 Wikipedia
-
-#### 去中心化系统 Decentralized System
-
-**描述**：
-
-- In decentralized systems, every node makes its own decision. The final behavior of the system is the aggregate of the decisions of the individual nodes. Note that there is no single entity that receives and responds to the request.
-
-**实例**：
-
-- 区块链 Blockchain
-
-#### 分布式系统 Distributed System
-
-**描述**：
-
-- In decentralized systems, every node makes its own decision. The final behaviour of the system is the aggregate of the decisions of the individual nodes. Note that there is no single entity that receives and responds to the request.
+- **集中式系统 Centralized System**：Centralized systems are systems that use client/server architecture where one or more client nodes are directly connected to a central server.
+- **去中心化系统 Decentralized System**：In decentralized systems, every node makes its own decision. The final behavior of the system is the aggregate of the decisions of the individual nodes. Note that there is no single entity that receives and responds to the request. For example, blockchain is a decentralized system.
+- **分布式系统 Distributed System**：In decentralized systems, every node makes its own decision. The final behaviour of the system is the aggregate of the decisions of the individual nodes. Note that there is no single entity that receives and responds to the request.
 
 ### 扩展
 
@@ -66,7 +38,7 @@
 
   > Vertical scaling, otherwise known as scaling up, which involves upgrading the hardware of an existing server, usually by adding more RAM or CPU.
 
-## 系统的设计原则
+## 系统的设计原则——CAP理论
 
 - 我们需要对一般性原则有一个基本的认识，知道它们是什么，怎样使用以及权衡利弊。
 
@@ -154,7 +126,7 @@
 
 **主—主复制**：
 
-## 重要组件的设计
+## 常见系统组件
 
 - 域名系统 DNS
 - 内容分发系统 CDN
