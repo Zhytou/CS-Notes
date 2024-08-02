@@ -12,7 +12,7 @@
 
 - 借用阿里云官网的例子，来简单介绍CDN的工作原理。
 
-![CDN流程](../img/cdn_process.jpg)
+![CDN流程](../../img/cdn_process.jpg)
 
 - 假设通过CDN加速的域名为`www.a.com`，接入CDN网络，开始使用加速服务后，当终端用户（北京）发起HTTP请求时，处理流程如下：
   - 当终端用户（北京）向`www.a.com`下的指定资源发起请求时，首先向LDNS（本地DNS）发起域名解析请求。

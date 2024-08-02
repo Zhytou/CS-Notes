@@ -16,7 +16,6 @@
     - [直写模式 Write-Through](#直写模式-write-through)
     - [回写模式 Write-Back](#回写模式-write-back)
     - [刷新模式 Refresh-Ahead](#刷新模式-refresh-ahead)
-  - [缓存一致性](#缓存一致性)
   - [常见问题 Problem](#常见问题-problem)
     - [缓存穿透](#缓存穿透)
     - [缓存击穿](#缓存击穿)
@@ -181,8 +180,6 @@ Set associative mapping is a middle range of design between direct mapping and f
 **缺点**：
 
 - 不能准确预测到未来需要用到的数据可能会导致性能不如不使用刷新。
-
-## 缓存一致性
 
 ## 常见问题 Problem
 

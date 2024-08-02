@@ -1,17 +1,21 @@
-# Communication
+# API
 
-- [Communication](#communication)
+- [API](#api)
   - [RPC](#rpc)
   - [SOAP](#soap)
-  - [REST](#rest)
+  - [RESTful API](#restful-api)
   - [GraphQL](#graphql)
   - [References](#references)
-
-![communication timeline](https://content.altexsoft.com/media/2020/05/word-image-52.png.webp)
 
 ## RPC
 
 远程过程调用（Remote Procedure Call，RPC）是一种允许在不同上下文中远程执行函数的规范。
+
+进程间通信（IPC）是在多任务操作系统或联网的计算机之间运行的程序和进程所用的通信技术。
+其中，进程间通信（IPC）由可按照相互通信的进程是否在同一计算机中分为本地进程调用（LPC）和远场进程调用（RPC）。
+
+序列化 (Serialization)是将对象的状态信息转换为可以存储或传输的形式的过程。
+反序列化（Deserialization）是将可以存储或传输的形式转换为对象的状态信息的过程。
 
 **优势**：
 
@@ -33,7 +37,7 @@
 
 SOAP（Simple Object Access Protocol）是一种基于XML的协议，用于在Web上交换结构化的和面向对象的信息。
 
-## REST
+## RESTful API
 
 表述性状态转移（Representational State Transfer，REST）是一种强制的客户端/服务端架构设计模型，客户端基于服务端管理的一系列资源操作。服务端提供修改或获取资源的接口。所有的通信必须是无状态和可缓存的。
 
