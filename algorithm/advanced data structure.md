@@ -246,7 +246,7 @@ public:
 
 ```c++
 void build(int s, int t, int p) {
-  // 对 [s,t] 区间建立线段树,当前根的编号为 p
+  // 对[s,t]区间建立线段树，当前根的编号为 p
   if (s == t) {
     d[p] = a[s];
     return;
