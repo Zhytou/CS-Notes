@@ -93,9 +93,11 @@ shared_ptr<int> sp3;
 sp3.reset(new int(456));
 ```
 
+除了支持get、release和reset三个函数之外，shared_ptr还提供了一个use_count函数用于查看当前管理对象的引用计数。
+
 ### make_shared
 
-此外，shared_ptr也有一个名为make_shared的函数能够用于初始化，比如：
+shared_ptr还提供了一个名为make_shared的函数用于初始化，它的使用方法如下：
 
 ```c++
 // 使用make_shared
@@ -207,7 +209,7 @@ else {
 }
 ```
 
-除此之外，weak_ptr还提供了expired()函数来判断所指对象是否已经被销毁。比如：
+值得注意的是，如果lock函数返回一个非空shared_ptr，则其引用计数也会加1。除此之外，weak_ptr还提供了expired()函数来判断所指对象是否已经被销毁。比如：
 
 ```c++
 shared_ptr<A> sp(new A());
