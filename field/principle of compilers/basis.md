@@ -40,6 +40,17 @@
 
 内存栅栏是一种硬件指令，用于确保特定的内存操作按照指定的顺序执行，防止编译器和处理器的优化导致数据可见性问题。内存栅栏分为读屏障(Load Barrier)和写屏障(Store Barrier)，可以防止指令重排序。例如，mfence指令在x86架构中用于实现全内存屏障，确保在屏障前后的读写操作按照正确的顺序执行。
 
+**内存栅栏在编程语言中的体现——std::memory_order**：
+
+除此之外，内存栅栏和原子类型同样有一定关联。比如：C++ STL库提供了std::memory_order这个枚举类型来指定std::atomic类操作内存的顺序，而其底层则正是依赖于内存栅栏所实现的。具体来说，std::memory_order包括：
+
+- std::memory_order_relaxed（松散顺序）：不对执行顺序做出任何保证。
+- std::memory_order_consume（消费顺序）：一个载入操作的后续操作（仅限于依赖于该载入操作的结果的操作）不能被重排到该载入操作之前。
+- std::memory_order_acquire（获取顺序）：一个载入操作的后续操作（包括对任何变量的读取和写入）不能被重排到该载入操作之前。
+- std::memory_order_release（释放顺序）：一个存储操作的前序操作（包括对任何变量的读取和写入）不能被重排到该存储操作之后。
+- std::memory_order_acq_rel（获取释放顺序）：同时包含 std::memory_order_acquire 和 std::memory_order_release 的语义。
+- std::memory_order_seq_cst（顺序一致顺序）：除了有 std::memory_order_acq_rel 的语义外，还保证了全局的顺序一致性。
+
 ### 内联函数
 
 内联函数是一种编程技术，它可以在编译器对函数进行调用时将函数的代码直接插入到调用位置，而不是通过函数调用的方式执行。这样可以减少函数调用的开销，提高程序的执行效率。但是如果内联函数逻辑较复杂，则可能会导致代码膨胀，增加程序的体积。因此，对于函数体较小或者频繁调用的函数适合使用内联函数。
@@ -79,7 +90,18 @@
 
 ### RTTI
 
-通过运行时类型信息程序能够使用基类的指针或引用来检查这些指针或引用所指的对象的实际派生类型。
+在C++中，运行时类型信息（Run-Time Type Information, RTTI）是一种特性。它允许程序在运行时获取对象的类型信息。具体来说，主要通过下列两者方式实现：
+
+- **dynamic_cast**用于将基类指针或引用转换为派生类指针或引用。如果转换合法，则返回转换后的指针或引用，否则返回nullptr。
+- **typeid**用于获取对象的类型信息。它返回一个type_info对象，包含了对象的实际类型信息。
+
+**RTTI原理**：
+
+想要搞清楚RTTI背后的原理，首先需要复习虚表的内存分布，因为dynamic_cast的功能就决定了RTTI和虚表多态的紧密联系。关于这一点的详细介绍可以查看[陈皓-虚表解析](https://blog.csdn.net/haoel/article/details/1948051)。
+
+![type info内存分布](https://i-blog.csdnimg.cn/blog_migrate/65206a0cf4a3c9af21289f0e63bbf166.jpeg)
+
+根据上图可知，RTTI的实现依赖于虚表中第一项指向一个type_info类。
 
 ## 参考
 
