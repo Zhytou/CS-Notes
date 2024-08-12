@@ -3,15 +3,11 @@
 - [系统设计](#系统设计)
   - [系统分类](#系统分类)
     - [扩展](#扩展)
-  - [系统的设计原则——CAP理论](#系统的设计原则cap理论)
+  - [系统的设计原则](#系统的设计原则)
     - [性能与可扩展性](#性能与可扩展性)
     - [延迟与吞吐量](#延迟与吞吐量)
-    - [可用性与一致性](#可用性与一致性)
-      - [CAP 理论](#cap-理论)
+    - [可用性与一致性——CAP理论](#可用性与一致性cap理论)
     - [一致性模式](#一致性模式)
-      - [弱一致性](#弱一致性)
-      - [最终一致性](#最终一致性)
-      - [强一致性](#强一致性)
     - [可用模式](#可用模式)
       - [故障切换](#故障切换)
       - [复制](#复制)
@@ -26,44 +22,31 @@
 
 ### 扩展
 
-**水平扩展 Scaling Out**：
+> [Understanding Database Sharding](https://www.digitalocean.com/community/tutorials/understanding-database-sharding#benefits-of-sharding)
 
-- [Understanding Database Sharding](https://www.digitalocean.com/community/tutorials/understanding-database-sharding#benefits-of-sharding)
+**水平扩展 Scaling Out**：Horizontal scaling also konw as scaling out is the practice of adding more machines to an existing stack in order to spread out the load and allow for more traffic and faster processing.
 
-  > Horizontal scaling also konw as scaling out is the practice of adding more machines to an existing stack in order to spread out the load and allow for more traffic and faster processing.
+**垂直扩展 Scaling Up**：Vertical scaling, otherwise known as scaling up, which involves upgrading the hardware of an existing server, usually by adding more RAM or CPU.
 
-**垂直扩展 Scaling Up**：
-
-- [Understanding Database Sharding](https://www.digitalocean.com/community/tutorials/understanding-database-sharding#benefits-of-sharding)
-
-  > Vertical scaling, otherwise known as scaling up, which involves upgrading the hardware of an existing server, usually by adding more RAM or CPU.
-
-## 系统的设计原则——CAP理论
-
-- 我们需要对一般性原则有一个基本的认识，知道它们是什么，怎样使用以及权衡利弊。
+## 系统的设计原则
 
 ### 性能与可扩展性
 
-- 如果服务**性能**的增长与资源的增加是成比例的，服务就是可扩展的。通常，提高性能意味着服务于更多的工作单元，另一方面，当数据集增长时，同样也可以处理更大的工作单位。
-- 另一个角度来看待性能与可扩展性:
-  - 如果你的系统有**性能**问题，对于单个用户来说是缓慢的。
-  - 如果你的系统有**可扩展性**问题，单个用户较快但在高负载下会变慢。
+如果服务**性能**的增长与资源的增加是成比例的，服务就是可扩展的。通常，提高性能意味着服务于更多的工作单元，另一方面，当数据集增长时，同样也可以处理更大的工作单位。从另一个角度来看，如果系统有**性能**问题，对于单个用户来说是缓慢的；而如果系统有**可扩展性**问题，单个用户较快但在高负载下会变慢。
 
 ### 延迟与吞吐量
 
-- **延迟**是执行操作或运算结果所花费的时间。
-- **吞吐量**是单位时间内（执行）此类操作或运算的数量。
-- 通常，你应该以**可接受级延迟**下**最大化吞吐量**为目标。
+**延迟**是执行操作或运算结果所花费的时间，而**吞吐量**是单位时间内（执行）此类操作或运算的数量。通常，系统设计应该以**可接受级延迟**下**最大化吞吐量**为目标。
 
-### 可用性与一致性
+### 可用性与一致性——CAP理论
 
-#### CAP 理论
+在一个分布式计算系统中，只能同时满足下列的两点:
 
-- 在一个分布式计算系统中，只能同时满足下列的两点:
-  - **一致性** ─ 每次访问都能获得最新数据但可能会收到错误响应
-  - **可用性** ─ 每次访问都能收到非错响应，但不保证获取到最新数据
-  - **分区容错性** ─ 在任意分区网络故障的情况下系统仍能继续运行
-- ==因为分布式系统依赖网络通信，但网络并不可靠，所以你应要支持分区容错性 P ，并需要在软件可用性 A 和一致性 C 间做出取舍==。
+- **一致性** ─ 每次访问都能获得最新数据但可能会收到错误响应
+- **可用性** ─ 每次访问都能收到非错响应，但不保证获取到最新数据
+- **分区容错性** ─ 在任意分区网络故障的情况下系统仍能继续运行
+
+因为分布式系统依赖网络通信，但网络并不可靠，所以你应要支持分区容错性 P ，并需要在软件可用性 A 和一致性 C 间做出取舍==。
 
 **CP 一致性和分区容错性**：
 
@@ -78,22 +61,11 @@
 
 ### 一致性模式
 
-- 有同一份数据的多份副本，我们面临着怎样同步它们的选择，以便让客户端有一致的显示数据。
+**弱一致性**：在弱一致性模式下，读取数据可能看到刚写入的数据，也可能看不到。可见，这种模式会尽力优化让系统能访问最新数据。
 
-#### 弱一致性
+**最终一致性**：在最终一致性模式下，写入数据后，访问最终能看到写入数据（通常在数毫秒内）。即，写入数据被异步复制。DNS和Email等系统均使用此种方式。可见，最终一致性在高可用性系统中效果不错。
 
-- 在写入之后，访问可能看到，也可能看不到（写入数据）。尽力优化之让其能访问最新数据。
-- 这种方式可以 memcached 等系统中看到。弱一致性在 VoIP，视频聊天和实时多人游戏等真实用例中表现不错。打个比方，如果你在通话中丢失信号几秒钟时间，当重新连接时你是听不到这几秒钟所说的话的。
-
-#### 最终一致性
-
-- 在写入后，访问最终能看到写入数据（通常在数毫秒内）。数据被异步复制。
-- DNS 和 email 等系统使用的是此种方式。最终一致性在高可用性系统中效果不错。
-
-#### 强一致性
-
-- 在写入后，访问立即可见。数据被同步复制。
-- 文件系统和关系型数据库（RDBMS）中使用的是此种方式。强一致性在需要记录的系统中运作良好。
+**强一致性**：在强一致性，写入数据后，访问立即可见。即，数据被同步复制。文件系统和关系型数据库（RDBMS）中常使用这种模式。可见，强一致性在需要记录的系统中运作良好。
 
 ### 可用模式
 
@@ -119,12 +91,6 @@
 - 如果新写入数据在能被复制到备用系统之前，工作系统出现了故障，则有可能会丢失数据。
 
 #### 复制
-
-- 这一个话题可以参考数据库目录
-
-**主—从复制**：
-
-**主—主复制**：
 
 ## 常见系统组件
 
