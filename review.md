@@ -224,3 +224,107 @@ auto f3 = [=]() {
 49、一个类，设计一个成员函数，返回一个shared_ptr的智能指针，指针指向自己。
 
 enable_shared_from_this
+
+50、shared_ptr使用和不用make_shared初始化的区别
+
+```c++
+shared_ptr<int> p1 = make_shared<int>(10);
+
+int* p = new int(10);
+shared_ptr<int> p2(p);
+```
+
+51、当模板函数和普通函数重命名时，调用该函数会发生什么？编译会报错吗？
+
+```c++
+template<class T>
+void func(T t) {
+    cout << "template func " <<  t << endl;
+}
+
+void func(int t) {
+    cout << "normal func " <<  t << endl;
+}
+
+int main() {
+    func(1);
+}
+```
+
+上述代码编译会通过，执行后输出normal func 1。
+
+52、atomic的实现原理？
+
+53、C++ memory_order是什么？
+
+54、自旋锁
+
+55、dynamic_cast背后的原理（RTTI）
+
+56、inline函数必须定义在头文件里吗？
+
+是的，特别是如果一个inline会在多个源文件中被用到，那么必须把它定义在头文件中。因为内联的目的就是在编译期让编译器把使用函数的地方直接替换掉，而不是像普通函数一样通过链接器把地址链接上。这种情况，如果定义没有在头文件的话，编译器是无法进行函数替换的。
+
+57、头文件中可以放哪些东西的定义？
+
+一般来说，头文件中变量和函数的声明，而不要放定义进去。否则就会有重复定义的错误出现。但是有几种情况是例外的：
+
+- 内联函数的定义
+- 类（class）的定义
+- const 和 static 变量
+
+58、QT信号和槽函数的底层原理
+
+Qt信号和槽是一种用于实现对象间通信的机制。在接收对象中定义好槽函数之后，就可以使用connect将二者绑定起来。比如：
+
+```c++
+QSlider* sld = new QSlider();
+sld->setOrientation(Qt::Horizontal);
+connect(sld, &QSlider::valueChanged, this, [this](int x) {
+    // ...
+});
+```
+
+此外，除了使用Qt组件中原生信号之外，还可以自定义信号。比如：
+
+```c++
+class XXX : public QObject {
+    Q_OBJECT // 必须包含这一行，用于启用元对象系统
+
+public:
+    explicit XXX(QObject *parent = nullptr);
+
+signals:
+    void xxx(int value); // 声明一个带整型参数的自定义信号
+};
+```
+
+当需要发出信号时，使用emit关键字加上信号名和参数列表来触发信号。例如：
+
+```c++
+emit xxx(42); // 发出自定义信号，并传递整数值42
+```
+
+本质上，信号槽是一种事件驱动的机制。通过信号和槽的连接，当信号被触发时，槽函数会被自动调用，从而实现对象间的通信和交互。
+
+具体来说，信号和槽都是特殊的函数。前者用于表示某种事件的发生，当事件发生时，信号会被自动发送出去，通知所有连接到该信号的槽函数。而后者用于处理信号的触发事件，当槽函数被连接到某个信号时，当该信号被触发时，槽函数会自动被调用，从而实现对信号的响应。
+
+至于，信号和槽的连接是通过Qt的元对象系统实现的，每个QObject派生类都有一个元对象，用于存储该类的属性、方法和信号槽信息。通过元对象系统，可以在运行时动态地连接信号和槽，从而实现对象间的通信。 总之，Qt信号和槽是一种事件驱动的机制，通过信号和槽的连接，实现了对象间的通信和交互。
+
+59、Qt的元对象系统是什么？和C++ RTTI有什么关系？
+
+Qt的元对象系统(Qt Meta Object System)提供了以下三样基础设施：
+
+- QObject类，作为每一个需要利用元对象系统的类的基类。也就是说只有继承QObject类才能使用MOS。
+- Q_OBJECT宏，定义在每一个类的私有数据段，用来启用元对象功能，比如，动态属性、信号和槽。
+- 元对象编译器moc（Meta Object Compiler），如果一个头文件中包含Q_OBJECT宏定义，moc就会将该文件编译成C++源文件。
+
+继承于QObject的自定义对象除了能够获得信号槽带来的通讯机制之外，还获得了以下能力：
+
+- QObject::metaObject()方法，获得与一个类相关联的meta-object。
+- QMetaObject::className()方法，在运行期间返回一个对象的类名，不需要本地C++编译器的RTTI（run time type information）支持。
+- QObject::inherits()方法，用来判断一个对象的类是不是从一个特定的类继承而来。
+
+换句话说，Qt的元对象系统就是独立于RTTI，用于提供对象的元数据（如信号和槽、属性、动态属性等）和运行时类型信息，所实现的一套C++扩展机制。
+
+60、ffmpeg
