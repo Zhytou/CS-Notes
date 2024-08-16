@@ -97,13 +97,12 @@
 
 **RTTI原理**：
 
-想要搞清楚RTTI背后的原理，首先需要复习虚表的内存分布，因为dynamic_cast的功能就决定了RTTI和虚表多态的紧密联系。关于这一点的详细介绍可以查看[陈皓-虚表解析](https://blog.csdn.net/haoel/article/details/1948051)。
+想要搞清楚RTTI背后的原理，就需要搞清楚虚表的内存分布。因为dynamic_cast的功能就决定了RTTI和虚表的紧密联系。详细介绍可以查看[知乎-c++ vtable 内存布局](https://www.zhihu.com/search?type=content&q=c%2B%2B%20vtable%20%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80)。
 
-![type info内存分布](https://i-blog.csdnimg.cn/blog_migrate/65206a0cf4a3c9af21289f0e63bbf166.jpeg)
-
-根据上图可知，RTTI的实现依赖于虚表中第一项指向一个type_info类。
+简单来说，就是从对象的vptr获取对象的真实类型信息，检查目标类型是否位于对象的类型信息层次结构中。如果目标类型是对象的真实类型或其基类，则转型成功；否则失败。
 
 ## 参考
 
 - [stack over flow - JIT vs Interpreters](https://stackoverflow.com/questions/3718024/jit-vs-interpreters)
 - [编译优化，编译器到底做了什么？](https://juejin.cn/post/6933180767656738824)
+- [陈皓-虚表解析](https://blog.csdn.net/haoel/article/details/1948051)。

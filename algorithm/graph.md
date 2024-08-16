@@ -6,7 +6,7 @@
     - [遍历](#遍历)
     - [拓扑排序](#拓扑排序)
     - [最短路径](#最短路径)
-    - [图合并](#图合并)
+    - [连通性](#连通性)
     - [最小生成树](#最小生成树)
   - [经典题目](#经典题目)
     - [分类](#分类)
@@ -103,7 +103,7 @@ void bfs (const vector<vector<int>>& adj) {
 
 **双向广度优先遍历Bidirectional Breadth First Search**：
 
-当起点和终点已知时，使用BBFS可以提高搜索效率，避免算法超时，比如[127 单词接龙](https://leetcode.cn/problems/word-ladder/description)和[752 打开转盘锁](https://leetcode.cn/problems/open-the-lock/description/)都可以使用BBFS。
+当起点和终点已知时，使用BBFS可以提高搜索效率，避免算法超时，比如[127 单词接龙](https://leetcode.cn/problems/word-ladder/description)和[752 打开转盘锁](https://leetcode.cn/problems/open-the-lock/description/)都可以使用BBFS。值得注意的是，BBFS中使用那一头的进行搜索的条件很关键。即：`q1.size() <= q2.size()`时，搜索q1；反之搜索q2.如果不注意的话，可能会出现错误。
 
 ```c++
 void bbfs(const vector<vector<int>>& adj, int s, int t) {
@@ -334,7 +334,7 @@ A*算法同样是一种用于求解图中最短路径问题的算法。它综合
 
 关于A星算法更详细的介绍可以查看这篇[博客](https://paul.pub/a-star-algorithm/)。
 
-### 图合并
+### 连通性
 
 **并查集 Unionset**：
 
@@ -395,6 +395,31 @@ bool UnionSet::merge(int index1,int index2){
     }
     count--;
     return true;
+}
+```
+
+**Tarjan**：
+
+Tarjan是一种用于在图中查找强连通分量的算法。而所谓的强连通性分量则是指图中的一个子图，其中任意两个节点都可以互相到达。[1192 查找集群中的关键连接](https://leetcode.cn/problems/critical-connections-in-a-network/description/)就是该算法的一到典型例题。
+
+Tarjan的本质是基于深度优先搜索的算法，不过它额外定义DFN和LOW两个数组，用于帮助判断每个节点属于哪个强连通分量。其中，DFN(u)为节点u搜索的次序编号(时间戳)；而LOW(u)则为u或u的子树能够追溯到的最早的栈中节点的次序号。由此可以得出，当DFN(u)=LOW(u)时，以u为根的搜索子树上所有节点是一个强连通分量。该算法伪代码如下：
+
+```c++
+tarjan(u){
+  DFN[u]=LOW[u]=++Index                      // (1) 为节点u设定次序编号和Low初值
+  Stack.push(u)                              // (2) 将节点u压入栈中
+  for each (u, v) in E                       // (3) 枚举每一条边
+    if (v is not visted)                     // (4) 如果节点v未被访问过
+      tarjan(v)                              // (5) 继续向下找
+      LOW[u] = min(LOW[u], LOW[v])           // (6) 
+    else if (v in Stack)                     // (7) 如果节点v还在栈内
+      LOW[u] = min(LOW[u], DFN[v])           // (8)
+
+  if (DFN[u] == LOW[u])                      // (9) 如果节点u是强连通分量的根
+    repeat                                   // (10) 循环出栈,直到u=v
+      v = Stack.pop                          // (11) 将v退栈，为该强连通分量中一个顶点
+      print v                                // (12) 输出v
+    until (u == v)                           // (13) 循环终止条件u=v  
 }
 ```
 

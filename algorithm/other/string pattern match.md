@@ -13,6 +13,8 @@
 
 然而，暴力算法的时间复杂度较高。为了更高效地解决字符串匹配问题，Knuth、Morris和Pratt在1977年提出了KMP算法。KMP算法通过构建模式串的前缀表，在匹配过程中可以跳过一些不可能匹配的位置，从而提高匹配效率。
 
+**KMP原理**：
+
 具体来说，暴力匹配的问题在于它一次只能将子串T整个后移一位，再从头逐个比较。这样做虽然可行，但是效率很差，因为你要把"搜索位置"移到已经比较过的位置，重比一遍。而KMP算法改进了这一点，它通过提前建立子串T的部分匹配表(Partial Match Table)来跳过一些不可能匹配的位置。比如，主串为"BBC ABCDAB ABCDABCDABDE"，而子串为"ABCDABD"。
 
 首先，建立它的部分匹配表如下图。
@@ -36,6 +38,33 @@
 - "ABCDA"的前缀为[A, AB, ABC, ABCD]，后缀为[BCDA, CDA, DA, A]，共有元素为"A"，长度为1；
 - "ABCDAB"的前缀为[A, AB, ABC, ABCD, ABCDA]，后缀为[BCDAB, CDAB, DAB, AB, B]，共有元素为"AB"，长度为2；
 - "ABCDABD"的前缀为[A, AB, ABC, ABCD, ABCDA, ABCDAB]，后缀为[BCDABD, CDABD, DABD, ABD, BD, D]，共有元素的长度为0。
+
+**KMP实现**：
+
+[leetcode strstr题解](https://leetcode.cn/problems/find-the-index-of-the-first-occurrence-in-a-string/solutions/2600821/kan-bu-dong-ni-da-wo-kmp-suan-fa-chao-qi-z1y0/)中详细介绍了部分匹配表的O(n)计算方式。
+
+```c++
+int strStr(string s, string p) {
+    vector<int> next(p.size() + 1, 0);  // 部分匹配表
+    vector<int> res; // res数组:记录p在s中出现的位置下标
+    for(int j = 2, i = 0; j <= p.size(); j++) {   // 求next数组过程
+        while(i > 0 && p[j - 1] != p[i]) i = next[i];
+        if(p[j - 1] == p[i]) i++;
+        next[j] = i;
+    }
+    for(int i = 0, j = 0; i < s.size(); i++) {   // p和s匹配的过程
+        while(j > 0 && s[i] != p[j]) j = next[j];
+        if(s[i] == p[j]) j++;
+        if(j == p.size()) {  // 如果找到了一个匹配的位置
+            res.push_back(i - j + 1);   // 记录结果
+            j = next[j];
+        }
+    }
+    if(res.size() > 0)
+        return res[0];  // 题目要求返回第一个出现的位置
+    return -1;
+}
+```
 
 ## Boyer–Moore算法
 
