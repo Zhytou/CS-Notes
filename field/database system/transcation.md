@@ -45,7 +45,7 @@ ACID和BASE是两种不同的数据库事务模型，它们确定数据库组织
 
 **持久性 Durability**：持久性意味着当系统或介质发生故障时，确保已提交事务的更新不能丢失。即一旦一个事务提交，DBMS保证它对数据库中数据的改变应该是永久性的，即对已提交事务的更新能恢复。持久性通过数据库备份和恢复来保证。
 
-> Atomicity, isolation, and durability are properties of the database, whereas consis‐ tency (in the ACID sense) is a property of the application. The application may rely on the database’s atomicity and isolation properties in order to achieve consistency, but it’s not up to the database alone. ---DDIA
+> Atomicity, isolation, and durability are properties of the database, whereas consistency (in the ACID sense) is a property of the application. The application may rely on the database’s atomicity and isolation properties in order to achieve consistency, but it’s not up to the database alone. ---DDIA
 
 值得一提的是，原子性，隔离性和持久性是数据库的属性，而一致性是应用程序的属性。以MySQL为例，它通过undo log保证原子性，通过lock和MVCC保证隔离性，通过redo log保证持久性，最终得到一致性。换句话说说AID是手段，C是目的！
 
