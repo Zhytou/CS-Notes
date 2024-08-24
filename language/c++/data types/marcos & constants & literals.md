@@ -2,6 +2,7 @@
 
 - [常量与字面量](#常量与字面量)
   - [宏](#宏)
+    - [宏函数](#宏函数)
     - [宏的缺陷](#宏的缺陷)
   - [宏的替换机制](#宏的替换机制)
     - [内联函数](#内联函数)
@@ -29,6 +30,62 @@
 #define WORK_MODE_1 1
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 ```
+
+除此之外，宏还能用达成类似命名空间的功能，比如：
+
+```c++
+#ifndef COMDEF_H
+#define COMDEF_H
+
+//头文件内容 …
+#endif
+```
+
+### 宏函数
+
+在C/C++中，宏函数（Macro Function）是一种在预处理阶段展开的宏定义，可以用来简化代码、实现代码重用以及避免重复性的代码书写。它的格式一般如下：
+
+```c++
+#define MACRO_FUNCTION_NAME(parameter1, parameter2, ...) replacement_code
+```
+
+值得注意的是，宏函数通常是不包含返回值的。它和一般意义上的C++函数不同，它只是一个简单的替换。常见的宏函数实现包括：
+
+```c++
+#define  MAX( x, y )  ( ((x) > (y)) ? (x) : (y) )
+#define  MIN( x, y )  ( ((x) < (y)) ? (x) : (y) )
+
+#define ADD(x, y) ((x) + (y))
+
+#define  HEXCHK( ch ) \
+(((ch) >= ’0′ && (ch) <= ’9′) || \
+((ch) >= ’A' && (ch) <= ’F') || \
+((ch) >= ’a' && (ch) <= ’f') )
+
+#define GETMID(nums, mid) {\
+    sort(nums.begin(), nums.end());\
+    mid = nums[nums.size()/2];\
+}
+```
+
+此外，在编写宏函数时，有一些技巧能够避免错误，比如：
+
+- 使用小括号包含；
+- 用do{}while(0)语句包含多语句防止错误；
+- 使用\定义多行宏函数；
+- 使用#把宏参数变为一个字符串，用##把两个宏参数贴合在一起。
+
+其中，需要特别强调的是第二条。可能你会觉得单独使用{}同样可以达到效果，为什么一定要使用do{}while(0)呢？下面就是一个例子。
+
+```c++
+#define switch(x,y) {int tmp; tmp=x;x=y;y=tmp;}
+if(x>y)
+   switch(x,y);
+else        //error, parse error before else
+   otheraction();
+```
+
+在把宏引入代码中，会多出一个分号，从而会报错。使用do{….}while(0) 把它包裹起来，成为一个独立的语法单元，从而不会与上下文发生混淆。同时因为绝大多数的编译器都能够识别do{…}while(0)这种无用的循环并进行优化，所以使用这种方法也不会导致程序的性能降低，
 
 ### 宏的缺陷
 
