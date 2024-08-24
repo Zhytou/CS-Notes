@@ -12,6 +12,8 @@
     - [列表初始化](#列表初始化)
     - [列表初始化返回值](#列表初始化返回值)
   - [C++14](#c14)
+    - [generic lambda](#generic-lambda)
+    - [std::make\_unique](#stdmake_unique)
   - [C++17](#c17)
     - [if constexpr](#if-constexpr)
     - [std::optional](#stdoptional)
@@ -173,6 +175,26 @@ vector<int> process()
 ```
 
 ## C++14
+
+### generic lambda
+
+所谓泛型lambda，就是在形参声明中使用auto类型指示说明符的lambda。比如：
+
+```c++
+auto lambda = [](auto x, auto y) {return x + y;};
+
+// 在C++14标准下，上述lambda表达式与以下代码作用相同。
+struct unnamed_lambda
+{
+  template<typename T, typename U>
+    auto operator()(T x, U y) const {return x + y;}
+};
+auto lambda = unnamed_lambda();
+```
+
+### std::make_unique
+
+C++11时，只给shared_ptr指针提供了make_shared函数，却没有给unique_ptr指针提供make_unique函数。C++14改善了这一点。
 
 ## C++17
 
