@@ -15,8 +15,10 @@
     - [generic lambda](#generic-lambda)
     - [std::make\_unique](#stdmake_unique)
   - [C++17](#c17)
+    - [结构化绑定](#结构化绑定)
     - [if constexpr](#if-constexpr)
     - [std::optional](#stdoptional)
+    - [std::variant](#stdvariant)
     - [std::filesystem](#stdfilesystem)
   - [C++20](#c20)
     - [std::concept](#stdconcept)
@@ -198,11 +200,79 @@ C++11时，只给shared_ptr指针提供了make_shared函数，却没有给unique
 
 ## C++17
 
+### 结构化绑定
+
 ### if constexpr
+
+if constexpr是C++17 中引入的一个新特性，它是一种编译时条件判断语句。与传统的if语句不同，if constexpr在编译时根据条件表达式的结果选择是否编译其中的代码块，不符合条件的分支在编译时被丢弃，不会出现在最终的可执行代码中。这使得编译器能够进行更多的优化，并且在模板元编程中非常有用。
+
+```c++
+if constexpr (std::is_integral<T>::value) {
+  // 当 T 是整数类型时，编译此代码块
+  std::cout << "T is an integral type." << std::endl;
+} else {
+  // 当 T 不是整数类型时，编译此代码块
+  std::cout << "T is not an integral type." << std::endl;
+}
+```
 
 ### std::optional
 
+std::optional是C++17中引入的一个标准库模板类，用于表示一个可能包含值的容器。它的作用类似与Python中的None类似。
+
+比如，编写一个查找数组中第一个非零元素的函数，如果没有std::optional类的话，可能我们使用返回一个pair来表示。其中，第一个位置表示是否包含非0元素，第二个位置表示非0元素的值。
+
+```c++
+int findFirstNonZero(vector<int>& arr) {
+  for (int i = 0; i < arr.size(); i++) {
+    if (arr[i] != 0) {
+      return make_pair(true, arr[i]);
+    }
+  }
+  return make_pair(false, -1);
+}
+```
+
+采用std::optional可以简化上面的代码：
+
+```c++
+std::optional<int> findFirstNonZero(vector<int>& arr) {
+  for (int i = 0; i < arr.size(); i++) {
+    if (arr[i] != 0) {
+      return arr[i];
+    }
+  }
+  return std::nullopt;
+}
+```
+
+此时，调用方只需使用has_value()和value()函数访问该optional即可，比如：
+
+```c++
+int main() {
+  vector<int> nums = {0, 0, -1};
+  auto ret = findFirstNonZero(nums);
+  if (ret.has_value()) {
+    cout << ret.value() << endl;
+  }
+}
+```
+
+### std::variant
+
+std::variant是C++17中引入的另一个标准库模板类，用于表示一组可能类型中的一个。它的功能类似联合体Union，但其功能更强大，可以使用其他容器。比如
+
+```c++
+std::variant<int, double, std::string> var;
+var = 42;
+if (std::holds_alternative<int>(var)) {
+  std::cout << "The variant holds an int: " << std::get<int>(var) << std::endl;
+}
+```
+
 ### std::filesystem
+
+std::filesystem是C++17中引入的标准库，用于操作文件系统。它提供了一组类和函数，用于处理文件、目录和路径等文件系统相关的操作。
 
 ## C++20
 
