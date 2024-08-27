@@ -15,13 +15,14 @@
     - [generic lambda](#generic-lambda)
     - [std::make\_unique](#stdmake_unique)
   - [C++17](#c17)
-    - [结构化绑定](#结构化绑定)
     - [if constexpr](#if-constexpr)
     - [std::optional](#stdoptional)
     - [std::variant](#stdvariant)
     - [std::filesystem](#stdfilesystem)
   - [C++20](#c20)
     - [std::concept](#stdconcept)
+    - [std::ranges](#stdranges)
+    - [corountine](#corountine)
 
 ## C++11
 
@@ -200,8 +201,6 @@ C++11时，只给shared_ptr指针提供了make_shared函数，却没有给unique
 
 ## C++17
 
-### 结构化绑定
-
 ### if constexpr
 
 if constexpr是C++17 中引入的一个新特性，它是一种编译时条件判断语句。与传统的if语句不同，if constexpr在编译时根据条件表达式的结果选择是否编译其中的代码块，不符合条件的分支在编译时被丢弃，不会出现在最终的可执行代码中。这使得编译器能够进行更多的优化，并且在模板元编程中非常有用。
@@ -277,3 +276,120 @@ std::filesystem是C++17中引入的标准库，用于操作文件系统。它提
 ## C++20
 
 ### std::concept
+
+std::concept是C++20中引入的一个重要特性，用于对模板参数进行约束。简单来说，可以将其看作是对原来使用enable_if和 constexpr等技术进行模板编程的一种改进。它提供了更直观和可读的语法，使得模板参数的约束更加清晰和简单。比如：
+
+```c++
+#include <iostream>
+#include <concepts>
+#include <type_traits>
+
+// 使用enable_if实现
+template <typename T>
+typename std::enable_if_t<std::is_integral_v<T>, void>
+printValue(T value) {
+  std::cout << "Integral value: " << value << std::endl;
+}
+
+// 使用if constexpr实现
+template <typename T>
+void printValue(T value) {
+  if constexpr(std::is_integral_v<T>) {
+    std::cout << "Integral value: " << value << std::endl;
+  }
+}
+
+// 使用concept实现
+template <typename T>
+requires std::integral<T>
+void printValue(T value) {
+  std::cout << "Integral value: " << value << std::endl;
+}
+```
+
+从上面可以看出，依靠enable_if这类萃取器实现SFINAE和特化只能依靠返回值来限制，而if constexpr和concept则灵活的多，直接对传入类型进行限制即可。具体来说，使用requires关键字限制传入类型，有下面四种写法。
+
+```c++
+template <integral T>
+T inc(T& a) { return ++a; }
+
+integral auto inc(integral auto a) { return ++a; }
+
+template <typename T>
+T inc(T a) requires integral<T> { return ++a; }
+
+template <typename T>
+requires integral<T> 
+T inc(T a) { return ++a; }
+```
+
+其中，integral是标准库定义的一种concept，实现如下：
+
+```c++
+template <typename T>
+concept integral = std::is_integral<T>::value;
+```
+
+除了使用标准库预先定义好的concept之外，我们也可以使用下面两种形式进行自定义。
+
+- requires { requirement-seq }
+- requires ( parameter-list(optional) ) { requirement-seq }
+
+下面是使用这两种形式进行自定义的实例。
+
+```c++
+template <typename T>
+concept Addable = requires(T a, T b) { a + b; };  // a + b 可通过编译即可
+
+template <class T>
+concept Check = requires(T a, T b) {
+  { a.clear() } noexcept;  // 支持clear,且不抛异常
+  { a + b } noexcept->std::same_as<int>;  // std::same_as<decltype((a + b)), int>
+};
+
+template <typename T>
+concept Check = requires(T x) {
+  {*x};                                 // *x有意义
+  { x + 1 } -> std::same_as<int>;       // x + 1有意义且std::same_as<decltype((x + 1)), int>，即x+1是int类型
+  { x * 1 } -> std::convertible_to<T>;  // x * 1 有意义且std::convertible_to< decltype((x *1),T>，即x*1可转变为T类型
+};
+```
+
+### std::ranges
+
+std::ranges是C++20中引入的一个新的标准库组件，用于处理序列和容器。它提供了一组通用的操作函数，如过滤、映射、排序等，使得对序列的操作更加简洁和高效。具体来说，一个range是指任何拥有begin()和end()成员函数的类型。它实际是一个概念，具体实现如下：
+
+```c++
+template< class T >
+concept range = requires( T& t ) {
+  ranges::begin(t); // equality-preserving for forward iterators
+  ranges::end (t);
+};
+```
+
+这样，任何满足range概念的类型就可以被视为一个范围，进而可以直接使用std::ranges中的算法和操作符。其中，常见的用法包括：
+
+```c++
+std::vector<int> numbers = {3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5};
+ 
+// 排序
+std::ranges::sort(numbers);
+
+// 查找
+auto it = std::ranges::find(numbers, 5);
+if (it != numbers.end()) {
+    std::cout << "Found at index: " << std::distance(numbers.begin(), it) << '\n';
+} else {
+    std::cout << "Not found\n";
+}
+
+// 变换
+auto squared_numbers = numbers | std::views::transform([](int num) { return num * num; });
+
+// 筛选
+auto even_numbers = numbers | std::views::filter([](int num) { return num % 2 == 0; });
+```
+
+可见，使用ranges中提供的排序和查找算法时，不再需要像algorithm一样指定起始和结束迭代器，而是直接传入原容器即可。此外，关于ranges提供的变换和筛选操作，还需要引入一个新概念std::views，也就是范围视图。它是一种惰性求值的机制，仅在需要时才会计算或生成范围中的元素，而不会立即生成或复制整个范围的元素。
+
+### corountine
