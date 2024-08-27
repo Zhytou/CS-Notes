@@ -5,8 +5,13 @@
     - [Render Pipeline](#render-pipeline)
     - [Context](#context)
   - [First OpenGL Program](#first-opengl-program)
+    - [GLFW](#glfw)
     - [Several Steps](#several-steps)
     - [Example Code](#example-code)
+  - [GLSL Basics](#glsl-basics)
+    - [Data Type](#data-type)
+    - [Qualifier](#qualifier)
+    - [Internal Variable](#internal-variable)
   - [References](#references)
 
 ## Introduction
@@ -46,9 +51,15 @@ OpenGL的模式分为核心模式(Core Profile)和立即渲染模式(Immediate M
 
 ## First OpenGL Program
 
+### GLFW
+
+正如前面所提到的，在编写GLSL之前，首先要做的就是创建一个OpenGL上下文(Context)和一个用于显示的窗口。这时，就需要使用GLFW。
+
+GLFW是一个专门针对OpenGL的C语言库，提供了一组用于创建窗口、处理输入事件以及管理OpenGL上下文的函数。在它的[官网](https://www.glfw.org/download.html)上，可以直接下载Visual Studio（2012到2022都有）预编译好的二进制版本和相应的头文件，添加到项目配置中就可以直接使用了。
+
 ### Several Steps
 
-分配顶点缓存对象，传入顶点数据：
+**分配顶点缓存对象，传入顶点数据**：
 
 `顶点缓存对象Vertex Buffer Object VBO`是OpenGL中向GPU传入顶点数据的对象。我们一般使用`glGenBuffers(GLsizei n, GLuint *buffers);`和`glBindBuffer(GLenum target, GLuint buffer);`函数创建和绑定该VBO对象。其中，绑定一个缓存时，需要指定它所对应的类型。缓存类型有很多种，它们用于实现不同OpenGL功能。
 
@@ -76,7 +87,7 @@ GLfloat vertices[12] = {
 glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 ```
 
-使用顶点数组对象管理顶点缓存对象：
+**使用顶点数组对象管理顶点缓存对象**：
 
 我们需要使用`顶点数组对象(Vertex Array Object, VAO)`来管理VBO并解释VBO中顶点数据的含义。其创建和绑定和VBO类似。至于，向OpenGL解释传入顶点数据的含义，具体可以使用`glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)`指明传入数据的含义。此外，还可以通过glVertexAttribPointer的第三个参数指定顶点数据是否归一化。
 
@@ -95,7 +106,7 @@ glEnableVertexAttribArray(0);
 glBindVertexArray(0);
 ```
 
-编译链接着色器程序：
+**编译链接着色器程序**：
 
 `着色器Shader`是OpenGL中一个最重要的概念，它是图形硬件设备所执行的一类特殊函数。简单来说，可以将其理解成一种GPU能够编译和执行的一种小型程序。一个简单的顶点着色器如下：
 
@@ -111,7 +122,7 @@ void main()
 
 OpenGL主要提供了两个函数`glLinkProgram(GLuint program)`和`glUseProgram(GLuint program)`来调用提前编译好的着色器程序。其中，一般在初始化时，调用`glLinkProgram(GLuint program)`将着色器程序链接；在实际渲染时，调用`glUseProgram(GLuint program)`。
 
-绘制：
+**绘制**：
 
 我们使用`glDrawArrays(GLenum mode, GLint first, GLsizei count)`绘制。其中，模式和画法对应关系如下表：
 
@@ -162,6 +173,49 @@ glBindVertexArray(0);
 最后，总结一下Vertex Array Object(VAO)和Vertex Buffer Object(VBO)的关系。在OpenGL中，VAO和VBO一起用于高效地在GPU上存储和管理顶点数据。其中，VAO是一个顶点数组的配置信息容器，它存储了如何解释和访问VBO中的顶点数据的规则。它包含了顶点属性指针(Vertex Attribute Pointers, VAPs)的设置，这些指针定义了顶点数据的布局、数据类型、步长等信息。而VBO是用于存储顶点数据的GPU内存对象。它可以包含顶点位置、颜色、纹理坐标、法线等信息。VBO将数据从CPU传输到GPU，使得GPU可以直接访问和处理这些数据，提高渲染性能。
 
 因此，VAO和VBO一起工作时，VAO是配置信息，VBO是数据存储。VAO不直接存储顶点数据，而是存储了如何解释VBO中数据的规则。当VAO被绑定时，OpenGL知道如何从VBO中读取数据，并正确地渲染几何形状。
+
+## GLSL Basics
+
+### Data Type
+
+**基础数据类型**：
+
+- void
+- bool
+- int
+- uint
+- float
+
+**纹理数据类型**：
+
+- sampler1D
+- sampler2D
+- sampler3D
+
+**聚合数据类型**：
+
+- vec2/vec3/vec4
+- mat2/mat3/mat4
+
+### Qualifier
+
+**变量存储限定符**：
+
+- const：常量值必须在声明时初始化，它是只读的不可修改的。
+- varying：顶点着色器的输出，主要负责在顶点着色器和片元着色器之间传递变量。
+- uniform：一致变量。在着色器执行期间一致变量的值是不变的。与 const 常量不同的是，这个值在编译时期是未知的是由着色器外部初始化的，且一致变量在顶点着色器和片段着色器之间是共享的。
+- attribute：表示只读的顶点数据，只用在顶点着色器中。
+
+**函数参数限定符**：
+
+- in：用在函数的参数中，表示该参数是输出参数，值是会改变的。
+- out：用在函数的参数中，表示该参数是输出参数，值是会改变的。
+
+### Internal Variable
+
+- gl_Position：输出属性-变换后的顶点的位置，用于后面的固定的裁剪等操作。所有的顶点着色器都必须写这个值。
+
+![GLSL语法基础](https://www.cnblogs.com/straywriter/articles/15889310.html)
 
 ## References
 
