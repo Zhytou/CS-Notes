@@ -2,6 +2,7 @@
 
 - [C++习惯用法](#c习惯用法)
   - [RAII](#raii)
+  - [SIFNAE](#sifnae)
   - [Pimpl](#pimpl)
   - [CRTP](#crtp)
   - [References](#references)
@@ -40,6 +41,10 @@ public:
     lock_guard& operator=(lock_guard const&) = delete;
 };
 ```
+
+## SIFNAE
+
+SFINAE(Substitution Failure Is Not An Error)是指，C++编译器在实例化模板时发生了替换失败时，编译器不会报错，而是会继续尝试其他的重载函数或模板。这样可以在编译期间根据模板参数的特性来选择合适的函数重载或模板实例化。
 
 ## Pimpl
 

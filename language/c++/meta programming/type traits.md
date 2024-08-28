@@ -7,6 +7,7 @@
     - [类型判断](#类型判断)
     - [根据条件选择萃取](#根据条件选择萃取)
     - [根据条件启用或禁用萃取](#根据条件启用或禁用萃取)
+  - [嵌套template参数](#嵌套template参数)
 
 类型萃取，也被称为类型提取，是指将类模板的一部分接口提取出来，形成一个新的独立的模板的技术。
 
@@ -78,3 +79,15 @@ struct enable_if;
 ```
 
 std::enable_if使得函数在判断条件B为真时才有效。
+
+## 嵌套template参数
+
+``` c++
+template <template<class, class> class V, class T, class A>
+void f(V<T, A> &v) {
+    // This can be "typename V<T, A>::value_type",
+    // but we are pretending we don't have it
+}
+```
+
+这样做也算是`Traits`技术的一种替代品。

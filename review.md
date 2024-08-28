@@ -360,3 +360,72 @@ UTF-8 和 UTF-16 中的数字 8 和 16 指的是每个字符编码所占用的�
 65、Http和RPC的区别是什么？为什么客户端和服务端相连使用HTTP，而服务端中各个微服务相连使用RPC？
 
 66、gdb和valgrind的使用
+
+67、匿名命名空间有什么用？
+
+在C++中，可以用下面的方式定义一个匿名空间。
+
+```c++
+namespce {
+    char c;
+    int i;
+    double d;
+}
+```
+
+编译器在内部会为这个命名空间生成一个唯一的名字，而且还会为这个匿名的命名空间生成一条using指令。所以上面的代码在效果上等同于：
+
+``` c++
+namespace __UNIQUE_NAME_ {
+    char c;
+    int i;
+    double d;
+}
+using namespace __UNIQUE_NAME_;
+```
+
+在匿名命名空间中声明的名称也将被编译器转换，与编译器为这个匿名命名空间生成的唯一内部名称(即这里的__UNIQUE_NAME_)绑定在一起。
+
+至于，匿名空间的作用则是使其内部的定义和声明都具有internal链接属性，即名称的作用域被限制在当前文件中，无法通过在另外的文件中使用extern声明来进行链接。和static相比，匿名空间除了能作用于函数和变量之外，同样能作用于类定义。因为static并不能直接修饰一个类，使其不能在其他源文件中使用，而匿名空间则可以做到这一点。
+
+68、c语言有函数重载吗？extern "C"修饰的函数可以重载吗？
+
+c语言没有重载，正因为如此extern "C"修饰的函数不可以重载。比如：
+
+```c++
+extern "C" void func(double t) {
+}
+
+extern "C" void func(int t) {
+}
+```
+
+编译会报错，如下：
+
+```txt
+main.cpp:26:17: error: conflicting declaration of C function ‘void func(int)’
+   26 | extern "C" void func(int t) {
+      |                 ^~~~
+main.cpp:23:17: note: previous declaration ‘void func(double)’
+   23 | extern "C" void func(double t) {
+      |       
+```
+
+69、大小端序
+
+大小端（Endianness）是指在存储多字节数据时，字节的顺序排列方式。在计算机系统中，有两种常见的大小端方式：
+
+- 大端序（Big Endian）：最高有效字节（Most Significant Byte，MSB）存储在最低的内存地址，最低有效字节（Least Significant Byte，LSB）存储在最高的内存地址。类比于阅读顺序，从左到右读取字节，最高有效字节在前。
+- 小端序（Little Endian）：最低有效字节（LSB）存储在最低的内存地址，最高有效字节（MSB）存储在最高的内存地址。类比于阅读顺序，从左到右读取字节，最低有效字节在前。
+
+![示例](https://i-blog.csdnimg.cn/blog_migrate/3a55326ec2df8188d878fc87368fe1a7.png)
+
+70、十大排序算法中稳定的三个有哪些？
+
+十大排序算法中稳定算法包括：冒泡排序、插入排序和归并排序。
+
+71、shared_ptr的引用计数是线程安全的？
+
+shared_ptr 的引用计数是线程安全的。shared_ptr 内部使用原子操作来维护引用计数，确保在多线程环境下引用计数的操作是线程安全的。
+
+72、C++模板函数用inline修饰有什么好处？

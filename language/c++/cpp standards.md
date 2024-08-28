@@ -20,7 +20,7 @@
     - [std::variant](#stdvariant)
     - [std::filesystem](#stdfilesystem)
   - [C++20](#c20)
-    - [std::concept](#stdconcept)
+    - [concept](#concept)
     - [std::ranges](#stdranges)
     - [corountine](#corountine)
 
@@ -275,9 +275,9 @@ std::filesystem是C++17中引入的标准库，用于操作文件系统。它提
 
 ## C++20
 
-### std::concept
+### concept
 
-std::concept是C++20中引入的一个重要特性，用于对模板参数进行约束。简单来说，可以将其看作是对原来使用enable_if和 constexpr等技术进行模板编程的一种改进。它提供了更直观和可读的语法，使得模板参数的约束更加清晰和简单。比如：
+concept是C++20中引入的一个关键字，用于定义对模板参数的一条约束。简单来说，可以将其看作是对原来使用enable_if和 constexpr等技术进行模板编程的一种改进。它提供了更直观和可读的语法，使得模板参数的约束更加清晰和简单。比如：
 
 ```c++
 #include <iostream>
