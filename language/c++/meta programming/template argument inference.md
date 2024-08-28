@@ -7,7 +7,6 @@
     - [引子](#引子)
     - [第一种规则](#第一种规则)
     - [第二种规则——引用折叠](#第二种规则引用折叠)
-  - [嵌套template参数](#嵌套template参数)
 
 ## 从左值引用函数参数推断类型
 
@@ -69,15 +68,3 @@ f3(i);// 正确，因为引用迭代
 - 类型X&& &&折叠成X&&。
 
 在这种规则下，我们将得到一个惊人的结果，即：如果一个函数参数是指向模板参数类型的右值引用，则可以传递给他任意类型的实参。
-
-## 嵌套template参数
-
-``` c++
-template <template<class, class> class V, class T, class A>
-void f(V<T, A> &v) {
-    // This can be "typename V<T, A>::value_type",
-    // but we are pretending we don't have it
-}
-```
-
-这样做也算是`Traits`技术的一种替代品。
