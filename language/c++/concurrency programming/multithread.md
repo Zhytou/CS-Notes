@@ -2,8 +2,10 @@
 
 - [Multithread Programming](#multithread-programming)
   - [Thread Management](#thread-management)
-    - [Start a Thread](#start-a-thread)
-    - [Terminate a Thread](#terminate-a-thread)
+    - [Create a Thread](#create-a-thread)
+    - [Pass Arguments to Thread](#pass-arguments-to-thread)
+    - [Get Return Value](#get-return-value)
+    - [Sub-thread](#sub-thread)
     - [POSIX Thread](#posix-thread)
   - [Lock-based Coding](#lock-based-coding)
     - [Mutex](#mutex)
@@ -14,7 +16,7 @@
 
 ## Thread Management
 
-### Start a Thread
+### Create a Thread
 
 **创建即启动**：
 
@@ -51,39 +53,9 @@ int main() {
 }
 ```
 
-**参数传递**：
-
-当想要使用线程执行一个带参数的函数时，我们可以在构造时直接将参数连同函数一起传入，比如：
-
-```c++
-void printNums(const vector<int>& nums) {
-    for (auto num : nums) {
-        cout << num << ' ';
-    }
-    cout << endl;
-}
-
-int main() {
-    vector<int> v = {1, 2, 3, 4, 5};
-    thread t(printNums, v);
-    t.join();
-}
-```
-
-如果函数参数为引用呢？此时，我们必须使用
-
-由此，可以得到thread中参数传递的四条注意：
-
-- 使用引用和指针是要注意；
-- 对于内置简单类型，建议传值；
-- 对于类对象，建议使用引用来接收，以为使用引用会只会构造两次，而传值会构造三次；
-- 在detach下要避免隐式转换，因为此时子线程可能还来不及转换主线程就结束了，应该在构造线程时，用参数构造一个临时对象传入。
-
-**返回值**：
-
 **移动语义** ：
 
-因为thread是不能复制构造的，所以只能使用右值进行转移，比如使用std::swap或std::move。
+线程在创建后，它便拥有了一些资源，包括线程的执行状态、堆栈、ID等。因此，std::thread的拷贝构造和赋值操作符都是禁用的。如果需要将线程对象传递给其他函数或线程，可以使用右值进行转移，比如std::swap或std::move。
 
 ``` c++
 void func1();
@@ -103,10 +75,68 @@ cout << "after std::swap(t1, t2):" << '\n'
 
 运行这段代码可以看到，交换后两者id也变了，即完成了thread交换。
 
-### Terminate a Thread
+### Pass Arguments to Thread
 
-- std::thread::join()：
-- std::thread::detach()：
+**值传递**：
+
+当想要使用线程执行一个带参数的函数时，我们可以在构造时直接将参数连同函数一起传入，比如：
+
+```c++
+void printNums(const vector<int>& nums) {
+    for (auto num : nums) {
+        cout << num << ' ';
+    }
+    cout << endl;
+}
+
+int main() {
+    vector<int> v = {1, 2, 3, 4, 5};
+    thread t(printNums, v);
+    t.join();
+}
+```
+
+**引用传递**：
+
+值得注意的是，默认情况下C++线程传参是按指传入。即子线程会复制一份参数副本到其内部，而无法影响主线程。那如果想要像普通函数那样传递引用呢？使用std::ref()即可，比如：
+
+```c++
+void sortNums(vector<int>& nums) {
+  sort(nums.begin(), nums.end());
+}
+
+int main() {
+  vector<int> v = {0, 3, 4, 2, 1, 5};
+  thread t(sortNums, ref(v));
+  t.join();
+  for (auto i : v) {
+    cout << i << ' ';
+  }
+  cout << endl;
+}
+```
+
+另外，使用指针可以在传值的基础上修改其指向的内存，但需要注意内存可能提前释放的问题。比如：如果使用detach()，则当主线程崩溃或者正常结束后，该块内存被回收，若此时子线程没有结束，那么子线程中指针的访问将未定义，程序会出错。
+
+总之，thread中参数传递有四条注意：
+
+- 使用引用和指针是要注意；
+- 对于内置简单类型，建议传值；
+- 对于类对象，建议使用引用来接收，以为使用引用会只会构造两次，而传值会构造三次；
+- 在detach下要避免隐式转换，因为此时子线程可能还来不及转换主线程就结束了，应该在构造线程时，用参数构造一个临时对象传入。
+
+### Get Return Value
+
+通过前两节，我们了解到可以通过构造std::thread对象启动一个线程来执行某个函数。有些时候，我们更关心执行完该函数的返回值。一个朴素的方法是依靠引用或者指针在参数中传递返回值。那是否还有更优雅的方式呢？
+
+答案是有的，C++标准库`<future>`提供了future、promise、packaged_task以及async这几种手段来实现这一点。具体介绍可以查看异步编程小节。
+
+### Sub-thread
+
+在创建完子线程后，主线程可以选择等待或分离它，其相应函数如下：
+
+- std::thread::join()：等待线程执行完毕，并将主线程阻塞，直到被调用的线程执行结束。
+- std::thread::detach()：将线程分离，使得被调用的线程可以独立执行，不再与主线程有关联。
 
 ### POSIX Thread
 
@@ -171,12 +201,11 @@ uniuqe_lock<mutex> locker(mtx, defer_lock);
 
 std::adopt_lock则一般和std::lock_guard一起使用，表示初始化std::lock_guard对象时，对应的mutex已经上锁。
 
-> Now, here we first acquire the locks (still avoiding deadlocks), and *then* we create the lockguards to make sure that they are properly released. Note that std::adopt_lock requires that the current thread owns the mutex (which is the case since we just locked them)
-
- c++
+``` c++
 mutex mtx1, mtx2;
 std::lock(mtx1, mtx2);
 lock_guard<mutex> lk1(mtx1, adopt_lock), lk2(mtx2, adopt_lock);
+```
 
 ### Condition Variable
 
@@ -207,14 +236,13 @@ while(!pred()) {
   cond.wait(lock);
 }
 
-
 ## Atomic Operation
 
 > 一般来说，atomic都是不可拷贝的。这是因为有些不支持原子指令的硬件平台必须要通过锁来实现原子操作，而锁又是无法拷贝的。因此，atomic是无法拷贝的
 
 **std::memory_order**：
 
- c++
+``` c++
 typedef enum memory_order {
   memory_order_relaxed,    // 不对执行顺序做保证
   memory_order_acquire,    // 本线程中,所有后续的读操作必须在本条原子操作完成后执行
@@ -223,7 +251,7 @@ typedef enum memory_order {
   memory_order_consume,    // 本线程中,所有后续的有关本原子类型的操作,必须在本条原子操作完成之后执行
   memory_order_seq_cst    // 全部存取都按顺序执行
 } memory_order;
-
+```
 
 设置指令的执行顺序。
 
