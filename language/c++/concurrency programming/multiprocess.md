@@ -1,13 +1,13 @@
-# 多进程编程
+# Multiprocess Programming
 
-- [多进程编程](#多进程编程)
-  - [进程 Process](#进程-process)
-  - [进程的API](#进程的api)
-  - [进程间通信 IPC](#进程间通信-ipc)
-    - [管道](#管道)
-    - [套接字](#套接字)
+- [Multiprocess Programming](#multiprocess-programming)
+  - [Process](#process)
+  - [Process API](#process-api)
+  - [IPC](#ipc)
+    - [Pipe](#pipe)
+    - [Socket](#socket)
 
-## 进程 Process
+## Process
 
 进程和程序组成了一对相依的概念。一个运行中的程序被称为一个进程；反过来讲，进程就是程序的一个实例。更准确的说，一个正在执行、且拥有独立的内存空间和资源的程序就是进程。
 
@@ -18,7 +18,7 @@
 - 阻塞状态（Waiting）：等待其他资源，如I/O等
 - 中止状态（Terminated）：进程执行结束
 
-## 进程的API
+## Process API
 
 **fork()**：做一份状态机的完整复制（内存、寄存器现场）。
 
@@ -83,7 +83,7 @@ int main() {
 }
 ```
 
-## 进程间通信 IPC
+## IPC
 
 在多进程程序中，各个程序的协作通常依靠`进程间通讯IPC(Interprocess Communication)`来完成。Linux系统中，IPC被分成三大类：
 
@@ -100,7 +100,7 @@ int main() {
 
 下面我们分别介绍几种常用的IPC实现方法。
 
-### 管道
+### Pipe
 
 **pipe()**：创建一个管道，用于在两个进程间传递数据。
 
@@ -159,4 +159,4 @@ int main() {
 }
 ```
 
-### 套接字
+### Socket
