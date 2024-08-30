@@ -8,6 +8,7 @@
   - [shared\_ptr](#shared_ptr)
     - [make\_shared](#make_shared)
     - [shared\_ptr实现](#shared_ptr实现)
+    - [enable\_shared\_from\_this](#enable_shared_from_this)
     - [shared\_ptr线程安全性](#shared_ptr线程安全性)
   - [weak\_ptr](#weak_ptr)
     - [weak\_ptr的使用：lock函数](#weak_ptr的使用lock函数)
@@ -109,7 +110,15 @@ type *raw = new type(args);
 shared_ptr<type> p(raw); 
 ```
 
-和其他初始化方式相比，std::make_shared 通过单次内存分配同时分配对象和控制块（引用计数），避免了两次内存分配带来的性能开销。且由于其直接创建控制块并将对象的指针保存在其中，可以避免由于对象和控制块分开分配而可能导致的悬空指针问题。
+和其他初始化方式相比，std::make_shared最大的优势就是能够避免一块内存由多个引用计数无联系的shared_ptr指向，比如：
+
+```c++
+int p = new int(5);
+
+shared_ptr<int> sp1(p), sp2(p);
+// 析构时，一定会报错
+// free(): double free detected in tcache 2
+```
 
 ### shared_ptr实现
 
@@ -167,6 +176,60 @@ private:
   - （*this）指针不再指向之前内存区域，所以赋值前_refCount要自减；
   - （*this）指针指向other指针，所以other指针的_refCount要自增。
 - 析构函数只有在_refCount == 0时，才执行。
+
+### enable_shared_from_this
+
+有些时候我们可能希望实现一个类函数直接返回调用对象的shared_ptr。常见的做法是：直接用该对象的this指针去初始化一个shared_ptr对象。不过，这样会返回多个独立的shared_ptr，即引用计数无关的指针指向同一块内存，从而引起析构时重复释放内存的错误。
+
+**使用**：
+
+正确的做法是让该类继承std::enable_shared_from_this模板，通过CRTP的方式达成目的。比如：
+
+```c++
+class A : public enable_shared_from_this<A> {
+public:
+  shared_ptr<A> getPtr() {
+    return shared_from_this();
+  }
+};
+```
+
+值得注意的是，仅当A类对象被一个shared_ptr管理时，才能调用该getPtr()函数，否则就会报错。比如：
+
+```c++
+A* a1 = new A();
+auto p1 = a1->getPtr(); // wrong! Terminate called after throwing an instance of 'std::bad_weak_ptr'
+
+shared_ptr<A> a2 = make_shared<A>();
+shared_ptr<A> p2 = a2->getPtr(); // correct
+```
+
+**原理**：
+
+至于，为什么要求A类对象被一个shared_ptr管理时才能调用该getPtr()函数就涉及到std::enable_shared_from_this的实现原理了。
+
+简单来说，enable_shared_from_this的内部保存着一个对this的弱引用，通过该弱引用就可以获得指向this的shared_ptr了，即实现了shared_from_this函数。比如：
+
+```c++
+template<class _Tp>
+class enable_shared_from_this {
+  mutable weak_ptr<_Tp> __weak_this_;
+  //...
+
+public:
+  shared_ptr<_Tp> shared_from_this()
+      {return shared_ptr<_Tp>(__weak_this_);}
+  
+  shared_ptr<_Tp const> shared_from_this() const
+      {return shared_ptr<const _Tp>(__weak_this_);}
+
+  // ...
+}
+```
+
+也正因为enable_shared_from_this包含着一个weak_ptr，所以该对象必须被shared_ptr管理，否则就无法正确初始化enable_shared_from_this中的weak_ptr。换句话说，构造shared_ptr指针时，判断管理类继承自enable_shared_from_this模板时就会初始化其中的weak_ptr。
+
+另外，使用`class A : public enable_shared_from_this<A>`这样的方式则是涉及到奇异递归模板模式（Curiously Recurring Template Pattern，CRTP）的编程思想。不过，这里并没有用于获取静态多态的能力，而只是共享其成员函数shared_from_this罢了。
 
 ### shared_ptr线程安全性
 
