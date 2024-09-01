@@ -12,12 +12,14 @@
     - [Mutex RAII Wrapper](#mutex-raii-wrapper)
     - [Lockable and Lock Function](#lockable-and-lock-function)
     - [Condition Variable](#condition-variable)
-  - [Lock-Based Coding](#lock-based-coding)
-    - [Thread-Safe Data Structure](#thread-safe-data-structure)
   - [Memory Model and Atomic Operation](#memory-model-and-atomic-operation)
     - [Atomic Type](#atomic-type)
-    - [Atomic and Synchronization](#atomic-and-synchronization)
+    - [Memory Order and Synchronization](#memory-order-and-synchronization)
   - [Async Programming](#async-programming)
+  - [Multithread Programming Practice](#multithread-programming-practice)
+    - [Thread Pool](#thread-pool)
+    - [Lock-Based Thread-Safe Data Structure](#lock-based-thread-safe-data-structure)
+    - [Lock-Free Thread-Safe Data Structure](#lock-free-thread-safe-data-structure)
 
 ## Thread Management
 
@@ -316,10 +318,6 @@ while(!pred()) {
 }
 ```
 
-## Lock-Based Coding
-
-### Thread-Safe Data Structure
-
 ## Memory Model and Atomic Operation
 
 ### Atomic Type
@@ -356,23 +354,55 @@ std::atomic_flag是标准库定义的一种原子布尔类型。它只有set和u
 std::atomic_flag winner = ATOMIC_FLAG_INIT;
 ```
 
-### Atomic and Synchronization
+### Memory Order and Synchronization
 
 **std::memory_order**：
 
+为了能够便捷、统一地在各平台指定内存顺序，C++11引入了std::memory_order。它能够作为输入参数指定std::atomic对象执行操作的内存顺序，比如：
+
+```c++
+std::atomic<int> cnt(0);
+cnt.store(1, std::memory_order_relaxed); 
+```
+
+编译器会根据CPU平台类型选用合适的手段来保证对应的同步，从而大大提升了C++多线程程序的可移植性。具体来说，std::memory_order是一个枚举类型，其定义如下：
+
 ``` c++
 typedef enum memory_order {
-  memory_order_relaxed,    // 不对执行顺序做保证
-  memory_order_acquire,    // 本线程中,所有后续的读操作必须在本条原子操作完成后执行
-  memory_order_release,    // 本线程中,所有之前的写操作完成后才能执行本条原子操作
-  memory_order_acq_rel,    // 同时包含 memory_order_acquire 和 memory_order_release
-  memory_order_consume,    // 本线程中,所有后续的有关本原子类型的操作,必须在本条原子操作完成之后执行
-  memory_order_seq_cst    // 全部存取都按顺序执行
+  memory_order_relaxed,   // relaxed
+  memory_order_consume,   // consume
+  memory_order_acquire,   // acquire
+  memory_order_release,   // release
+  memory_order_acq_rel,   // acquire/release
+  memory_order_seq_cst    // sequentially consistent
 } memory_order;
 ```
+
+其中，每个元素的含义如下：
+
+- memory_order_relaxed：没有同步或顺序保障。适用于不需要跨线程通信的原子操作。
+- memory_order_consume：消费者线程可看到生产者的修改，但不保证其他修改可见（较少使用）。
+- memory_order_acquire：确保之后对共享变量的访问不会在当前操作之前执行。用于读取操作。
+- memory_order_release：确保之前对共享变量的修改在当前操作之后对其他线程可见。用于写入操作。
+- memory_order_acq_rel：结合了acquire和release，适用于读-改-写操作。
+- memory_order_seq_cst：提供全局的顺序一致性，所有线程看到的修改顺序一致。这是最强的同步保障。
+
+通过设置合理的原子操作内存顺序，程序可以达成同步，这也就是所谓的无锁编程。比如：
+
+**std::atomic_thread_fence(memory_order sync)**：
+
+除了直接在原子操作中指定内存顺序，还可以使用std::atomic_thread_fence来引入内存栅栏。内存栅栏是一种同步机制，它不对任何数据进行操作，但可以影响编译器和CPU的优化行为，确保在栅栏前的所有写操作在栅栏后的所有读操作之前完成。
 
 ## Async Programming
 
 **std::async**：
 
 **std::future**：
+
+## Multithread Programming Practice
+
+### Thread Pool
+
+### Lock-Based Thread-Safe Data Structure
+
+### Lock-Free Thread-Safe Data Structure
