@@ -14,7 +14,9 @@
     - [Condition Variable](#condition-variable)
   - [Lock-Based Coding](#lock-based-coding)
     - [Thread-Safe Data Structure](#thread-safe-data-structure)
-  - [Atomic Operation](#atomic-operation)
+  - [Memory Model and Atomic Operation](#memory-model-and-atomic-operation)
+    - [Atomic Type](#atomic-type)
+    - [Atomic and Synchronization](#atomic-and-synchronization)
   - [Async Programming](#async-programming)
 
 ## Thread Management
@@ -221,6 +223,53 @@ lck.lock();
 
 **Lockable**:
 
+在C++20之前，Lockable是标准库文档中的一个规范。它描述的是一个实现了lock()、unlock()以及try_lock()的接口。前一节提到的互斥量以及各种互斥量包装器都是Lockable。它主要是为了方便限制模板类入参，尤其是创建各种互斥量包装器和条件变量。
+
+随着C++20引入concept语法，Lockable也改为使用概念做约束，其潜在实现如下：
+
+```c++
+/**
+  * Checks whether given type T satisfies the requirements of
+  * `BasicLockable` concept (a.k.a named requirement).
+  * 
+  * @see http://www.cplusplus.com/reference/concept/BasicLockable/
+  * 
+  * @tparam T Type to check
+  */
+template<typename T>
+concept basic_lockable = requires(T a) {
+
+    /**
+      * @brief Instantiation of type T must have a public function named `lock` 
+      * and it must have return type of `void`.
+      */
+    { a.lock()   } -> std::same_as<void>;
+
+    /**
+      * @brief Instantiation of type T must have a public function named `unlock` 
+      * and it must have return type of `void`, and it must be noexcept.
+      */
+    { a.unlock() } -> std::same_as<void>;
+};
+
+/**
+  * Checks whether given type T satisfies the requirements of
+  * `Lockable` concept (a.k.a named requirement).
+  * 
+  * @see http://www.cplusplus.com/reference/concept/Lockable/
+  * 
+  * @tparam T Type to check
+  */
+template<typename T>
+concept lockable = basic_lockable<T> && requires (T a){
+    /**
+      * @brief Instantiation of type T must have a public function named `try_lock` 
+      * and it must have return type of `bool`.
+      */
+    { a.try_lock() } -> std::same_as<bool>;
+};
+```
+
 **std::lock()**:
 
 std::mutex::lock()是std::mutex类中的一个成员函数，只能被std::mutex对象调用，当调用对象可以上锁，则成功锁住，否则发生死锁，所以一般不建议使用这个函数；而std::lock()则是STL库中的一个函数模板，可以一次锁多个mutex，当调用对象全部都可以上锁，则成功锁住，否则解锁全部调用对象，这样能有效避免死锁，不过可以用scoped_lock替代。具体例子如下：
@@ -271,9 +320,43 @@ while(!pred()) {
 
 ### Thread-Safe Data Structure
 
-## Atomic Operation
+## Memory Model and Atomic Operation
 
-> 一般来说，atomic都是不可拷贝的。这是因为有些不支持原子指令的硬件平台必须要通过锁来实现原子操作，而锁又是无法拷贝的。因此，atomic是无法拷贝的
+### Atomic Type
+
+原子操作是指在多线程环境下不可被中断或分割的操作，它能够保证操作的完整性和一致性。在C++中，它依靠标准库`<atomic>`提供的原子类型来实现。
+
+**std::atomic**:
+
+std::atomic是标准库中定义的一个原子类型模板，其主要操作包括：
+
+- std::atomic::load()：读取原子对象值。
+- std::atomic::store(T val)：写入原子对象值。
+- std::atomic::exchange(T val)：交换原子对象值。
+- std::atomic::compare_exchange_weak/strong(T& expected, T val)：比较原子对象值和expected，若相等则将原子对象值修改为val；反之将原子对象值修改为expected。weak和strong的区别在于内存顺序。
+
+**std::atomic::is_lock_free()**:
+
+std::atomic::is_lock_free()是原子类型中一个特殊的函数，它能够确认该原子类型的实现方式。当其返回true时，该原子类型直接使用原子指令实现；反之，还是依靠内部锁实现。
+
+换句话说，当该函数返回false时，使用这种原子类型的意义就不大了。（没有获得无锁所带来的性能提高）
+
+**std::atomic_flag**:
+
+std::atomic_flag是标准库定义的一种原子布尔类型。它只有set和unset两种状态，并且通过以下两个操作实现：
+
+- std::atomic_flag::test_and_set()：将atomic_flag设置为set状态，若当前已经为set状态，则返回true；反之返回false。
+- std::atomic_flag::clear()：将atomic_flag设置为unset状态，即下次调用test_and_set()会返回false。
+
+和`std::atomic<bool>`不同，std::atomic_flag的操作必须使用机器指令来实现。也就是说，std::atomic_flag的 is_lock_free()成员函数始终返回true。
+
+除此之外，std::atomic_flag创建后最好使用ATOMIC_FLAG_INIT宏进行初始化，否则就会处于一种不确定的状态。比如：
+
+```c++
+std::atomic_flag winner = ATOMIC_FLAG_INIT;
+```
+
+### Atomic and Synchronization
 
 **std::memory_order**：
 
@@ -287,14 +370,6 @@ typedef enum memory_order {
   memory_order_seq_cst    // 全部存取都按顺序执行
 } memory_order;
 ```
-
-设置指令的执行顺序。
-
-**std::atomic::is_lock_free()**：
-
-返回该变量是否无锁。无锁变量不会导致其他线程访问阻塞。
-
-C++中的std::atomic原子操作可能是由CPU提供的原子指令来支持，也可能是由操作系统中的spinlock来支持，具体可以根据std::atomic::is_lock_free()去判断。
 
 ## Async Programming
 
