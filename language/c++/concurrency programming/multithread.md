@@ -14,8 +14,11 @@
     - [Condition Variable](#condition-variable)
   - [Memory Model and Atomic Operation](#memory-model-and-atomic-operation)
     - [Atomic Type](#atomic-type)
-    - [Memory Order and Synchronization](#memory-order-and-synchronization)
+    - [Memory Order](#memory-order)
+    - [Lock-Free Synchronization](#lock-free-synchronization)
   - [Async Programming](#async-programming)
+    - [STL Asynchronous Facility](#stl-asynchronous-facility)
+    - [Event Loop and Callback](#event-loop-and-callback)
   - [Multithread Programming Practice](#multithread-programming-practice)
     - [Thread Pool](#thread-pool)
     - [Lock-Based Thread-Safe Data Structure](#lock-based-thread-safe-data-structure)
@@ -333,6 +336,16 @@ std::atomic是标准库中定义的一个原子类型模板，其主要操作包
 - std::atomic::exchange(T val)：交换原子对象值。
 - std::atomic::compare_exchange_weak/strong(T& expected, T val)：比较原子对象值和expected，若相等则将原子对象值修改为val；反之将原子对象值修改为expected。weak和strong的区别在于内存顺序。
 
+除此之外，针对模板参数为整型和指针类型的atomic，标准库还提供了下列函数：
+
+- std::atomic::fetch_add(T val)：对当前值执行加法操作，并返回修改前的值。
+- std::atomic::fetch_sub(T val)：对当前值执行减法操作，并返回修改前的值。
+- std::atomic::fetch_and(T val)：执行按位与操作，并返回修改前的值。
+- std::atomic::fetch_or(T val)：执行按位或操作，并返回修改前的值。
+- std::atomic::fetch_xor(T val)：执行按位异或操作，并返回修改前的值。
+- std::atomic::operater++：自增运算符。
+- std::atomic::operater--：自减运算符。
+
 **std::atomic::is_lock_free()**:
 
 std::atomic::is_lock_free()是原子类型中一个特殊的函数，它能够确认该原子类型的实现方式。当其返回true时，该原子类型直接使用原子指令实现；反之，还是依靠内部锁实现。
@@ -354,7 +367,7 @@ std::atomic_flag是标准库定义的一种原子布尔类型。它只有set和u
 std::atomic_flag winner = ATOMIC_FLAG_INIT;
 ```
 
-### Memory Order and Synchronization
+### Memory Order
 
 **std::memory_order**：
 
@@ -387,17 +400,145 @@ typedef enum memory_order {
 - memory_order_acq_rel：结合了acquire和release，适用于读-改-写操作。
 - memory_order_seq_cst：提供全局的顺序一致性，所有线程看到的修改顺序一致。这是最强的同步保障。
 
-通过设置合理的原子操作内存顺序，程序可以达成同步，这也就是所谓的无锁编程。比如：
-
 **std::atomic_thread_fence(memory_order sync)**：
 
 除了直接在原子操作中指定内存顺序，还可以使用std::atomic_thread_fence来引入内存栅栏。内存栅栏是一种同步机制，它不对任何数据进行操作，但可以影响编译器和CPU的优化行为，确保在栅栏前的所有写操作在栅栏后的所有读操作之前完成。
 
+### Lock-Free Synchronization
+
+通过使用原子类型并设置合理的内存顺序，程序就可以达成同步，这也就是所谓的无锁编程。比如：有两个线程，一个向数据结构中填充数据，另一个读取数据结构中的数据。为了避免恶性条件竞争，第一个线程设置一个标志，用来表明数据已经准备就绪，并且第二个线程在这个标志设置前不能读取数据。
+
+```c++
+vector<int> arr;
+atomic<bool> ready(false);
+
+void reader() {
+  while(!ready.load()) {
+    this_thread::sleep_for(chrono::milliseconds(100));
+  }
+  cout << "The answer=" << arr[0] << endl;
+}
+
+void writer() {
+  arr.push_back(42);
+  ready = true;
+}
+
+int main() {
+  std::thread t1(reader), t2(writer);
+  t1.join();
+  t2.join();
+  return 0;
+}
+```
+
+上述程序执行之后输出`The answer=42`。
+
 ## Async Programming
 
-**std::async**：
+### STL Asynchronous Facility
 
 **std::future**：
+
+std::future是一个模板类，用于表示异步操作的结果。std::future对象通常不是直接创建的，而是与 std::async(launch policy, Fn&& fn, Args&&... args)，std::packaged_task和std::promise配合使用。
+
+**std::async(launch policy, Fn&& fn, Args&&... args)**：
+
+std::async是一个函数模板，用于启动一个异步任务。具体来说，它接受一个可调用的对象作为参数，并在一个单独的线程上异步执行它，同时返回一个std::future对象。比如：
+
+```c++
+bool is_prime (int x) {
+  std::cout << "Calculating. Please, wait...\n";
+  for (int i=2; i<x; ++i) if (x%i==0) return false;
+  return true;
+}
+
+int main ()
+{
+  // call is_prime(313222313) asynchronously:
+  std::future<bool> fut = std::async (is_prime,313222313);
+
+  std::cout << "Checking whether 313222313 is prime.\n";
+  // ...
+
+  bool ret = fut.get();      // waits for is_prime to return
+
+  if (ret) std::cout << "It is prime!\n";
+  else std::cout << "It is not prime.\n";
+
+  return 0;
+}
+```
+
+此外，std::async还可以指定的执行策略，包括：
+
+- std::launch::async强制在单独的线程上异步执行函数；
+- std::launch::deferred延迟执行，直到调用返回结果的std::future::get()或std::future::wait()时才执行函数。
+
+**std::packaged_task**:
+
+除此之外，标准库还提供了std::packaged_task这个类模板，用于打包可调用对象，再将其传递给线程异步地执行。
+
+类似的，使用std::packaged_task也可以获得一个std::future保存的执行结果。不过，需要调用std::packaged_task::get_future()。这个std::future对象可以通过.get()来获取任务完成后产生的结果。如果任务尚未完成，则获取结果的操作将阻塞调用线程，直到结果可用。
+
+相比于std::async，std::packaged_task将异步任务的创建和执行分离开来，提供了更高的自由度。使用std::packaged_task，你可以显式地指定在哪个线程上执行任务，也可以更灵活地控制任务的生命周期。比如：
+
+```c++
+// count down taking a second for each value:
+int countdown (int from, int to) {
+  for (int i=from; i!=to; --i) {
+    std::cout << i << '\n';
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+  std::cout << "Lift off!\n";
+  return from-to;
+}
+
+int main ()
+{
+  std::packaged_task<int(int,int)> tsk (countdown);   // set up packaged_task
+  std::future<int> ret = tsk.get_future();            // get future
+
+  std::thread th (std::move(tsk),10,0);   // spawn thread to count down from 10 to 0
+
+  // ...
+
+  int value = ret.get();                  // wait for the task to finish and get result
+
+  std::cout << "The countdown lasted for " << value << " seconds.\n";
+
+  th.join();
+
+  return 0;
+}
+```
+
+**std::promise**:
+
+std::promise是一个类模板，它提供了在线程间传递值或异常的机制。通过这个机制，一个线程可以在任务执行的任意时刻使用std::promise对象来设置值或异常，而另一个线程则可以通过与std::promise对象相关联的std::future对象来检索这个值或异常。
+
+```c++
+void print_int (std::future<int>& fut) {
+  int x = fut.get();
+  std::cout << "value: " << x << '\n';
+}
+
+int main ()
+{
+  std::promise<int> prom;                      // create promise
+
+  std::future<int> fut = prom.get_future();    // engagement with future
+
+  std::thread th1 (print_int, std::ref(fut));  // send future to new thread
+
+  prom.set_value (10);                         // fulfill promise
+                                               // (synchronizes with getting the future)
+  th1.join();
+  return 0;
+}
+```
+
+### Event Loop and Callback
 
 ## Multithread Programming Practice
 
