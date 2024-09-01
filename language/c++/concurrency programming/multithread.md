@@ -7,10 +7,13 @@
     - [Get Return Value](#get-return-value)
     - [Sub-thread](#sub-thread)
     - [POSIX Thread](#posix-thread)
-  - [Lock-based Coding](#lock-based-coding)
+  - [Mutex and Condition Variable](#mutex-and-condition-variable)
     - [Mutex](#mutex)
     - [Mutex RAII Wrapper](#mutex-raii-wrapper)
+    - [Lockable and Lock Function](#lockable-and-lock-function)
     - [Condition Variable](#condition-variable)
+  - [Lock-Based Coding](#lock-based-coding)
+    - [Thread-Safe Data Structure](#thread-safe-data-structure)
   - [Atomic Operation](#atomic-operation)
   - [Async Programming](#async-programming)
 
@@ -150,15 +153,73 @@ POSIX提供的线程API包括：
 
 此外，它还提供了一些互斥量、条件变量等线程同步机制的支持。
 
-## Lock-based Coding
+## Mutex and Condition Variable
 
 ### Mutex
 
+**std::mutex**：
+
+在C++中，标准库提供了std::mutex作为互斥量帮助管理共享数据。完成创建后，可通过成员函数lock()对互斥量上锁，unlock()进行解锁。不过，实践中不推荐直接去调用其成员函数去上锁和解锁。因为调用成员函数意味着必须在每个函数出口都要去调用unlock()，也包括异常的情况。
+
+为此，C++标准库提供了一系列基于RAII思想的互斥量包装器。这些包装器在构造时就就锁上传入互斥量，并在析构的时候进行解锁，从而保证了一个已锁互斥量能被正确解锁。我们将在下一节详细介绍这些工具。
+
 **std::recursive_mutex**:
 
-一个线程尝试多次获取std::mutex会导致死锁，但一个线程却可以多次获取std::recursive_mutex而不出现问题。
+除了最普通的std::mutex之外，标准库还提供了std::recursive_mutex和std::timed_mutex两种更为复杂的互斥量工具。
 
-****
+其中，std::recursive_mutex是一个递归互斥量，允许同一个线程多次对其进行锁定而不会导致死锁。当同一个线程多次对std::recursive_mutex进行加锁操作时，只有当对应的解锁操作次数与加锁次数相等时，才会真正释放互斥量。这对于涉及递归调用或者函数嵌套的情况非常有用。
+
+**std::timed_mutex**:
+
+至于，std::timed_mutex则是一种带有超时功能的互斥量。它允许线程在尝试获取锁时设置超时时间。如果在指定的超时时间内无法获取到锁，线程可以根据返回值来判断是否超时。
+
+### Mutex RAII Wrapper
+
+正如我前面所提到的，C++标准库提供了一系列基于RAII思想的互斥量包装器，包括：std::lock_guard、std::unique_lock和std::scoped_lock。
+
+**std::lock_guard**:
+
+总体来说，上述三者都是基于RAII思想的管理互斥量的“锁”，即在创建时上锁，析构时解锁，但它们相互之间也有区别。其中，std::lock_guard是最普通的，它只能上锁一次，且不支持移动和拷贝语义。
+
+**std::unique_lock**:
+
+相比之下，std::unique_lock能够多次上锁解锁，这也是条件变量一般与它绑定的原因。此外，std::unique_lock还可以使用std::move进行移动。
+
+**std::scoped_lock**:
+
+至于std::scoped_lock则是C++17时引入的一种新的锁包装器。它能够以RAII的方式管理多个std::mutex。注意：如果一次需要上锁多个互斥量，需要在一个操作内完成（比如使用std::scoped_lock或全局函数std::lock），否则有可能发生死锁。例如：
+
+```c++
+mutex mtx1, mtx2;
+// 可能发生死锁
+lock_guard lck1(mtx1), lck2(mtx2);
+```
+
+**std::adpot_lock & std::defer_lock**:
+
+std::adpot_lock和std::defer_lock是`<mutex>`中定义的两个常量。它们主要用于创建std::unique_lock或std::lock_guard对象时，指明互斥量当前状态。
+
+其中，当使用std::adopt_lock标记来构造std::unique_lock或std::lock_guard对象时，表示该对象将“接管”已经被锁定的互斥量。这意味着构造函数假定互斥量已经被另一个线程锁定，不再尝试再次锁定互斥量，而是直接将其管理起来。这在某些情况下非常有用，例如在函数调用中传递已锁定的互斥量。比如：在C++17之前（引入scoped_lock之前），使用std::lock_guard托管多个互斥量。
+
+``` c++
+mutex mtx1, mtx2;
+std::lock(mtx1, mtx2);
+// 使用lock_guard托管互斥量
+lock_guard<mutex> lck1(mtx1, adopt_lock), lck2(mtx2, adopt_lock);
+```
+
+至于，使用std::defer_lock标记来构造std::unique_lock或std::lock_guard对象则表示该对象不会立即锁定互斥量。这样构造的对象需要在后续手动调用lock()函数来锁定互斥量。这种延迟锁定的方式可以在一些需要动态控制锁定时非常有用。
+
+``` c++
+mutex mtx;
+uniuqe_lock<mutex> lck(mtx, defer_lock);
+// 手动锁定互斥量
+lck.lock();
+```
+
+### Lockable and Lock Function
+
+**Lockable**:
 
 **std::lock()**:
 
@@ -174,44 +235,13 @@ lock(lk1), lock(lk2);
 lock(lk1, lk2);
 ```
 
-### Mutex RAII Wrapper
-
-**std::lock_guard vs std::unique_lock**:
-
-首先，上述二者都是基于RAII思想的管理互斥量的“锁”，都能够代替互斥量的lock()和unlock()，并且都能有效解决资源忘记释放的问题；
-
-其次，二者的区别在于std::lock_guard只能上锁一次，即std::lock_guard在创建时上锁，析构时解锁;而对于std::unique_lock，它能够多次上锁解锁，这也是条件变量一般与它绑定的原因。
-
-此外，std::unique_lock还可以使用std::move进行移动，而std::lock_guard则不行。
-
-总的来说，std::unique_lock有更高的灵活性，但也要付出更性能损耗；与之相反的，std::lock_guard损耗更低，但灵活性也更差。
-
-**std::scoped_lock**:
-
-简单来说，std::scoped_lock就是std::lock_guard的升级版，它能够以RAII的方式管理多个std::mutex。注意：如果一次需要上锁多个互斥量，需要在一个操作内完成（比如使用std::scoped_lock），否则有可能发生死锁。例如：
-
-**std::adpot_lock & std::defer_lock**:
-
-std::defer_lock一般和std::unique_lock一起使用，表示初始化std::unique_lock对象时，对应的mutex不用立刻上锁。
-
-``` c++
-mutex mtx;
-uniuqe_lock<mutex> locker(mtx, defer_lock);
-```
-
-std::adopt_lock则一般和std::lock_guard一起使用，表示初始化std::lock_guard对象时，对应的mutex已经上锁。
-
-``` c++
-mutex mtx1, mtx2;
-std::lock(mtx1, mtx2);
-lock_guard<mutex> lk1(mtx1, adopt_lock), lk2(mtx2, adopt_lock);
-```
-
 ### Condition Variable
 
-std::condition_variable的初始化并不需要std::mutex或者mutexRAII的包装类，而是无需传其他参数就可以直接使用。
+**std::condition_variable**:
 
-**std::condition_variable::notify_one() vs std::condition_variable::notify_all()**：
+std::condition_variable的初始化并不需要std::mutex或者mutex的RAII的包装类，而是无需传其他参数就可以直接使用。
+
+**std::condition_variable::notify_one() & std::condition_variable::notify_all()**：
 
 std::condition_variable::notify_one()和std::condition_variable::notify_all()的唯一区别就是：前者仅唤醒一个关联该条件变量的线程，而后者唤醒所有这种线程。
 
@@ -225,7 +255,7 @@ std::condition_variable::wait()的第二个参数是可选参数。用户可以�
 
 因此，传入第二个参数，也就等价于：
 
- c++
+```c++
 // cond.wait(lock)
 std::mutex mtx;
 std::condition_variable cond;
@@ -235,6 +265,11 @@ std::unique_lock<std::mutex> lock;
 while(!pred()) {
   cond.wait(lock);
 }
+```
+
+## Lock-Based Coding
+
+### Thread-Safe Data Structure
 
 ## Atomic Operation
 
