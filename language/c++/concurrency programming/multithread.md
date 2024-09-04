@@ -453,8 +453,7 @@ bool is_prime (int x) {
   return true;
 }
 
-int main ()
-{
+int main () {
   // call is_prime(313222313) asynchronously:
   std::future<bool> fut = std::async (is_prime,313222313);
 
@@ -494,8 +493,7 @@ int countdown (int from, int to) {
   return from-to;
 }
 
-int main ()
-{
+int main () {
   std::packaged_task<int(int,int)> tsk (countdown);   // set up packaged_task
   std::future<int> ret = tsk.get_future();            // get future
 
@@ -523,8 +521,7 @@ void print_int (std::future<int>& fut) {
   std::cout << "value: " << x << '\n';
 }
 
-int main ()
-{
+int main () {
   std::promise<int> prom;                      // create promise
 
   std::future<int> fut = prom.get_future();    // engagement with future
@@ -540,10 +537,167 @@ int main ()
 
 ### Event Loop and Callback
 
+事件循环（Event Loop）是异步编程中的一个核心概念，它允许程序在处理I/O或其他耗时操作时保持响应。而回调机制（Callback Mechanism）则是一种常和事件循环配合的设计模式，它允许程序在某个任务完成时自动执行预定的函数。
+
+具体来说，网络编程中Reactor设计模式就是其最好的示例。它使用epoll监听大量的文件描述符，并将它们就绪的事件通知给主线程。紧接着，主线程就会将该事件的回调处理逻辑交由线程池中空闲线程处理。
+
 ## Multithread Programming Practice
 
 ### Thread Pool
 
+一个线程池的核心是任务队列和工作线程组，它本质是一个生产者-消费者模型。其中，用户通过接口向线程池添加任务；工作线程不断的处理任务，直到消费完成。其定义：
+
+```c++
+class ThreadPool {
+ private:
+  std::string name;
+  std::mutex mtx;
+  std::condition_variable cv;
+  std::atomic<bool> running;
+  std::atomic<size_t> maxTaskNum;
+  std::queue<std::function<void()>> tasks;
+  std::vector<std::thread> workers;
+
+ public:  // 构造析构
+  explicit ThreadPool(const std::string& _name);
+  ~ThreadPool();
+
+ public:  // 主要接口
+  void start(size_t, size_t);
+  void terminate();
+
+  template <typename Func, typename... Args>
+  std::future<typename std::invoke_result_t<Func, Args...>> run(Func&&, Args&&...);
+};
+```
+
+其中，void ThreadPool::start(size_t, size_t)和void ThreadPool::terminate()分别用于启动和终止线程池。前者会初始化指定数目的工作线程，并定义一个taskWrapper函数来保证工作线程在任务队列为空时仅休眠而非终止；后者则会逐个关闭工作线程，从而终止线程池。
+
+```c++
+void ThreadPool::start(size_t workerNum, size_t taskNum) {
+  maxTaskNum = taskNum;
+  running = true;
+  for (size_t i = 0; i < workerNum; i++) {
+    auto taskWrapper = [this]() {
+      // 线程池工作时
+      while (running.load()) {
+        // 取出任务
+        std::function<void()> task;
+        {
+          std::unique_lock<std::mutex> lck(mtx);
+          // 避免虚假唤醒
+          while (running && tasks.empty()) {
+            cv.wait(lck);
+          }
+
+          // 终止线程池
+          if (!running || tasks.empty()) {
+            return;
+          }
+
+          // 提取任务
+          task = std::move(tasks.front());
+          tasks.pop();
+        }
+        cv.notify_one();
+        
+        // 执行任务
+        task();
+      }
+    };
+
+    workers.emplace_back(taskWrapper);
+  }
+}
+
+void ThreadPool::terminate() {
+  if (running) {
+    running = false;
+    cv.notify_all();
+    for (size_t i = 0; i < workers.size(); i++) {
+      workers[i].join();
+    }
+  }
+}
+```
+
+最后也是最关键的接口——用于指定任务的run函数，它的实现涉及到：
+
+- 模板编程：可变参数模板、std::invoke_result_t返回值萃取器和std::forward完美转发；
+- 函数式编程：std::bind绑定器；
+- 异步编程：std::packaged_task异步任务和std::future异步任务结果；
+
+```c++
+template <typename Func, typename... Args>
+std::future<typename std::invoke_result_t<Func, Args...>> ThreadPool::run(Func&& func, Args&&... args) {
+  if (!running) {
+    throw std::runtime_error("ThreadPool Exception: thread pool is not running!");
+  }
+
+  // 提取返回类型，并定义返回的future对象
+  // 注意，C++17后禁用std::result_of_t<Func(Args...)>。
+  using Res = typename std::invoke_result_t<Func, Args...>;
+  std::future<Res> res;
+
+  // 将任务加入任务队列
+  {
+    std::lock_guard<std::mutex> lck(mtx);
+    if (tasks.size() > maxTaskNum) {
+      throw std::runtime_error("ThreadPool Exception: the task queue is full!");
+    }
+
+    // 将参数绑定到函数对象上，并使用一个返回类型为Res的packaged_task管理该任务
+    // 注意，此处packaged_task对象一定要放在堆区，并使用智能指针管理，否则传入tasks队列后会失效，出现segment fault错误。
+    // 即，若task为普通变量，在离开该作用域后，task析构释放。此时tasks.emplace([&task]() { task(); });中的task已经失效。
+    auto task = std::make_shared<std::packaged_task<Res()>>(std::bind(std::forward<Func>(func), std::forward<Args>(args)...));
+    res = task->get_future();
+    tasks.emplace([task]() { (*task)(); });
+  }
+  cv.notify_one();
+
+  return res;
+}
+```
+
 ### Lock-Based Thread-Safe Data Structure
+
+```c++
+template<typename T>
+class LockBasedQueue {
+private:
+    std::mutex mtx;
+    std::queue<T> data;
+public:
+    LockBasedQueue() {}
+    ~LockBasedQueue() {}
+
+    size_t size();
+    void push(const T& val);
+    std::optional<T> tryPop();
+};
+
+template<typename T>
+size_t LockBasedQueue<T>::size() {
+    std::lock_guard lck(mtx);
+    return data.size();
+}
+
+template<typename T>
+void LockBasedQueue<T>::push(const T& val) {
+    std::lock_guard lck(mtx);
+    data.push(val);
+}
+
+template<typename T>
+std::optional<T> LockBasedQueue<T>::tryPop() {
+    std::lock_guard lck(mtx);
+    if (data.empty()) {
+        return std::nullopt;
+    }
+    T val = std::move(data.front());
+    data.pop();
+    return val;
+}
+```
 
 ### Lock-Free Thread-Safe Data Structure
