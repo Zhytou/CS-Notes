@@ -21,7 +21,7 @@
 class MyClass {
 public:
   void incrementCounter() const {
-      ++counter_;  // 在常量成员函数中修改被声明为 mutable 的成员变量
+    ++counter_;  // 在常量成员函数中修改被声明为 mutable 的成员变量
   }
 
 private:

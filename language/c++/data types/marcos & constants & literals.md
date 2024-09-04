@@ -80,9 +80,9 @@
 ```c++
 #define switch(x,y) {int tmp; tmp=x;x=y;y=tmp;}
 if(x>y)
-   switch(x,y);
+  switch(x,y);
 else        //error, parse error before else
-   otheraction();
+  otheraction();
 ```
 
 在把宏引入代码中，会多出一个分号，从而会报错。使用do{….}while(0) 把它包裹起来，成为一个独立的语法单元，从而不会与上下文发生混淆。同时因为绝大多数的编译器都能够识别do{…}while(0)这种无用的循环并进行优化，所以使用这种方法也不会导致程序的性能降低，

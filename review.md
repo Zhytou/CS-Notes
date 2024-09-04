@@ -429,3 +429,5 @@ main.cpp:23:17: note: previous declaration ‘void func(double)’
 shared_ptr 的引用计数是线程安全的。shared_ptr 内部使用原子操作来维护引用计数，确保在多线程环境下引用计数的操作是线程安全的。
 
 72、C++模板函数用inline修饰有什么好处？
+
+73、SQL中delet、drop和truncate的区别是什么？

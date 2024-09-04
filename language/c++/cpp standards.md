@@ -19,6 +19,7 @@
     - [std::optional](#stdoptional)
     - [std::variant](#stdvariant)
     - [std::filesystem](#stdfilesystem)
+    - [模板参数推导](#模板参数推导)
   - [C++20](#c20)
     - [concept](#concept)
     - [std::ranges](#stdranges)
@@ -273,6 +274,15 @@ if (std::holds_alternative<int>(var)) {
 
 std::filesystem是C++17中引入的标准库，用于操作文件系统。它提供了一组类和函数，用于处理文件、目录和路径等文件系统相关的操作。
 
+### 模板参数推导
+
+C++17中添加了一个新特性，称为模板类参数推导。这样类似std::lock_guard这样简单的模板类型的模板参数列表可以省略。
+
+```c++
+std::mutex mtx;
+std::lock_guard lck(mtx);
+```
+
 ## C++20
 
 ### concept
@@ -378,9 +388,9 @@ std::ranges::sort(numbers);
 // 查找
 auto it = std::ranges::find(numbers, 5);
 if (it != numbers.end()) {
-    std::cout << "Found at index: " << std::distance(numbers.begin(), it) << '\n';
+  std::cout << "Found at index: " << std::distance(numbers.begin(), it) << '\n';
 } else {
-    std::cout << "Not found\n";
+  std::cout << "Not found\n";
 }
 
 // 变换
@@ -388,6 +398,20 @@ auto squared_numbers = numbers | std::views::transform([](int num) { return num 
 
 // 筛选
 auto even_numbers = numbers | std::views::filter([](int num) { return num % 2 == 0; });
+
+// 访问/切片
+// 访问前5个元素
+for (auto num : numbers | std::view::take(5)) {
+  cout << num << ' ';
+}
+// 从第三个元素开始访问
+for (auto num : numbers | std::view::drop(3)) {
+  cout << num << ' ';
+}
+// 指定访问范围为2到6
+for (auto num : numbers | std::view::slice(2, 6)) {
+  cout << num << ' ';
+}
 ```
 
 可见，使用ranges中提供的排序和查找算法时，不再需要像algorithm一样指定起始和结束迭代器，而是直接传入原容器即可。此外，关于ranges提供的变换和筛选操作，还需要引入一个新概念std::views，也就是范围视图。它是一种惰性求值的机制，仅在需要时才会计算或生成范围中的元素，而不会立即生成或复制整个范围的元素。
