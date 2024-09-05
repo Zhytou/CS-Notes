@@ -13,7 +13,7 @@
     - [if constexpr](#if-constexpr)
   - [编译期运算](#编译期运算)
     - [数值计算](#数值计算)
-    - [类型萃取](#类型萃取)
+    - [类型计算](#类型计算)
     - [编译时多态](#编译时多态)
     - [静态反射](#静态反射)
   - [参考](#参考)
@@ -96,6 +96,16 @@ struct Collection {
 **关键字**：
 
 其中，template是模板关键字，而typename则是模板参数关键字。前者用于声明一个模板函数或类；后者则用于声明可能出现的参数类型，并且可以用class替代。
+
+除此之外，template中还可以直接传入常量参数，比如std::array要求传入一个非负整数用于指定固定数组长度。
+
+```c++
+template<class T, std::size_t N>
+struct array;
+
+// 定义了一个存储int、长度为3的数组
+std::array<int, 3> arr;
+```
 
 **参数替换——零成本实现**：
 
@@ -442,7 +452,7 @@ template<size_t N>
 constexpr size_t Fibonacci_v = Fibonacci<N>::value; 
 ```
 
-### 类型萃取
+### 类型计算
 
 更常见的情况是使用模板进行类型计算，比如下面是一个计算类型T的指针类型的例子。
 
@@ -465,24 +475,24 @@ template<typename T>
 std::enable_if_t<std::is_integral<T>::value, std::string>
 to_string(T t)
 {
-    return std::to_string(t);
+  return std::to_string(t);
 }
 
 template<typename T>
 std::enable_if_t<!std::is_integral<T>::value, std::string>
 to_string(T t)
 {
-    return t;
+  return t;
 }
 
 // 使用constexpr if
 template<typename T>
 auto to_string(T t)
 {
-    if constexpr(std::is_integral<T>::value)
-        return std::to_string(t);
-    else
-        return t;
+  if constexpr(std::is_integral<T>::value)
+    return std::to_string(t);
+  else
+    return t;
 }
 ```
 
