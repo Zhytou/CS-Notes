@@ -498,10 +498,77 @@ auto to_string(T t)
 
 ### 编译时多态
 
+奇异递归模板模式（Curiously Recurring Template Pattern，CRTP）是C++模板编程时的一种惯用法，它能够实现编译期的多态。其具体做法就是把派生类作为基类的模板参数。比如：
+
+```c++
+template <class T> 
+struct Base
+{
+    void interface()
+    {
+        // ...
+        static_cast<T*>(this)->implementation();
+        // ...
+    }
+
+    static void static_func()
+    {
+        // ...
+        T::static_sub_func();
+        // ...
+    }
+};
+
+struct Derived : Base<Derived>
+{
+    void implementation();
+    static void static_sub_func();
+};
+```
+
+在这个例子中，`Base<Derived>::interface()`，虽然是在`struct Derived`之前就被声明了，但未被编译器实例化直至它被实际调用，这发生于`Derived`声明之后，此时`Derived::implementation()`的声明是已知的。
+
+这种技术获得了类似于虚函数的效果，并避免了动态多态的代价。因此CRTP被称为编译期多态。
+
 ### 静态反射
+
+**反射是什么**：
+
+The term reflection refers to the ability of a computer program to observe and possibly alter its own structure and/or its behavior. This includes building new or altering the existing data structures, doing changes to algorithms or changing the way the program code is interpreted. To some degree, reflective programming can be regarded a particular kind of metaprogramming.
+
+**反射分类**：
+
+Reflection can be classified as static/compile-time reflection and dynamic/run-time reflection. The static reflection means meta info about the program only available at complie-time, while the dynamic reflection can be queried when program is running.
+
+**反射的作用**：
+
+Common purposes of reflection include:
+
+- serialization/store object data in JSON or XML;
+- remote procedure calls;
+- automatic generation of a relational schema from the application object model and
+object-relational mapping;
+- etc.
+
+**Java的反射**：
+
+Althogh the implementation of Java reflection is based on .class files which are generated at compile time, java reflection is dynamic, allowing it to inspect and possibly modify its structure while it is running. This is beacause JVM loads these .class files and provides reflection capabilities to inspect and interact with the bytecode at run time.
+
+Relection in Java is widely used. For example, the two features of the most famous Java framework "Spring": IoC and AOP involve reflection. Other use scenarios of Java reflection include:
+
+- dynamic proxies;
+- testing frameworks;
+- serialization mechanisms.
+
+**C++原生的“反射”**：
+
+Comparing to Java, C++ only supports *limited* compile-time reflection(also known as RTTI), primarily through the use of the typeid operator and dynamic_cast. Although the usefulness of RTTI mechanisms is quite limited, it merely costs nothing. It is actually a tradeoff between the complexity of the reflection system and its usefulness.
+
+You don't pay for what you don't use. That's one of the must basic design philosophies underlying C++. That is why C++ only supports limited compile-time reflection.
 
 ## 参考
 
 - [Modern C++模板元编程](https://netcan.github.io/presentation/metaprogramming/#/)
 - [Constexpr 从11到20](https://netcan.github.io/presentation/constexpr_from_11_20/#/)
 - [CppCon Constexpr all the things!](https://github.com/CppCon/CppCon2017/blob/master/Presentations/constexpr%20ALL%20the%20things/constexpr%20ALL%20the%20things%20-%20Jason%20Turner%20and%20Ben%20Deane%20-%20CppCon%202017.pdf)
+- [如何优雅的实现 C++ 编译期静态反射](https://netcan.github.io/2020/08/01/%E5%A6%82%E4%BD%95%E4%BC%98%E9%9B%85%E7%9A%84%E5%AE%9E%E7%8E%B0C-%E7%BC%96%E8%AF%91%E6%9C%9F%E9%9D%99%E6%80%81%E5%8F%8D%E5%B0%84/)
