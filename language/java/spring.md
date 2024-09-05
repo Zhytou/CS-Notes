@@ -764,7 +764,7 @@ Spring MVC是一种基于Java的轻量级Web框架。它使用了MVC架构模式
 
 ### Web应用上下文 WebApplicationContext
 
-事实上，DispatcherServlet总是和一个WebApplicationContext绑定。它通过这个上下文，取和Web相关的Bean，包括：控制器、处理映射器和视图解析器等等。
+事实上，DispatcherServlet总是和一个WebApplicationContext绑定。它通过这个上下文，获取Web相关的Bean，包括：控制器、处理映射器和视图解析器等等。
 
 正如上述web.xml文件所示，其中设置的init-param，即Spring MVC配置文件位置，正是用于初始化WebApplication。而一个常见的Spring MVC配置文件如下：
 

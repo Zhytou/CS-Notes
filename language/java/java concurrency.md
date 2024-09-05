@@ -82,7 +82,7 @@
 
 #### Lock Prefix Instructions
 
-![On multicore x86 systems, are mutexes implemented using a LOCK'd instruction?](https://stackoverflow.com/questions/6868007/on-multicore-x86-systems-are-mutexes-implemented-using-a-lockd-instruction)
+[On multicore x86 systems, are mutexes implemented using a LOCK'd instruction?](https://stackoverflow.com/questions/6868007/on-multicore-x86-systems-are-mutexes-implemented-using-a-lockd-instruction)
 
 #### CAS
 
@@ -94,7 +94,7 @@
 
 如果内存中要更新的变量值与预期值相等，CAS会将内存中的值更新为新值；如果不相等，它不会做任何修改。比如，`lock cmpxchg`指令就是x86体系下的CAS指令，所以我们可以使用Inline ASM实现如下效果。
 
-```java
+```c++
 int cmpxchg(int* val, int expected, int newval) {
     __asm__ volatile(
         "lock cmpxchg %2, %0\n\t"
