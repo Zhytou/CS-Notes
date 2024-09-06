@@ -20,9 +20,10 @@
     - [STL Asynchronous Facility](#stl-asynchronous-facility)
     - [Event Loop and Callback](#event-loop-and-callback)
   - [Multithread Programming Practice](#multithread-programming-practice)
-    - [Thread Pool](#thread-pool)
+    - [Producer-Consumer](#producer-consumer)
     - [Lock-Based Thread-Safe Data Structure](#lock-based-thread-safe-data-structure)
     - [Lock-Free Thread-Safe Data Structure](#lock-free-thread-safe-data-structure)
+    - [Thread Pool](#thread-pool)
 
 ## Thread Management
 
@@ -125,6 +126,8 @@ int main() {
   cout << endl;
 }
 ```
+
+**指针**：
 
 另外，使用指针可以在传值的基础上修改其指向的内存，但需要注意内存可能提前释放的问题。比如：如果使用detach()，则当主线程崩溃或者正常结束后，该块内存被回收，若此时子线程没有结束，那么子线程中指针的访问将未定义，程序会出错。
 
@@ -543,6 +546,144 @@ int main () {
 
 ## Multithread Programming Practice
 
+### Producer-Consumer
+
+```c++
+std::mutex mtx;
+std::queue<int> data;
+
+void consumer(int n) {
+  int nn = 0;
+  while (nn < n) {
+    std::cout << "Consuming ";
+    while(!data.empty()) {
+      int num = data.front();
+      data.pop();
+      nn += 1;
+      std::cout << num << ' ';
+    }
+    std::cout << std::endl;
+  }
+  std::cout << "Finish Consuming!" << std::endl;
+
+  return ;
+}
+
+void producer(int n) {
+  while (n > 0) {
+    {
+      std::lock_guard lck(mtx);
+      int nn = rand()%n;
+      std::cout << "Producing ";
+      for (int num = n; num > nn; num--) {
+        data.push(num);
+        std::cout << num << ' ';
+      }
+      std::cout << std::endl;
+      n = nn;
+    }
+  }
+  std::cout << "Finish Producing!" << std::endl;
+  return ;
+}
+```
+
+完成一个最简单的生产-消费者问题，可能会按上面的实现。但其中有一个潜在的问题，即当消费者占有锁且data为空时，生产者无法展开生产的，因为消费者不会主动释放锁的，因此需要引入条件变量。同时，我们也能看出mutex和condition_variable的关系——前者用于保护共享内存安全，即同一时刻仅一个线程能操作该内存，但它无法保证这些线程的执行顺序。而后者能够通过条件来控制线程执行顺序。
+
+```c++
+std::mutex mtx;
+std::condition_variable cv;
+std::queue<int> data;
+
+void consumer(int n) {
+  int nn = 0;
+
+  while (nn < n) {
+    std::unique_lock lck(mtx);
+    while(data.empty()) {
+      cv.wait(lck);
+    }
+
+    std::cout << "Consuming ";
+    while(!data.empty()) {
+      int num = data.front();
+      data.pop();
+      nn += 1;
+      std::cout << num << ' ';
+    }
+    std::cout << std::endl;
+  }
+  std::cout << "Finish Consuming!" << std::endl;
+
+  return ;
+}
+
+void producer(int n) {
+  while (n > 0) {
+    {
+      std::lock_guard lck(mtx);
+      int nn = rand()%n;
+      std::cout << "Producing ";
+      for (int num = n; num > nn; num--) {
+        data.push(num);
+        std::cout << num << ' ';
+      }
+      std::cout << std::endl;
+      n = nn;
+    }
+    cv.notify_one();
+    if (n > 0) {
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+  }
+  std::cout << "Finish Producing!" << std::endl;
+  return ;
+}
+```
+
+### Lock-Based Thread-Safe Data Structure
+
+```c++
+template<typename T>
+class LockBasedQueue {
+private:
+    std::mutex mtx;
+    std::queue<T> data;
+public:
+    LockBasedQueue() {}
+    ~LockBasedQueue() {}
+
+    size_t size();
+    void push(const T& val);
+    std::optional<T> tryPop();
+};
+
+template<typename T>
+size_t LockBasedQueue<T>::size() {
+    std::lock_guard lck(mtx);
+    return data.size();
+}
+
+template<typename T>
+void LockBasedQueue<T>::push(const T& val) {
+    std::lock_guard lck(mtx);
+    data.push(val);
+}
+
+template<typename T>
+std::optional<T> LockBasedQueue<T>::tryPop() {
+    std::lock_guard lck(mtx);
+    if (data.empty()) {
+        return std::nullopt;
+    }
+    T val = std::move(data.front());
+    data.pop();
+    return val;
+}
+```
+
+### Lock-Free Thread-Safe Data Structure
+
 ### Thread Pool
 
 一个线程池的核心是任务队列和工作线程组，它本质是一个生产者-消费者模型。其中，用户通过接口向线程池添加任务；工作线程不断的处理任务，直到消费完成。其定义：
@@ -658,46 +799,3 @@ std::future<typename std::invoke_result_t<Func, Args...>> ThreadPool::run(Func&&
   return res;
 }
 ```
-
-### Lock-Based Thread-Safe Data Structure
-
-```c++
-template<typename T>
-class LockBasedQueue {
-private:
-    std::mutex mtx;
-    std::queue<T> data;
-public:
-    LockBasedQueue() {}
-    ~LockBasedQueue() {}
-
-    size_t size();
-    void push(const T& val);
-    std::optional<T> tryPop();
-};
-
-template<typename T>
-size_t LockBasedQueue<T>::size() {
-    std::lock_guard lck(mtx);
-    return data.size();
-}
-
-template<typename T>
-void LockBasedQueue<T>::push(const T& val) {
-    std::lock_guard lck(mtx);
-    data.push(val);
-}
-
-template<typename T>
-std::optional<T> LockBasedQueue<T>::tryPop() {
-    std::lock_guard lck(mtx);
-    if (data.empty()) {
-        return std::nullopt;
-    }
-    T val = std::move(data.front());
-    data.pop();
-    return val;
-}
-```
-
-### Lock-Free Thread-Safe Data Structure

@@ -7,7 +7,7 @@
   - [可调用对象](#可调用对象)
     - [仿函数类](#仿函数类)
     - [lambda表达式](#lambda表达式)
-  - [标准库中的函数式编程](#标准库中的函数式编程)
+  - [标准库对函数式编程的支持](#标准库对函数式编程的支持)
     - [可调用对象包装器](#可调用对象包装器)
     - [绑定器](#绑定器)
     - [引用包装器](#引用包装器)
@@ -163,7 +163,23 @@ auto cmp = [sz](const string& s) mutable {
 
 在C++中，lambda表达式就可以实现闭包:lambda表达式可以直接访问并使用它外层函数作用域内的变量，这些变量不在lambda函数内声明。而lambda本身又可以作为一个独立的可调用实体传递给其他函数。
 
-## 标准库中的函数式编程
+**lambda捕获unique_ptr**：
+
+早期C++的lambda表达式只有值捕获、引用捕获和隐式捕获三种方式，因此其难以捕获unique_ptr这种movable的对象。为了改善这个问题，C++14引入了广义捕获的特性(Generalized Lambda Captures)。这种特性允许lambda表达式在捕获列表中定义任意的本地变量来帮助你捕获，比如：
+
+```c++
+// a unique_ptr is move-only
+auto u = make_unique<some_type>(some, parameters); 
+
+// move the unique_ptr into the lambda
+go.run([u = move(u)]{do_something_with(u);});
+```
+
+**递归lambda**：
+
+[How to make a recursive lambda](https://stackoverflow.com/questions/2067988/how-to-make-a-recursive-lambda)
+
+## 标准库对函数式编程的支持
 
 ### 可调用对象包装器
 
@@ -217,3 +233,24 @@ int result = f(); // 调用加法函数并传入已绑定参数
 ```
 
 ### 引用包装器
+
+std::reference_wrapper是标准库提供的一种模板类，它能够将一个引用对象包装成一个可复制和赋值的对象。其核心作用就是在函数式编程或多线程编程时传递引用参数。和它密切相关的是另外两个标准库函数：std::ref和std::cref。二者分别用于返回普通和const的std::reference_wrapper对象。比如：
+
+```c++
+void f(int& n1, int& n2, const int& n3)
+{
+  std::cout << "In function: " << n1 << ' ' << n2 << ' ' << n3 << '\n';
+  ++n1; // increments the copy of n1 stored in the function object
+  ++n2; // increments the main()'s n2
+  // ++n3; // compile error
+}
+
+int main() {
+  int n1 = 1, n2 = 2, n3 = 3;0
+  std::function<void()> bound_f = std::bind(f, n1, std::ref(n2), std::cref(n3));
+  f();
+
+  std::thread th(f, n1, std::ref(n2), std::cref(n3));
+  th.join();
+}
+```
