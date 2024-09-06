@@ -12,6 +12,7 @@
     - [shared\_ptr线程安全性](#shared_ptr线程安全性)
   - [weak\_ptr](#weak_ptr)
     - [weak\_ptr的使用：lock函数](#weak_ptr的使用lock函数)
+    - [weak\_ptr的实现](#weak_ptr的实现)
 
 在C++11标准中规定了四个智能指针std::auto_ptr，std::unique_ptr，std::shared_ptr以及std::weak_ptr。它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。其中，auto_ptr是C++98提出的，C++11已将其摒弃，并提出了unique_ptr替代auto_ptr。而shared_ptr和weak_ptr则是C+11从准标准库Boost中引入的两种智能指针。
 
@@ -123,18 +124,18 @@ shared_ptr<int> sp1(p), sp2(p);
 ### shared_ptr实现
 
 ``` c++
-using namespace std;
-
 template <typename T>
 class SharedPtr {
 public:
+    SharedPtr () : _pdata(nullptr), _refCount(nullptr) {}
+
     SharedPtr (T data) {
         _pData = new T(data);
         _refCount = new int(1);
     }
     
     SharedPtr (SharedPtr& other) {
-        this->_pData = other._pdata;
+        this->_pData = other._pData;
         this->_refCount = other._refCount;
         *(this->_refCount) += 1;
     }
@@ -280,3 +281,34 @@ weak_ptr<A> wp(sp);
 sp.reset(); // 此时sp被销毁
 cout << wp.expired() << endl;  // true表示已被销毁，否则为false
 ```
+
+### weak_ptr的实现
+
+```c++
+// 实现的前提包括：
+// 1、WeakPtr需要被设置为SharedPtr的友元类；
+// 2、SharedPtr中引用计数和数据指针均需改为protected；
+// 3、SharedPtr中增加一个使用引用计数和数据指针作为入参的构造函数。
+template <typename T>
+class WeakPtr {
+public:    
+    WeakPtr (SharedPtr& other) {
+        this->_pData = other._pData;
+        this->_refCount = other._refCount;
+    }
+    
+    ~WeakPtr () = default;
+    
+    SharedPtr<T> lock() {
+        if (*_refCount == 0) {
+          return SharedPtr<T>();
+        }
+        return SharedPtr<T>(_pData, _refCount)
+    }
+private:    
+    T* _pData;
+    int* _refCount;
+};
+```
+
+类似shared_ptr的实现，weak_ptr需要
