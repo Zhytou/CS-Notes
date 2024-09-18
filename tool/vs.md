@@ -11,6 +11,8 @@
     - [第三方库](#第三方库)
     - [性能优化](#性能优化)
     - [打包\&发布](#打包发布)
+    - [版本控制](#版本控制)
+    - [跨平台编译](#跨平台编译)
   - [其他](#其他)
     - [Qt](#qt)
     - [Vcpkg](#vcpkg)
@@ -146,6 +148,14 @@ VS中自带了类似valgrind的性能分析工具，可以使用快捷键`F2 + A
 为了让我们的项目显得高大上，我们常常需要为可执行程序添加一些精美的图标，并为其制作一个安装程序。
 
 而这些其实都有VS内置工具可以帮助我们完成，具体方法可以参考[这篇笔记](https://github.com/Zhytou/CS-Notes/blob/main/language/qt/other.md)。
+
+### 版本控制
+
+> [Should a .sln be committed to source control?](https://stackoverflow.com/questions/1033809/should-a-sln-be-committed-to-source-control)
+
+### 跨平台编译
+
+一些跨平台项目常常使用CMake+VS的组合实现在Windows平台上的编译，比如之前学习的Game104的Piccolo项目。当在Piccolo目录下，执行cmake -B build -S . -G "Visual Studio 16 2019"之后，就会在build目录下生成VS的sln项目文件。之后，就可以在VS平台下进行进一步的开发了（比如使用它的profile来性能优化或使用断点来帮助调试），这真的就是CMake+VS的好用之处。
 
 ## 其他
 

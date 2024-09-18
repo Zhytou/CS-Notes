@@ -310,5 +310,3 @@ private:
     int* _refCount;
 };
 ```
-
-类似shared_ptr的实现，weak_ptr需要

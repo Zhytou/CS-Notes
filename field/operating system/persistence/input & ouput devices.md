@@ -201,7 +201,7 @@ int poll(struct pollfd *fds, unsigned int nfds, int timeout);
 
 ### epoll
 
-epoll是对select和poll的改进，它避免了性能开销大（待监视文件描述符从用户空间到内核空间的复制）和文件描述符数量少两个缺点，同时还提供了边缘触发和水平触发两种模式供开发者选择。不光如此，epoll实际使用一组函数来帮助管理文件描述符。
+epoll是对select和poll的改进，它使用红黑树管理文件描述符，且避免了将待监视文件描述符从用户空间复制到内核空间，同时还提供了边缘触发和水平触发两种模式供开发者选择。不光如此，epoll实际使用一组函数来帮助管理文件描述符。
 
 **epoll_create函数**：
 
