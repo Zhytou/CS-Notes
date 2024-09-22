@@ -443,7 +443,7 @@ int main() {
 
 **std::future**：
 
-std::future是一个模板类，用于表示异步操作的结果。std::future对象通常不是直接创建的，而是与 std::async(launch policy, Fn&& fn, Args&&... args)，std::packaged_task和std::promise配合使用。
+std::future是一个模板类，用于表示异步操作的结果。std::future对象通常不是直接创建的，而是与std::async(launch policy, Fn&& fn, Args&&... args)，std::packaged_task和std::promise配合使用。
 
 **std::async(launch policy, Fn&& fn, Args&&... args)**：
 
@@ -487,7 +487,7 @@ int main () {
 
 ```c++
 // count down taking a second for each value:
-int countdown (int from, int to) {
+int countdown(int from, int to) {
   for (int i=from; i!=to; --i) {
     std::cout << i << '\n';
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -497,7 +497,7 @@ int countdown (int from, int to) {
 }
 
 int main () {
-  std::packaged_task<int(int,int)> tsk (countdown);   // set up packaged_task
+  std::packaged_task<int(int,int)> tsk(countdown);   // set up packaged_task
   std::future<int> ret = tsk.get_future();            // get future
 
   std::thread th (std::move(tsk),10,0);   // spawn thread to count down from 10 to 0
