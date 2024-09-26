@@ -174,6 +174,89 @@ mode：文件权限。与open函数中的mode一样，需要与umask做相应运
 - 二者都是半双工通信，本质都是一块缓存。生产者和消费者分别进行写入和读取，从而达成通信。
 - 匿名管道只允许有亲属关系的进程使用，而有名管道无限制。
 
+**共享内存**：
+
+共享内存（Shared Memory）也是一种进程间通信的机制。具体来说，它将同一物理地址映射到不同进程的虚拟地址中，从而允许某内存被多个进程同时访问和修改。在Linux系统中，共享内存通常可以通过SystemV API和POSIX API来实现。其中，POSIX API主要通过以下函数实现：
+
+- `int shm_open(const char *name, int oflag, mode_t mode);`: 创建或打开共享内存对象。
+- `int shm_unlink(const char *name);`:删除共享内存对象。
+- `void *mmap(void addr[.length], size_t length, int prot, int flags, int fd, off_t offset);`: 将共享内存映射到进程的地址空间。
+- `int munmap(void addr[.length], size_t length);`:共享内存从进程的地址空间分离。
+
+下面给出POSIX API实现共享内存的例子：
+
+```c++
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <unistd.h>
+ 
+int producer() {
+  /* the size (in bytes) of shared memory object */
+  const int SIZE = 4096;
+
+  /* name of the shared memory object */
+  const char* name = "OS";
+
+  /* strings written to shared memory */
+  const char* message_0 = "Hello";
+  const char* message_1 = "World!";
+
+  /* shared memory file descriptor */
+  int shm_fd;
+
+  /* pointer to shared memory object */
+  void* ptr;
+
+  /* create the shared memory object */
+  shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666);
+
+  /* configure the size of the shared memory object */
+  ftruncate(shm_fd, SIZE);
+
+  /* memory map the shared memory object */
+  ptr = mmap(0, SIZE, PROT_WRITE, MAP_SHARED, shm_fd, 0);
+
+  /* write to the shared memory object */
+  sprintf(ptr, "%s", message_0);
+  ptr += strlen(message_0);
+  sprintf(ptr, "%s", message_1);
+  ptr += strlen(message_1);
+  return 0;
+}
+
+void consumer() {
+  /* the size (in bytes) of shared memory object */
+  const int SIZE = 4096;
+
+  /* name of the shared memory object */
+  const char* name = "OS";
+
+  /* shared memory file descriptor */
+  int shm_fd;
+
+  /* pointer to shared memory object */
+  void* ptr;
+
+  /* open the shared memory object */
+  shm_fd = shm_open(name, O_RDONLY, 0666);
+
+  /* memory map the shared memory object */
+  ptr = mmap(0, SIZE, PROT_READ, MAP_SHARED, shm_fd, 0);
+
+  /* read from the shared memory object */
+  printf("%s", (char*)ptr);
+
+  /* remove the shared memory object */
+  shm_unlink(name);
+  return 0;
+}
+```
+
 **套接字 Socket**：
 
 套接字（Socket）是一种Unix系统中进程间通信的机制。它提供了一组标准函数接口，隐藏了器底层实现协议，从而统一了不同的网络编程模型（流式和数据包式、面向连接和无连接、TCP和UDP）。套接字本质上是一个文件描述符（即字节流），允许连接双方向其中写入或读取数据，从而达到通信的目的。它常见的API包括：
