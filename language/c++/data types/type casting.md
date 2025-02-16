@@ -88,7 +88,30 @@ double slope = static_cast<double>(c);
 
 `dynamic_cast`专门用于将多态基类的指针或引用强制转换为派生类的指针或引用，而且能够检查转换的安全性。对于不安全的指针转换，转换结果返回NULL指针；而对于不安全的引用转换，则会抛出异常。此外，由于`dynamic_cast`会动用运行时信息（RTTI）来进行类型安全检查，因此它存在一定的效率损失。
 
-值得注意的是，`dynamic_cast`只有在基类存在虚函数(虚函数表)的情况下才有可能将基类指针转化为子类。
+值得注意的是，`dynamic_cast`只有在基类存在虚函数(虚函数表)的情况下才有可能将基类指针转化为子类。因为它的实现实际上是通过查询虚函数表中的type_info来实现的。
+
+``` c++
+
+class Base {
+public:
+    virtual void print() { cout << "Base" << endl; }
+};
+
+class Derived : public Base {
+public:
+    void print() { cout << "Derived" << endl; }
+};
+
+Base *pb1 = new Derived;
+Base *pb2 = new Base;
+
+Derived *pd1 = dynamic_cast<Derived*>(pb1); // 合法
+Derived *pd2 = dynamic_cast<Derived*>(pb2); // 非法，返回NULL
+```
+
+可见，`dynamic_cast`的使用主要就是把指向子类对象的基类指针转为子类指针，因为在某些时候可能需要调用子类中独有的函数。
+
+具体来说，`dynamic_cast`依赖与`type_info`指针实现。它存储这当前对象的类型信息，当调用`dynamic_cast`时，会根据`type_info`指针来判断是否可以转换（`type_info`为子类或子类的子类时允许转换）。此外，仅当基类中有虚函数时，`type_info`指针才会被创建。
 
 **const_cast**:
 
