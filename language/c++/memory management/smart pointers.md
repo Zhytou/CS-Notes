@@ -182,6 +182,50 @@ private:
 
 有些时候我们可能希望实现一个类函数直接返回调用对象的shared_ptr。常见的做法是：直接用该对象的this指针去初始化一个shared_ptr对象。不过，这样会返回多个独立的shared_ptr，即引用计数无关的指针指向同一块内存，从而引起析构时重复释放内存的错误。
 
+**例子**：
+
+比如，下面这个例子就展示了直接使用this指针初始化shared_ptr的错误做法。
+
+```c++
+#include <iostream>
+#include <memory>
+
+using namespace std;
+
+class A{
+public:
+  string name;
+  shared_ptr<A> getPtr() {
+    return make_shared<A>(*this);
+  }
+
+  A() = default;
+
+  A(const A& a) {
+    name = a.name;
+  }
+};
+
+int main() {
+  A a;
+  a.name = "a";
+  auto ptr1 = a.getPtr();
+  auto ptr2 = a.getPtr();
+
+  cout << ptr1->name << ' ' << ptr2->name << endl;
+  cout << ptr1.use_count() << ' ' << ptr2.use_count() << endl;
+}
+```
+
+输出结果为：
+
+``` txt
+a a
+1 1
+```
+
+可见，即使ptr1和ptr2都由this初始化，但二者的use_count确无法建立关系，因此会在后续释放时发生错误。
+
 **使用**：
 
 正确的做法是让该类继承std::enable_shared_from_this模板，通过CRTP的方式达成目的。比如：
