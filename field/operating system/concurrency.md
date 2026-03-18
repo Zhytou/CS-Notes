@@ -54,6 +54,8 @@
 struct task_struct {
   // 1. 进程标识
   pid_t pid;
+  pid_t ppid;
+  pid_t pgid;
   pid_t tgid;
   struct task_struct *parent;  // 父进程指针
   struct list_head tasks;      // 全局进程链表节点
@@ -83,7 +85,17 @@ struct task_struct {
 };
 ```
 
-由此可见，进程可以拥有
+因此，当创建一个新进程时，操作系统会为其分配一个新的`task_struct`结构体，用于保存该进程的相关信息。具体而言，操作系统会执行以下步骤：
+
+- 分配独立的进程标识符（pid）。
+- 若存在父进程，则将其ID设置为父进程标识符（ppid），同时复制其进程组ID（pgid）。
+- 设置线程组ID（tgid）为进程ID（pid）。
+- 初始化进程状态（state）为新建状态。
+- 复制父进程的内存管理结构（mm），并将其中所有内容标记为只读。
+- 复制父进程的文件描述符表（files）、信号处理函数（sighand）等资源。
+- 初始化新进程的上下文信息（thread）。
+
+其中，进程创建的核心在于内存管理结构的写时复制（Copy-on-Write，CoW）机制。通过这种方式，新创建的进程可以共享父进程的内存空间，共用其代码段和数据段。只有当新进程需要修改内存中的数据时，才会进行复制，这就避免了内存的浪费。
 
 **进程的标识**：
 
@@ -92,16 +104,13 @@ struct task_struct {
 ```c++
 struct task_struct {
   pid_t pid;  // process id
+  pid_t pgip; // process group id
   pid_t tgid; // thread group id
   // ...
 };
 ```
 
-如上述代码所示，在`task_struct`结构体中，`pid`字段表示进程的ID，它常作为唯一标识符在系统调用中使用。不过，由于Linux将线程视作轻量级进程，所以该字段也常用于表示线程ID。此时`pid`字段，也即线程组ID（Thread Group ID），则可视作进程ID。它们二者的关系如下图所示。
-
-![图 3pid与tgid的关系](https://pic4.zhimg.com/v2-a3afface9b99a77f239189ef5f15713b_1440w.jpg)
-
-换句话说，当`task_struct`结构体表示线程时，`pid`字段则表示线程ID，而`tgid`字段则表示线程组ID，也即进程ID。
+如上述代码所示，在`task_struct`结构体中，`pid`字段表示进程的ID，它常作为唯一标识符在系统调用中使用。
 
 ### 进程API Process API
 
@@ -124,6 +133,16 @@ struct task_struct {
 - envp：一个以 NULL 结尾的字符串数组，用于指定新程序的环境变量。每个字符串都是一个形如 key=value 的键值对，表示一个环境变量的值。
 
 execve函数执行成功时，不会返回到调用进程，而是直接将当前进程替换为新程序的进程。如果执行失败，则会返回 -1，并设置相应的错误码。
+
+**waitpid()**: 使父进程等待某个子进程结束后再继续运行。
+
+`pid_t waitpid(pid_t pid, int *stat_loc, int options);`
+
+- pid:指定等待的子进程ID。如果pid为-1,则等待任何子进程;如果pid为0,则等待本进程组中的任何子进程。
+- stat_loc:用于存放子进程退出状态的指针。
+- options:配置选项,如WNOHANG可以非阻塞等待。
+
+waitpid函数让父进程进入阻塞状态，等待指定子进程结束，然后根据stat_loc的内容确定子进程的退出状态。
 
 ### 进程的地址空间 Process Address Space
 
@@ -440,7 +459,7 @@ void consumer() {
 - PID:进程ID，唯一标识一个进程。
 - TID:线程ID，唯一标识一个进程内的线程。
 - PPID:父进程ID，标识一个进程是由哪个父进程fork出来的。
-- PGRP:进程组ID，标识一个后台作业中的进程集合。
+- PGRP/PGID:进程组ID，标识一个后台作业中的进程集合。
 - SID:会话ID，标识一个登录会话下的所有进程组。
 
 ### 特殊的进程
@@ -508,7 +527,9 @@ struct task_struct {
 - 复制对父线程内存空间管理结构（mm_struct），也即线程能够感知bss、data、text等段的内存布局，进而访问并使用其中定义的变量或函数。
 - 为新线程初始化独立的CPU上下文结构体（thread_struct）。
 
-其中，`thread_struct`结构体便是创建新线程唯一需要单独初始化的内容，它包含了寄存器状态、指令指针/栈指针以及TLS（Thread Local Storage）指针。
+与进程创建初始化`task_struct`所采用的 Copy-on-Write（COW）机制不同，线程创建过程中唯一需要全新分配和初始化的数据结构就是`thread_struct`。其余资源——包括页表、文件描述符、信号处理表等均直接复制即可，也即同一线程组内的所有线程可以共享这些。这也正是线程被称为“轻量级进程”的根本原因：它们共享地址空间，仅维护独立的执行上下文。
+
+`thread_struct`保存了线程切换时所需恢复的全部CPU状态，其核心内容包括通用寄存器、指令指针、栈指针以及线程局部存储TLS（Thread Local Storage）基地址等。以
 
 ```c++
 // 简化版 x86_64 thread_struct 核心字段
@@ -541,7 +562,11 @@ struct thread_struct {
 
 **线程的标识**：
 
-和进程类似，线程也有属于自己的ID（Thread ID），但线程ID在系统范围内可以不是唯一的，它只在所属的进程范围内唯一。
+和进程类似，线程也有属于自己的ID（Thread ID），但线程ID在系统范围内可以不是唯一的，它只在所属的进程范围内唯一。不过，由于Linux管理线程时仍使用`task_struct`结构体，因而`pid`字段此时则表示线程ID，而`tgid`字段，也即线程组ID（Thread Group ID），则被视作进程ID。它们二者的关系如下图所示。
+
+![图 3pid与tgid的关系](https://pic4.zhimg.com/v2-a3afface9b99a77f239189ef5f15713b_1440w.jpg)
+
+换句话说，当`task_struct`结构体表示线程时，`pid`字段则表示线程ID，而`tgid`字段则表示线程组ID，也即进程ID。
 
 **线程实现模型**：
 
