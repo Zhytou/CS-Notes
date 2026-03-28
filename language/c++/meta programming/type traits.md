@@ -1,26 +1,28 @@
 # 类型萃取
 
 - [类型萃取](#类型萃取)
-  - [类型萃取引入](#类型萃取引入)
-    - [萃取器的实现——声明内嵌](#萃取器的实现声明内嵌)
+  - [为什么需要类型萃取器](#为什么需要类型萃取器)
+    - [声明内嵌：一种简单的萃取器实现方法](#声明内嵌一种简单的萃取器实现方法)
     - [偏特化和萃取器配合](#偏特化和萃取器配合)
-    - [嵌套template参数——萃取器的替代品](#嵌套template参数萃取器的替代品)
+    - [萃取器的核心：编译期类型与值的封装](#萃取器的核心编译期类型与值的封装)
+    - [萃取器的替代品：嵌套template参数](#萃取器的替代品嵌套template参数)
   - [萃取的标准库支持](#萃取的标准库支持)
-    - [最基本的萃取](#最基本的萃取)
+    - [最基本的萃取器](#最基本的萃取器)
     - [常见萃取器](#常见萃取器)
     - [根据条件选择萃取](#根据条件选择萃取)
     - [根据条件启用或禁用萃取](#根据条件启用或禁用萃取)
 
-类型萃取，也被称为类型提取，是指将类模板的一部分接口提取出来，形成一个新的独立的模板的技术。
+类型萃取（Type Traits），是一种模板元编程技术。其核心在于：在编译期提取、查询或修改类型的属性。
 
-## 类型萃取引入
+## 为什么需要类型萃取器
 
-在实现迭代器时，我们可以使用模板参数推导机制写出如下代码：
+由于C++是一种静态类型语言，模板函数在处理未知类型T时，就像在黑盒里操作。类型萃取允许我们在不运行程序的情况下，提前获知T是不是指针、有没有构造函数，甚至强行把它的const属性去掉，为开发提供了更多的灵活性。
+
+比如，在实现迭代器时，我们可以使用模板参数推导机制写出如下代码：
 
 ``` c++
 template <typename Iter, typename ElementType>
 void func_impl(Iter iter, ElementType type) {
-
 }
 
 template <typename Iter>
@@ -31,28 +33,31 @@ void func_wrapper(Iter iter) {
 
 这里我们需要多写一个包装函数来掩盖底层实现，否则就要每次多传一个迭代器指向的值，而且无法返回指向类型。显然，我们还需要找到更好的方法。
 
-### 萃取器的实现——声明内嵌
+### 声明内嵌：一种简单的萃取器实现方法
 
-声明内嵌型别似乎是个好主意，这样我们就可以直接获取元素类型。
+为了直接获取迭代器指向元素类型，一种可行做法便是在迭代器类中内嵌一个`value_type`的类型声明：
 
 ``` c++
 template <typename T>
-class MyIter {
+struct MyIter {
   typedef T value_type; // 内嵌型别声明
 };
 
-template <class I>
+template <typename I>
 // 返回类型为迭代器指向类型
-typename I::value_type func(I ite) {
-  return *ite;
+typename I::value_type func(I itr) {
+  // ... 函数功能主体
+  return *itr;
 }
 ```
 
-尽管上述代码已经很不错了，但它有一个致命的问题——不支持原生指针。这时候就需要偏特化的出现了。
+这种方式对自定义迭代器类有效，逻辑清晰，也符合“将接口与实现分离”的设计原则。然而，它存在一个根本性局限：无法支持原生指针（如 int*）。
+
+因为原生指针是语言内置类型，无法为其添加`::value_type`成员。一旦该指针传入函数，编译器便将因找不到`int*::value_type`而报错。
 
 ### 偏特化和萃取器配合
 
-通过偏特化，我们得以针对特定类型或特定条件，对模板进行定制化的实现
+针对原生指针的情况，便需要偏特化对迭代器模板进行定制化的实现
 
 ``` c++
 // 迭代器萃取器
@@ -72,26 +77,87 @@ template<typename I>
 typename iterator_traits<I>::value_type func(I itr) {}
 ```
 
-### 嵌套template参数——萃取器的替代品
+### 萃取器的核心：编译期类型与值的封装
+
+**核心成员**：
+
+在C++模板元编程中，萃取器的本质是一种在编译期封装类型信息或常量值的机制。其典型实现通常包含两个核心成员：
+
+- value_type：一个类型别名（using 或 typedef），用于表示所关联的类型（如 bool、int 等）；
+- value：一个 static constexpr 静态常量，用于存储具体的编译期布尔值或整型常量。
+
+不仅如此，为了方便使用还会定义缩写_t以及_v的缩写，比如：
+
+```c++
+template<typename T, bool v>
+struct example_trait {
+  using value_type = T;
+  static constexpr bool value = v;
+  // ...
+};
+
+// 定义缩写
+template <typename T, bool v>
+using example_trait_t = typename example_trait<T, v>::value_type;
+template <typename T, bool v>
+constexpr bool example_trait_v = example_trait<T, v>::value;
+
+// 使用对比
+typename example_trait<int, true>::value_type a; // 旧
+example_trait_t<int, true> a;                   // 新，清爽很多
+if (example_trait<int, true>::value) { ... } // 旧
+if (example_trait_v<int, true>) { ... }      // 新
+```
+
+这种设计使得萃取器既能作为类型载体，又能作为编译期常量表达式参与条件判断、模板特化和 SFINAE 等元编程技术。
+
+**编译期常量**：
+
+其中，在C++11引入constexpr关键字之前，想要进行编译期计算，只能依靠模板参数以及enum关键字实现。比如：
+
+```c++
+template <int N>
+struct Fibonacci {
+  // 在 C++11 之前，这是定义“编译期变量”的标准写法
+  enum { value = Fibonacci<N - 1>::value + Fibonacci<int N - 2>::value };
+};
+
+template <>
+struct Fibonacci<0> {
+  enum { value = 0 };
+};
+
+template <>
+struct Fibonacci<1> {
+  enum { value = 1 };
+};
+
+```
+
+### 萃取器的替代品：嵌套template参数
+
+除了萃取器外，一种常见类型查询或修改的方法是使用嵌套template参数。比如：
 
 ``` c++
 template <template<class, class> class V, class T, class A>
 void f(V<T, A> &v) {
-    // This can be "typename V<T, A>::value_type",
-    // but we are pretending we don't have it
+  // This can be "typename V<T, A>::value_type",
+  // but we are pretending we don't have it
 }
 ```
+
+不过，相比萃取器，嵌套template参数的做法并没有完全解耦，且模板固化（比如上述例子假定了容器正好有两个模板参数）。
 
 ## 萃取的标准库支持
 
 C++11提供了type_traits库，来支持在编译期间计算、判断、转换或查询等功能。
 
-### 最基本的萃取
+### 最基本的萃取器
 
 std::integral_constant是标准库中最简单基础的萃取工具类。它的作用是获取一个编译器常量，其实现方法如下：
 
 ```c++
-template<class T, T v>
+template<typename T, T v>
 struct integral_constant {
   static constexpr T value = v;
   using value_type = T;
@@ -124,6 +190,19 @@ template<> struct is_integral_base<short>: std::true_type {};
 
 // std::remove_cv除去类型的const和volatile修饰符
 template<typename T> struct is_integral: is_integral_base<std::remove_cv_t<T>> {};
+```
+
+使用时，直接依靠其value成员判断true/false即可：
+
+```c++
+template<typename T>
+void process(T x) {
+  if constexpr (is_integral_v<T>) {
+    std::cout << "Integral: " << x << '\n';
+  } else {
+    std::cout << "Non-integral\n";
+  }
+}
 ```
 
 ### 常见萃取器
