@@ -32,7 +32,7 @@ OpenGL的模式分为核心模式(Core Profile)和立即渲染模式(Immediate M
 
 ### Render Pipeline
 
-渲染管线(Render Pipeline)，也被称为渲染流水线，主要包括以下流程：
+渲染管线（Render Pipeline），也被称为渲染流水线，主要包括以下流程：
 
 - 应用程序阶段：该阶段由应用程序编写的代码组成，主要负责设定场景和对象的各种属性以及交互逻辑等。
 - 几何顶点着色器阶段：该阶段将顶点数据转换为可用于图形渲染的数据类型，并对顶点进行变换、变形、裁剪等操作。
@@ -41,7 +41,7 @@ OpenGL的模式分为核心模式(Core Profile)和立即渲染模式(Immediate M
 - 片元着色器阶段：该阶段对每个像素执行光照、纹理映射、混合等操作，生成最终的像素颜色值。
 - 帧缓冲阶段：该阶段将处理后的像素输出到帧缓冲区中，最终在屏幕上显示出来。
 
-在《Real TimeRendering》一书中，渲染管线被划分为以下四个阶段：应用程序阶段(Application)、几何处理阶段(Geometry Processing)、光栅化(Rasterization)和像素处理阶段(Pixel Processing)。其中，应用阶段通常是在CPU端进行处理，包括碰撞检测、动画物理模拟以及视椎体剔除等任务，这个阶段会将数据送到渲染管线中；几何处理阶段主要执行顶点着色器、投影变换、裁剪和屏幕映射的功能；光栅化阶段和我们上面讨论的差不多，都是将图元离散化片段的过程；像素处理阶段包括像素着色和混合的功能。我们可以发现，虽然管线的划分粒度不一样，但是每个阶段的具体功能其实是差不多的，原理也是一样的，并没有太大的差异。
+在《Real TimeRendering》一书中，渲染管线被划分为以下四个阶段：应用程序阶段（Application）、几何处理阶段（Geometry Processing）、光栅化（Rasterization）和像素处理阶段（Pixel Processing）。其中，应用阶段通常是在CPU端进行处理，包括碰撞检测、动画物理模拟以及视椎体剔除等任务，这个阶段会将数据送到渲染管线中；几何处理阶段主要执行顶点着色器、投影变换、裁剪和屏幕映射的功能；光栅化阶段和我们上面讨论的差不多，都是将图元离散化片段的过程；像素处理阶段包括像素着色和混合的功能。我们可以发现，虽然管线的划分粒度不一样，但是每个阶段的具体功能其实是差不多的，原理也是一样的，并没有太大的差异。
 
 ### Context
 
@@ -53,7 +53,7 @@ OpenGL的模式分为核心模式(Core Profile)和立即渲染模式(Immediate M
 
 ### GLFW
 
-正如前面所提到的，在编写GLSL之前，首先要做的就是创建一个OpenGL上下文(Context)和一个用于显示的窗口。这时，就需要使用GLFW。
+正如前面所提到的，在编写GLSL之前，首先要做的就是创建一个OpenGL上下文和一个用于显示的窗口。这时，就需要使用GLFW。
 
 GLFW是一个专门针对OpenGL的C语言库，提供了一组用于创建窗口、处理输入事件以及管理OpenGL上下文的函数。在它的[官网](https://www.glfw.org/download.html)上，可以直接下载Visual Studio（2012到2022都有）预编译好的二进制版本和相应的头文件，添加到项目配置中就可以直接使用了。
 
@@ -61,18 +61,38 @@ GLFW是一个专门针对OpenGL的C语言库，提供了一组用于创建窗口
 
 **分配顶点缓存对象，传入顶点数据**：
 
-`顶点缓存对象Vertex Buffer Object VBO`是OpenGL中向GPU传入顶点数据的对象。我们一般使用`glGenBuffers(GLsizei n, GLuint *buffers);`和`glBindBuffer(GLenum target, GLuint buffer);`函数创建和绑定该VBO对象。其中，绑定一个缓存时，需要指定它所对应的类型。缓存类型有很多种，它们用于实现不同OpenGL功能。
+`顶点缓存对象(Vertex Buffer Object VBO)`是OpenGL中向GPU传入顶点数据所依靠的对象。我们一般使用`glGenBuffers(GLsizei n, GLuint *buffers);`和`glBindBuffer(GLenum target, GLuint buffer);`函数创建和绑定该VBO对象。
 
 ``` c++
 GLuint VBO;
-// 创建大小为1的vbo缓存对象
+// 创建一个gpu缓存对象
 glGenBuffers(1, &VBO);  
+GLuint VBOs[3];
+// 创建多个gpu缓存对象
+glGenBuffers(3, VBOs);  
 // 绑定，即定义该缓存对象用途（由于时将顶点数据保存到缓存，因此使用GL_ARRAY_BUFFER类型）
 // 其他的类型还包括：纹理缓存GL_TEXTURE_BUFFER、顶点索引缓存GL_ELEMENT_ARRAY_BUFFER等
 glBindBuffer(GL_ARRAY_BUFFER, VBO)
+
+// 写入数据/执行渲染操作等
+// ...
+
+// 解绑缓存对象
+glBindBuffer(GL_ARRAY_BUFFER, 0);
+// 删除缓存对象
+glDeleteBuffers(1, &VBO);
+// 删除多个缓存对象
+glDeleteBuffers(3, VBOs);
 ```
 
-创建并绑定好VBO对象之后，我们就可以使用`glBufferData(GLenum target, GLuint size, GLuint* buffer, GLenum type)`当前绑定的VBO对象传入顶点数据。其中，第四个参数指定了我们希望显卡如何管理给定的数据。它有三种形式：
+值得注意的是，绑定缓存对象时，需要指定它所对应的类型。比如上述代码中的GL_ARRAY_BUFFER类型，就是用于存储顶点数据的。总体而言，常见的缓存类型包括：
+
+- GL_ARRAY_BUFFER：顶点属性数据（如位置、颜色、法线）；
+- GL_ELEMENT_ARRAY_BUFFER：索引数据（用于 EBO）；
+- GL_UNIFORM_BUFFER：统一块数据（用于 UBO）；
+- GL_TEXTURE_BUFFER：纹理缓冲（较少使用）。
+
+创建并绑定好VBO对象之后，我们就可以使用`glBufferData(GLenum target, GLuint size, GLuint* buffer, GLenum type)`向指定的VBO对象传入顶点数据。其中，第四个参数指定了我们希望显卡如何管理给定的数据。它有三种形式：
 
 - GL_STATIC_DRAW ：数据不会或几乎不会改变。
 - GL_DYNAMIC_DRAW：数据会被改变很多。
@@ -87,11 +107,51 @@ GLfloat vertices[12] = {
 glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 ```
 
+具体来说，当调用`glBufferData`函数时，驱动程序实际上执行了两个沉重的步骤：
+
+- 销毁与重建（Orphan Reallocation）：它会先释放（或标记为废弃）该缓冲对象之前的内存，然后根据你传入的大小，向显存重新申请一块新的连续空间。
+- 数据拷贝：将CPU内存中的数据通过PCIe总线拉到GPU显存中。
+
+可见，频繁的内存申请和释放（Alloc/Free）会造成显存碎片，并强制让CPU等待GPU清空之前的渲染指令，导致严重的流水线阻塞（Pipeline Stall）。
+
 **使用顶点数组对象管理顶点缓存对象**：
 
-我们需要使用`顶点数组对象(Vertex Array Object, VAO)`来管理VBO并解释VBO中顶点数据的含义。其创建和绑定和VBO类似。至于，向OpenGL解释传入顶点数据的含义，具体可以使用`glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)`指明传入数据的含义。此外，还可以通过glVertexAttribPointer的第三个参数指定顶点数据是否归一化。
+在OpenGL的可编程渲染管线中，顶点着色器（Vertex Shader）负责处理每个顶点的数据，而片元着色器（Fragment Shader）负责计算每个像素的最终颜色。两者通过关键字`in`和`out`分别定义输入输出变量，并进行数据传递。
 
-例如：
+其中，顶点着色器的输入称为顶点属性（Vertex Attributes），由CPU通过顶点缓冲（VBO）提供，一般包括顶点位置、颜色、纹理坐标等，可以使用小写字母a开头表示；而其的输出则会在经过图元装配和光栅化后，作为片元着色器的输入传入。这类变量传统上被称为插值变量（Varying Variables），因而通常以小写字母v开头命名，以表明其为经插值传递的片段输入。
+
+例如，在以下着色器代码中：
+
+```glsl
+// 顶点着色器
+#version 330 core
+layout(location = 0) in vec3 aVertexPos;  // 期望从 attribute 0 读取3个float
+out vec3 vFragPos;
+
+void main() {
+    vFragPos = aVertexPos;
+    gl_Position = vec4(aVertexPos, 1.0);
+}
+```
+
+```glsl
+// 片元着色器
+layout(location = 0) in vec3 vFragPos;
+
+void main() {
+    gl_FragColor = vec4(vFragPos, 1.0);
+}
+```
+
+为了让GPU正确理解VBO中的数据，OpenGL引入了顶点数组对象（Vertex Array Object, VAO）来描述VBO数据的布局与含义。
+
+具体而言，VAO本身并不存储顶点数据，而是记录了顶点属性的配置状态。它能够记录以下操作：
+
+- `glBindBuffer`函数所定义的缓存关联，包括GL_ARRAY_BUFFER、GL_ELEMENT_ARRAY_BUFFER等类型，也即具体使用哪个VBO和EBO。
+- `glVertexAttribPointer`函数所定义的VBO布局（步长、偏移、格式）。
+- `glEnableVertexAttribArray`函数所定义的属性的开启状态。
+
+因此，一旦录制完成，正式渲染时，仅需绑定VAO，即可瞬间恢复复杂的顶点输入环境，极大减少了CPU向GPU发送状态指令的开销。
 
 ``` c++
 // 创建VAO
@@ -99,40 +159,117 @@ GLuint VAO;
 glGenVertexArrays(1, &VAO);  
 // 绑定VAO
 glBindVertexArray(VAO);
-// 定义顶点数据含义
+
+// 指定VBO或EBO等缓存对象
+// ...
+
+// 定义顶点属性0的大小、偏移量和步长
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+// 启用顶点属性0
 glEnableVertexAttribArray(0);
+
 // 解绑VAO
 glBindVertexArray(0);
 ```
 
-**编译链接着色器程序**：
+其中，`glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)`函数的参数含义如下：
 
-`着色器Shader`是OpenGL中一个最重要的概念，它是图形硬件设备所执行的一类特殊函数。简单来说，可以将其理解成一种GPU能够编译和执行的一种小型程序。一个简单的顶点着色器如下：
+- index：指定要配置的顶点属性索引，须与着色器中 layout(location = n) 的n一致。
+- size：每个顶点属性的分量个数（如 vec3 对应 3）。
+- type：数据类型（如 GL_FLOAT）。
+- normalized：是否希望非浮点型数据被归一化到[0, 1]或[-1, 1]范围。
+- stride：连续两个顶点属性组之间的步长，单位为字节。若数据紧密排列，可设为0让OpenGL自动计算。
+- pointer：该属性在缓冲区中第一个组件相对于起始位置的字节偏移量。
+
+此外，值得注意的是，片元着色器会自动将顶点着色器的输出作为其输入使用，而无需在代码中显式绑定或传递。这是因为OpenGL的着色器接口匹配机制会根据变量的名称和类型，自动将顶点着色器中声明为out的变量与片元着色器中同名且类型兼容的in变量进行连接。
+
+**使用索引缓存对象减少顶点冗余，进而提高绘制效率**：
+
+当多个图元共享相同顶点时（如两个相邻三角形共用一条边），直接重复上传顶点会造成内存浪费。`索引缓冲对象(Element Buffer Object, EBO)`通过存储顶点索引序列解决此问题。
+EBO的创建与VBO类似，但绑定目标为GL_ELEMENT_ARRAY_BUFFER：
+
+```c++
+GLuint EBO;
+// 创建EBO
+glGenBuffers(1, &EBO);  
+// 绑定EBO
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO)
+```
+
+不过，值得注意的是，EBO必须在VAO绑定时绑定！因为GL_ELEMENT_ARRAY_BUFFER的绑定状态是VAO的一部分。例如：
+
+```c++
+glBindVertexArray(VAO);
+glBindBuffer(GL_ARRAY_BUFFER, VBO);
+glVertexAttribPointer(...);
+glEnableVertexAttribArray(...);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // ← EBO 绑定也记录在 VAO 中
+glBindVertexArray(0);
+```
+
+此外，与VBO类似，EBO数据写入也使用`glBufferData(GLenum target, GLuint size, GLuint* buffer, GLenum type)`函数。
+
+**使用统一缓存对象替代普通Uniform变量传入相机矩阵以及光源参数**：
+
+在OpenGL中，统一变量（Uniform）是一种在着色器之间共享数据的方式。它类似全局变量，但是只能在着色器中读取，不能在着色器中写入。常见的可能的通用变量包括：
+
+- Camera信息（MVP矩阵）：ModelViewProjection矩阵，用于将顶点坐标转换为剪辑坐标。
+- Light信息：包括光源位置、颜色、强度等。
+
+当你有很多个着色器（比如 PBR、阴影、后期处理）都需要用到同一组数据（如 View 矩阵、Projection 矩阵、Light 信息）时，普通 Uniform 就会变得极其低效。此时，我们可以使用`统一缓冲对象(Uniform Buffer Object, UBO)`来替代普通的同一变量。 UBO 的做法是：在显存中开辟一块公共缓冲区，所有着色器直接去这块内存里“读”。
 
 ```glsl
-#version 330 core
-layout (location = 0) in vec3 aPos;
+// 所有着色器共享的 CameraBlock
+layout(std140, binding = 0) uniform CameraBlock {
+    mat4 view;
+    mat4 projection;
+    vec3 cameraPos;
+};
 
-void main()
-{
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
+layout(std140, binding = 1) uniform LightBlock {
+    vec3 lightPos;
+    vec3 lightColor;
+    float intensity;
+};
 ```
+
+```c++
+// 创建 UBO
+GLuint cameraUBO, lightUBO;
+glGenBuffers(1, &cameraUBO);
+glGenBuffers(1, &lightUBO);
+
+// 分配显存（std140 布局需注意对齐）
+glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraData), nullptr, GL_DYNAMIC_DRAW);
+glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO); // 绑定到绑定点 0
+
+glBindBuffer(GL_UNIFORM_BUFFER, lightUBO);
+glBufferData(GL_UNIFORM_BUFFER, sizeof(LightData), nullptr, GL_DYNAMIC_DRAW);
+glBindBufferBase(GL_UNIFORM_BUFFER, 1, lightUBO); // 绑定到绑定点 1
+
+// 每帧更新数据
+glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(cameraMatrices), &cameraMatrices);
+```
+
+**管理着色器程序**：
 
 OpenGL主要提供了两个函数`glLinkProgram(GLuint program)`和`glUseProgram(GLuint program)`来调用提前编译好的着色器程序。其中，一般在初始化时，调用`glLinkProgram(GLuint program)`将着色器程序链接；在实际渲染时，调用`glUseProgram(GLuint program)`。
 
 **绘制**：
 
-我们使用`glDrawArrays(GLenum mode, GLint first, GLsizei count)`绘制。其中，模式和画法对应关系如下表：
+我们使用`glDrawArrays(GLenum mode, GLint first, GLsizei count)`或`glDrawElements(GLenum mode, GLsizei count, GLenum type, const void * indices)`绘制。前者根据顶点数组对象中定义的顶点属性指针，绘制顶点数据。后者根据顶点索引缓存对象中存储的索引数据，绘制顶点数据。
 
-|  枚举类型  | 显示模式 |
+其中，模式和画法对应关系如下表：
+
+| 枚举类型 | 显示模式 |
 | --------- | -------- |
 | GL_POINTS | 点 |
-| GL_LINES  | 线 |
+| GL_LINES | 线 |
 | GL_LINE_STRIP | 条带线 |
 | GL_LINE_LOOP | 循环线 |
-| GL_TRIANGLES | 独立三角形|
+| GL_TRIANGLES | 独立三角形 |
 | GL_TRIANGLE_STRIP | 三角形条带 |
 | GL_TRIANGLE_FAN | 三角形扇面 |
 
