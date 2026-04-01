@@ -114,6 +114,8 @@ void *mmap(void *start, size_t length, int prot, int flags, int fd, off_t offset
 
 由上可知，由于缓存处于内核空间之中，使用fread/fwrite进行文件读取/写入的用户进程必须通过两次拷贝获取实际数据。相比之下，mmap通过建立物理地址（磁盘）到虚拟地址（内存）的映射，在实际读取文件时直接触发缺页中断，仅需一次拷贝即可将数据传入用户空间中。
 
+要想做到这一点，可以直接用fopen返回的文件描述符作为mmap的参数。
+
 **创建动态内存**：
 
 除了读写文件之外，通过将flags设置为MAP_ANONYMOUS（匿名映射）mmap还能创建动态内存。它也是malloc的底层实现之一。

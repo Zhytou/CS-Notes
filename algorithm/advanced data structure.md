@@ -127,7 +127,7 @@ public:
 
 **图示**：
 
-![字典树](../../img/algorithm_tire.png)
+![字典树](img/algorithm_tire.png)
 
 **代码**：
 
@@ -272,6 +272,25 @@ d.resize(4*n);
 // 对a的0到n-1范围建立线段树
 // 至于为什么初始节点序号为1，则是因为若取0，则2*p始终为0；
 build(0, n-1, 1)
+```
+
+观察上述代码，可以发现，线段树的构造方式实际上非常类似在堆排序中构建完全二叉树的过程。如下：
+
+```c++
+// 堆排序
+void heapify(vector<int>& a, int n, int i) {
+    int largest = i;
+    int l = 2 * i + 1;
+    int r = 2 * i + 2;
+    if (l < n && a[l] > a[largest])
+        largest = l;
+    if (r < n && a[r] > a[largest])
+        largest = r;
+    if (largest != i) {
+        swap(a[i], a[largest]);
+        heapify(a, n, largest);
+    }
+}
 ```
 
 **查询线段树**：

@@ -435,21 +435,26 @@ void process(T t, Tag tag) {
 ```c++
 template <size_t N> 
 struct Fibonacci {  
-    constexpr static size_t value = 
-        Fibonacci<N - 1>::value +
-        Fibonacci<N - 2>::value;
+  constexpr static size_t value = Fibonacci<N - 1>::value + Fibonacci<N - 2>::value;
 };
 
 template <> struct Fibonacci<0> {   
-    constexpr static size_t value = 0;
+  constexpr static size_t value = 0;
 };
 
 template <> struct Fibonacci<1> {   
-    constexpr static size_t value = 1;
+  constexpr static size_t value = 1;
 }
 
-template<size_t N>
-constexpr size_t Fibonacci_v = Fibonacci<N>::value; 
+template <size_t N>
+constexpr size_t Fibonacci_v = Fibonacci<N>::value;
+
+int main() {
+  // 编译期就确定了结果，等同于 const size_t res = 55;
+  constexpr size_t res = Fibonacci_v<10>; 
+  std::cout << "Fib(10) = " << res << std::endl;
+  return 0;
+}
 ```
 
 ### 类型计算
@@ -459,12 +464,12 @@ constexpr size_t Fibonacci_v = Fibonacci<N>::value;
 ```c++
 template <typename T> 
 struct AddPointer {   
-    using type = T*;  
+  using type = T*;  
 };
 
 template <typename T>
 using AddPointer_t =
-    typename AddPointer<T>::type; 
+  typename AddPointer<T>::type; 
 ```
 
 同样的我们也可以使用constexpr进行类型计算，比如使用constexpr if代替enable_if
