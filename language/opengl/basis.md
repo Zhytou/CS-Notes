@@ -1,61 +1,31 @@
 # OpenGL Introduction
 
 - [OpenGL Introduction](#opengl-introduction)
-  - [Introduction](#introduction)
-    - [Render Pipeline](#render-pipeline)
-    - [Context](#context)
   - [First OpenGL Program](#first-opengl-program)
-    - [GLFW](#glfw)
     - [Several Steps](#several-steps)
     - [Example Code](#example-code)
-  - [GLSL Basics](#glsl-basics)
+  - [Grammar Basis](#grammar-basis)
     - [Data Type](#data-type)
     - [Qualifier](#qualifier)
-    - [Internal Variable](#internal-variable)
+    - [Internal Variable \& Function](#internal-variable--function)
+  - [Window Controlling](#window-controlling)
+    - [Window Creation](#window-creation)
+    - [Event Handling](#event-handling)
+  - [Buffer Object](#buffer-object)
+    - [VAO / VBO](#vao--vbo)
+    - [UBO / SSBO](#ubo--ssbo)
+    - [FBO](#fbo)
+  - [Texture \& Sampler](#texture--sampler)
   - [References](#references)
 
-## Introduction
+OpenGL（Open Graphics Library） 在工程上常被误认为是一个单纯的图形库，但它本质上并非一套具体的软件代码，而是由 Khronos Group 制定并维护的跨平台图形渲染 API 规范（Specification）。OpenGL 规范严格定义了每一个接口的函数签名、状态机行为及预期输出，而其底层的具体实现（Implementation）则由显卡硬件厂商（如 NVIDIA、AMD、Intel）在其驱动程序中提供。因此，更新显卡驱动本质上就是更新显卡厂商对 OpenGL 规范的最新硬件级实现；当遇到图形渲染的硬件兼容性 Bug 时，也常通过升级驱动来解决。
 
-OpenGL(Open Graphics Library)一般被认为是一个图形应用API，包含了一系列可以操作图像、图形的函数，进而利用GPU实现2D或3D图像渲染。然而，OpenGL本身并不是一个API，它仅仅是一个由Khronos组织制定并维护的规范。OpenGL规范严格规定了每个函数该如何执行，以及它们的输出值。至于内部具体每个函数是如何实现的，将由OpenGL库的开发者自行决定。实际上，OpenGL库的开发者通常是显卡的生产商。当产生一个bug时通常可以通过升级显卡驱动来解决。这些驱动会包括你的显卡能支持的最新版本的OpenGL。
+为了兼顾现代 GPU 硬件架构的高效并行演进与老旧项目的历史包袱，OpenGL 从 3.2 版本开始在规范中明确划分了两套不同的上下文模式（Profiles）：
 
-**OpenCV & OpenCL & OpenMP**：
-
-OpenCV(Open Source Computer Vision Library)是一个开源发行的跨平台计算机视觉库，可以运行在Linux、Windows和Mac OS操作系统上。它轻量级而且高效——由一系列 C 函数和少量 C++ 类构成，同时提供了Python、Ruby、MATLAB等语言的接口，实现了图像处理和计算机视觉方面的很多通用算法。它由C++语言编写，它的主要接口也是C++语言，但是依然保留了大量的C语言接口。该库也有大量的Python, Java and MATLAB/OCTAVE (版本2.5)的接口。这些语言的API接口函数可以通过在线文档获得。如今也提供对于C#,Ch, Ruby的支持。
-
-OpenCL(Open Computing Language)是第一个面向异构系统通用目的并行编程的开放式、免费标准，也是一个统一的编程环境，便于软件开发人员为高性能计算服务器、桌面计算系统、手持设备编写高效轻便的代码，而且广泛适用于多核心处理器(CPU)、图形处理器(GPU)、Cell类型架构以及数字信号处理器(DSP)等其他并行处理器，在游戏、娱乐、科研、医疗等各种领域都有广阔的发展前景。
-
-OpenMP(Open Multi-Processing)是用于共享内存并行系统的多处理器程序设计的一套指导性的编译处理方案(Compiler Directive)。OpenMP支持的编程语言包括C语言、C++和Fortran；而支持OpenMP的编译器包括Sun Compiler，GNU Compiler和Intel Compiler等。OpenMP提供了对并行算法的高层的抽象描述，程序员通过在源代码中加入专用的pragma来指明自己的意图，由此编译器可以自动将程序进行并行化，并在必要之处加入同步互斥以及通信。当选择忽略这些pragma，或者编译器不支持OpenMP时，程序又可退化为通常的程序(一般为串行)，代码仍然可以正常运作，只是不能利用多线程来加速程序执行。OpenMP和OpenCL都是用于高性能计算机，但前者主要是基于CPU的并行，后者主攻是异构系统中GPU并行。
-
-**OpenGL模式**：
-
-OpenGL的模式分为核心模式(Core Profile)和立即渲染模式(Immediate Mode)。其中，核心模式是OpenGL的一个现代版本，它移除了过时的特性，强制使用现代的、规范化的编程模型。核心模式专注于向后兼容性和性能，鼓励使用顶点着色器、片段着色器等现代渲染技术。立即渲染模式，也成为经典模式，是早期OpenGL版本中的一个编程模型。它允许开发者直接调用函数来绘制几何图形，如glBegin()和glEnd()。这种模式在现代OpenGL中已被弃用，因为它效率较低，且不支持并行计算。
-
-### Render Pipeline
-
-渲染管线（Render Pipeline），也被称为渲染流水线，主要包括以下流程：
-
-- 应用程序阶段：该阶段由应用程序编写的代码组成，主要负责设定场景和对象的各种属性以及交互逻辑等。
-- 几何顶点着色器阶段：该阶段将顶点数据转换为可用于图形渲染的数据类型，并对顶点进行变换、变形、裁剪等操作。
-- 图元装配阶段：该阶段将原始几何形状（如点、线、三角形等）转换为图形原语，如多边形等。
-- 光栅化阶段：该阶段将图形原语转换为一系列像素，用于显示在屏幕上。
-- 片元着色器阶段：该阶段对每个像素执行光照、纹理映射、混合等操作，生成最终的像素颜色值。
-- 帧缓冲阶段：该阶段将处理后的像素输出到帧缓冲区中，最终在屏幕上显示出来。
-
-在《Real TimeRendering》一书中，渲染管线被划分为以下四个阶段：应用程序阶段（Application）、几何处理阶段（Geometry Processing）、光栅化（Rasterization）和像素处理阶段（Pixel Processing）。其中，应用阶段通常是在CPU端进行处理，包括碰撞检测、动画物理模拟以及视椎体剔除等任务，这个阶段会将数据送到渲染管线中；几何处理阶段主要执行顶点着色器、投影变换、裁剪和屏幕映射的功能；光栅化阶段和我们上面讨论的差不多，都是将图元离散化片段的过程；像素处理阶段包括像素着色和混合的功能。我们可以发现，虽然管线的划分粒度不一样，但是每个阶段的具体功能其实是差不多的，原理也是一样的，并没有太大的差异。
-
-### Context
-
-在应用程序调用任何OpenGL API之前，首先需要创建⼀个OpenGL的上下文。它是一个状态机保存了OpenGL中的各种信息，同时也是调用OpenGL函数的前提。事实上，OpenGL函数是类似C语言⼀样的面向过程的函数，使用这些函数本质上都是对OpenGL上下文这个庞大的状态机中的某个状态或者对象进行操作。当然在对其进行操作之前，得先把这个对象设置为当前对象。
-
-此外，由于OpenGL上下文是⼀个巨大的状态机，切换上下文往会产生较大的开销。但是不同的绘制模块，可能需要使用完全独立的状态管理。因此，可以在应用程序中分别创建多个不同的上下文，在不同线程中使用不同的上下文，上下文之间共享纹理、缓冲区等资源。这样的方案，会比反复切换上下文，或者大量修改渲染状态，更加合理高效的。
+- Core Profile（核心模式）：删除了所有传统的固定管线 API（如 glBegin/glEnd 即时模式、内置矩阵变换及传统灯光系统），强制要求开发者采用现代的着色器（GLSL）、顶点缓冲区对象（VBO）与顶点数组对象（VAO）进行显示列表的显存化管理。这是现代图形渲染管线与跨平台开发的唯一标准模式。
+- Compatibility Profile（兼容模式）：完整保留了早期 OpenGL 的所有固定管线函数与历史特性，允许开发者在同一个上下文中混合调用传统 API 与现代 GLSL 着色器。该模式主要用于维护工业级老旧代码库（如早期 CAD 或建模软件），在现代图形引擎与游戏开发中已被淘汰。
 
 ## First OpenGL Program
-
-### GLFW
-
-正如前面所提到的，在编写GLSL之前，首先要做的就是创建一个OpenGL上下文和一个用于显示的窗口。这时，就需要使用GLFW。
-
-GLFW是一个专门针对OpenGL的C语言库，提供了一组用于创建窗口、处理输入事件以及管理OpenGL上下文的函数。在它的[官网](https://www.glfw.org/download.html)上，可以直接下载Visual Studio（2012到2022都有）预编译好的二进制版本和相应的头文件，添加到项目配置中就可以直接使用了。
 
 ### Several Steps
 
@@ -311,7 +281,7 @@ glBindVertexArray(0);
 
 因此，VAO和VBO一起工作时，VAO是配置信息，VBO是数据存储。VAO不直接存储顶点数据，而是存储了如何解释VBO中数据的规则。当VAO被绑定时，OpenGL知道如何从VBO中读取数据，并正确地渲染几何形状。
 
-## GLSL Basics
+## Grammar Basis
 
 ### Data Type
 
@@ -348,12 +318,114 @@ glBindVertexArray(0);
 - in：用在函数的参数中，表示该参数是输出参数，值是会改变的。
 - out：用在函数的参数中，表示该参数是输出参数，值是会改变的。
 
-### Internal Variable
+**布局限定符**：
+
+以 layout(...) 的形式出现，用于告诉 GPU 数据在内存中的排列方式、接口绑定位置或线程组大小，主要包括：
+
+- std140：规范化的标准内存对齐规则。强制所有变量按照固定规则对齐（例如 vec3 强制按照 vec4 的 16 字节对齐）。它的作用是保证 CPU（C++ 结构体内存）和 GPU（Shader 内存）的内存布局完全一致，跨平台无缝传递。
+- std430：(SSBO 专享) 比 std140 更紧凑的内存对齐规则（如 vec3 变为 12 字节对齐），能节省显存，但仅支持 SSBO。
+
+- layout(location = 0)：指定顶点属性位置或 Fragment 输出缓存索引。
+- layout(binding = 1)：指定 UBO/SSBO/Sampler 绑定的纹理/缓冲单元槽位。
+
+### Internal Variable & Function
+
+**顶点着色器的内置输入/输出变量**：
 
 - gl_Position：输出属性-变换后的顶点的位置，用于后面的固定的裁剪等操作。所有的顶点着色器都必须写这个值。
 
-![GLSL语法基础](https://www.cnblogs.com/straywriter/articles/15889310.html)
+**片元着色器的内置输入/输出变量**：
+
+- gl_FragCoord (vec4)：当前片元在屏幕窗口空间中的相对坐标 $(x, y, z, 1/w)$。其中，gl_FragCoord.xy 为当前屏幕像素坐标（以像素为单位，如 $(1920, 1080)$）；gl_FragCoord.z 为映射到 $[0, 1]$ 深度缓冲区的深度值（$z_{win}$）。
+
+- gl_FragDepth：手动覆盖片元的 Z 深度值（默认由硬件自动插值写入gl_FragCoord.z）。值得注意的是，在 Fragment Shader 中写入 gl_FragDepth 会破坏硬件的 Early-Z 深度测试优化，导致性能下降。
+- gl_FragColor：输出属性-片元的颜色，早期用于直接输出片元颜色，3.3版本后核心模式废弃，改为统一采用用户自定义的out vec4 FragColor输出。
+
+**内置函数**：
+
+- min/max/clamp
+- abs/sign
+- pow/sqrt/exp/log
+- sin/cos/tan
+- dot/cross/normalize
+
+除了常见的数学函数外，还有以下重要的函数：
+
+- refract/reflect：折射/反射函数，用于计算折射/反射的向量。
+- texture/textureLod：纹理采样函数，用于采样纹理。
+- dFdx/dFdy：计算纹理坐标在x轴和y轴方向的导数。
+
+## Window Controlling
+
+在 OpenGL 开发中，OpenGL 本身是一个纯粹的跨平台图形渲染 API，它并不包含任何创建窗口、处理系统消息或接收键盘鼠标输入的代码。
+
+因此，使用 OpenGL 开发应用时，要么就需要直接调用操作系统底层接口（如 Windows HWND/Win32 API、X11、Wayland、AppKit），要么就使用第三方跨平台库（如 GLFW、GLUT、SDL、SFML）来实现。
+
+以 GLFW 为例, 使用它开发基于 OpenGL 的窗口应用时，主要需要完成以下几个步骤：
+
+- 初始化 GLFW
+- 创建窗口
+- 配置窗口属性
+- 设置回调函数
+- 进入主循环
+- 渲染场景
+- 清理资源
+
+### Window Creation
+
+### Event Handling
+
+## Buffer Object
+
+### VAO / VBO
+
+### UBO / SSBO
+
+### FBO
+
+## Texture & Sampler
+
+```c++
+struct SamplerDesc {
+    // Texture Filtering
+    // | Macro                     | Behavior                  | Available For       | Typical Usage                     |
+    // |---------------------------|---------------------------|---------------------|-----------------------------------|
+    // | GL_NEAREST                | Nearest pixel (no blend)  | Min / Mag           | Shadow map, pixel art, UI         |
+    // | GL_LINEAR                 | Bilinear blend (smooth)   | Min / Mag           | Common PBR texture, general image |
+    // | GL_NEAREST_MIPMAP_NEAREST | Nearest + nearest mip     | Min only            | Fast low-quality mipmapping       |
+    // | GL_LINEAR_MIPMAP_NEAREST  | Linear + nearest mip      | Min only            | Balanced performance & quality    |
+    // | GL_NEAREST_MIPMAP_LINEAR  | Nearest + linear mip blend | Min only           | Smooth mip transition             |
+    // | GL_LINEAR_MIPMAP_LINEAR   | Trilinear filtering       | Min only            | Highest quality, terrain/landscape|
+    // Note: magFilter only supports GL_NEAREST / GL_LINEAR (no mipmap variants)
+    GLenum minFilter = GL_LINEAR_MIPMAP_LINEAR; // minification filter (texture scaled down)
+    GLenum magFilter = GL_LINEAR;               // magnification filter (texture scaled up), NO mipmap modes allowed
+
+    // Texture Wrapping (UV addressing mode)
+    // | Macro               | Behavior when UV out of [0, 1] | Extra Config Required | Typical Usage                     |
+    // |---------------------|--------------------------------|-----------------------|-----------------------------------|
+    // | GL_REPEAT           | Tile texture repeatedly        | No                    | Floor, wall, seamless tile texture|
+    // | GL_MIRRORED_REPEAT  | Mirror then tile texture       | No                    | Natural texture, reduce tile seam |
+    // | GL_CLAMP_TO_EDGE    | Extend texture edge pixels     | No                    | Model texture, UI, skybox         |
+    // | GL_CLAMP_TO_BORDER  | Use custom border color        | Yes (borderColor)     | Shadow depth map, special effect  |
+    GLenum wrapS = GL_REPEAT; // wrap mode for S coordinate (U / horizontal axis)
+    GLenum wrapT = GL_REPEAT; // wrap mode for T coordinate (V / vertical axis)
+    GLenum wrapR = GL_REPEAT; // wrap mode for R coordinate (3D texture / cubemap only)
+
+    // Border Color
+    float borderColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; // border color for GL_CLAMP_TO_BORDER mode
+
+    // Level of Detail (LOD)
+    GLfloat lodBias = 0.0f; // LOD bias for mipmap sampling
+    GLfloat minLod  = -1000.0f;
+    GLfloat maxLod  = 1000.0f;
+
+    /// Depth texture
+    GLenum compareMode = GL_NONE; // depth compare mode (for shadow depth texture)
+    GLenum compareFunc = GL_LESS; // depth compare function (valid when compareMode != GL_NONE)
+};
+```
 
 ## References
 
-[learnopengl-cn](https://learnopengl-cn.readthedocs.io/zh/latest/01%20Getting%20started/04%20Hello%20Triangle/)
+- [learnopengl-cn](https://learnopengl-cn.readthedocs.io/zh/latest/01%20Getting%20started/04%20Hello%20Triangle/)
+- [glsl grammar basis](https://www.cnblogs.com/straywriter/articles/15889310.html)
