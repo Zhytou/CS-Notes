@@ -238,7 +238,7 @@ public:
 
 事实上，线段树就是一个树状数组，类似于堆排序中用一个数组去表示一个完全二叉树。比如，数组[10, 11, 12, 13, 14]由其所构建的序列和线段树为如下图所示。
 
-![序列和线段树](https://oi-wiki.org/ds/images/segt1.svg)
+![序列和线段树](https://oi-wiki.org/ds/images/seg-1.svg)
 
 可见，线段树将每个长度不为1的区间划分成左右两个区间递归求解，把整个线段划分为一个树形结构，通过合并左右两区间信息来求得该区间的信息。
 
@@ -310,6 +310,79 @@ int query(int l, int r, int s, int t, int p) {
 
 // 比如查询3-5的和
 query(3, 5, 0, n-1, 1);
+```
+
+综上所述，将这个线段树封装成类，并将它的递归版查询和创建函数接口进一步简化，即可得到：
+
+```c++
+#include <vector>
+#include <algorithm>
+#include <climits>
+
+class MaxSegmentTree {
+private:
+    int n;
+    std::vector<int> tree;
+
+    void build(int node, int start, int end, const std::vector<int>& arr) {
+        if (start == end) {
+            tree[node] = arr[start];
+            return;
+        }
+        int mid = start + (end - start) / 2;
+        build(2 * node, start, mid, arr);
+        build(2 * node + 1, mid + 1, end, arr);
+        tree[node] = std::max(tree[2 * node], tree[2 * node + 1]);
+    }
+
+    void update(int node, int start, int end, int idx, int val) {
+        if (start == end) {
+            tree[node] = val;
+            return;
+        }
+        int mid = start + (end - start) / 2;
+        if (idx <= mid) {
+            update(2 * node, start, mid, idx, val);
+        } else {
+            update(2 * node + 1, mid + 1, end, idx, val);
+        }
+        tree[node] = std::max(tree[2 * node], tree[2 * node + 1]);
+    }
+
+    int query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) {
+            return INT_MIN; // 最大值的无效/默认边界
+        }
+        if (l <= start && end <= r) {
+            return tree[node];
+        }
+        int mid = start + (end - start) / 2;
+        int p1 = query(2 * node, start, mid, l, r);
+        int p2 = query(2 * node + 1, mid + 1, end, l, r);
+        return std::max(p1, p2);
+    }
+
+public:
+    explicit MaxSegmentTree(const std::vector<int>& arr) {
+        n = arr.size();
+        tree.resize(4 * n, 0);
+        if (n > 0) {
+            build(1, 0, n - 1, arr);
+        }
+    }
+
+    // 单点更新：将索引 idx 处的值修改为 val
+    void update(int idx, int val) {
+        if (n == 0 || idx < 0 || idx >= n) return;
+        update(1, 0, n - 1, idx, val);
+    }
+
+    // 区间查询：查询 [l, r] 闭区间的最大值
+    int query(int l, int r) {
+        if (n == 0 || l > r || l < 0 || r >= n) return INT_MIN;
+        return query(1, 0, n - 1, l, r);
+    }
+};
 ```
 
 **例题**：
