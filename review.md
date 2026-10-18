@@ -80,7 +80,26 @@ ping是基于网际报文协议(Internet Control Message Protocol, ICMP)，因�
 
 17、介绍一下C10K问题和C100K问题。
 
+C10K 问题指单机同时维持约 1 万个并发连接；C100K 问题指单机维持约 10 万个并发连接。 这里的 C 通常理解为 Client/Connection，核心不是单纯“带宽够不够”，而是操作系统和程序能否在有限 CPU、内存、文件描述符、线程/进程资源下，高效管理大量连接。
+
+在早期服务器模型中，常见做法是 一个连接对应一个线程或进程。连接少时没问题，但达到 1 万、10 万级别后，线程调度、上下文切换、内存占用、文件描述符管理都会成为瓶颈。 所以 C10K/C100K 的本质是：如何不用一万个线程去服务一万个连接。
+
+解决思路主要依靠 I/O 多路复用 + 非阻塞 I/O + 少量工作线程：
+
+- 使用 select/poll/epoll 等机制，让一个线程同时监听大量 socket 事件；
+- 只处理“有数据可读/可写”的连接，避免每个连接都阻塞一个线程；
+- 配合线程池、异步非阻塞、事件驱动架构，把连接管理和业务处理分离；
+- 优化系统参数，如文件描述符上限、TCP 缓冲区、连接回收策略等。
+
+select/poll 的问题是随着连接数增加，轮询开销变大；epoll 则更适合大规模连接，因为它只返回就绪事件，不需要每次遍历全部描述符。 到 C100K 甚至 C1M、C10M 级别时，还会进一步涉及内存分配、内核协议栈开销、零拷贝、内核旁路等更深层优化。
+
 18、讲一讲QT信号与槽实现机制。
+
+Qt 信号与槽本质上是 类型安全的观察者模式，底层依赖 元对象系统 Meta-Object System。 所有支持信号与槽的类都必须继承自 QObject，并在类定义中加入 Q_OBJECT 宏。
+
+编译前，Qt 的 MOC 元对象编译器 会扫描这些类，生成额外的 C++ 代码。它会为类建立字符串表和索引表，记录类名、信号名、槽名、参数类型、方法索引等信息，并生成 metaObject()、qt_metacall()、qt_static_metacall() 等函数。 信号本身只需要声明，不需要手动实现，MOC 会自动生成信号函数的实现。 槽则是普通成员函数，只是可以被信号连接触发。
+
+当调用 connect() 时，Qt 会在内部建立“信号 → 槽”的连接关系。Qt5/Qt6 推荐使用基于函数指针的写法，例如
 
 19、如何实现一个CDN系统。
 
@@ -102,7 +121,65 @@ memcpy和strcpy都是C/C++语言中用于字符串或内存块复制的函数。
 
 25、实现一些线程安全的单例模式。
 
+```c++
+#include <iostream>
+#include <mutex>
+
+class Singleton {
+public:
+    // 删除拷贝构造和赋值运算符，防止外部复制
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+
+    // 获取单例实例的静态方法（线程安全）
+    static Singleton& getInstance() {
+        static Singleton instance; // 关键：局部静态变量
+        return instance;
+    }
+
+    void doSomething() {
+        std::cout << "Singleton is working!" << std::endl;
+    }
+
+private:
+    Singleton() {
+        // 私有构造函数
+        std::cout << "Singleton constructed." << std::endl;
+    }
+    
+    ~Singleton() {
+        std::cout << "Singleton destroyed." << std::endl;
+    }
+};
+
+int main() {
+    // 使用引用接收
+    Singleton& s1 = Singleton::getInstance();
+    Singleton& s2 = Singleton::getInstance();
+    
+    s1.doSomething();
+    
+    // 验证地址是否相同
+    if (&s1 == &s2) {
+        std::cout << "s1 and s2 are the same instance." << std::endl;
+    }
+    
+    return 0;
+}
+```
+
+为什么这样做是线程安全的？
+
+- 标准保证：根据 C++11 标准（ISO/IEC 14882:2011），局部静态变量（static local variable）的初始化是线程安全的。编译器会自动生成代码，确保 static Singleton instance; 只会被初始化一次。
+- Magic Statics：这通常被称为 "Magic Statics"。如果多个线程同时尝试执行 getInstance()，编译器内部会使用类似 std::call_once 的机制来保护初始化过程，无需手动加锁。
+
 26、公有继承、保护继承和私有继承的区别。为什么需要私有继承。
+
+基类的 private 成员在任何继承方式下都不可被派生类直接访问。
+
+- 公有继承：基类的 public/protected 成员在派生类中保持原级别。这是最常见的继承，表示 "is-a" 关系，派生类对象可以隐式转换为基类指针/引用。
+- 保护继承：基类所有可访问成员在派生类中都变为 protected。外部无法通过派生类对象访问基类接口，但派生类的子类仍可访问。适用于"受控的多态"场景。
+- 私有继承：基类所有可访问成员在派生类中都变为 private。外部完全看不到基类接口，派生类对象也不能转换为基类指针/引用。
 
 27、讲一讲A*算法。
 
