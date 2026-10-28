@@ -33,7 +33,7 @@
 
 进程和程序组成了一对相依的概念。一个运行中的程序被称为一个进程；反过来讲，进程就是程序的一个实例。更准确的说，一个正在执行、且拥有独立的内存空间和资源的程序就是进程。
 
-![图2 进程的状态](https://pic3.zhimg.com/80/v2-4a98dc88b067603584f3c0d6a688b4f6_1440w.webp)
+![图2 进程的状态](https://pic3.zhimg.com/80/v2-4a98dc88b067603584f3c0d6a688b4f6_1440w.png)
 
 尽管我们说一个正在执行的程序是进程，但进程作为一个状态机，不光有正在执行（Running）的状态，它还具有如图2中所展示的其他状态，包括：
 
@@ -155,7 +155,7 @@ waitpid函数让父进程进入阻塞状态，等待指定子进程结束，然�
 
 一个进程的虚拟地址空间承载了程序运行所需的全部状态。在32位架构下，受限于寻址位数，进程的理论地址空间上限为4GB（即$2^{32}$字节），如图3所示。而64位进程的理论寻址空间则呈爆炸式增长，达到 $2^{64}$ 字节（约16EB），远超当前任何物理内存的硬件极限。不过，考虑到现代CPU硬件、操作系统设计以及成本的限制，目前的x86_64处理器通常只实现了48位的虚拟地址寻址，也即对应着256TB的进程空间。
 
-![图4 进程地址空间](../img/process_address.png)
+![图4 进程地址空间](../img/operating_system_process_address.png)
 
 如图4所示，进程空间大体上可以分成两大部分，即用户空间和内核空间。其中，前者也就是实现进程隔离性的核心。而后者虽然是共享的（映射了同一段物理内存），但仅仅只有当进程需要执行系统调用，并切换到内核态之后才会真正访问。（有关内核空间这部分的相关知识会在进程调度章节中更详细说明。）
 
@@ -175,6 +175,10 @@ waitpid函数让父进程进入阻塞状态，等待指定子进程结束，然�
 - 进程描述符
 - 缓冲区
 - 设备寄存器虚拟映射表
+
+进一步，可以将用户空间和内核空间进一步细分为：
+
+![图5 细分进程地址空间](../img/operating_system_process_address_detail.png)
 
 **地址映射实现**：
 
@@ -434,7 +438,7 @@ void consumer() {
 
 本文想讨论的主要是终端会话（Terminal Session）。它往往由多个进程组（Process Group）构成，并且一定由一个控制终端（Controlling Terminal）连接着（或者说，会话就是由这个终端开启的），具体如下图。
 
-![图 5 session & terminal & process group](https://jyywiki.cn/pages/OS/img/tty-session.png)
+![图6 session & terminal & process group](https://jyywiki.cn/pages/OS/img/tty-session.png)
 
 除此之外，要补充的是所有fork出的进程都会继承进程组号。这也就能回答本章开头的问题了——如果我fork了一份计算任务，使用Ctrl+C会杀死哪个任务呢？答案是，所有fork出的进程都中止。
 
@@ -567,7 +571,7 @@ struct thread_struct {
 
 和进程类似，线程也有属于自己的ID（Thread ID），但线程ID在系统范围内可以不是唯一的，它只在所属的进程范围内唯一。不过，由于Linux管理线程时仍使用`task_struct`结构体，因而`pid`字段此时则表示线程ID，而`tgid`字段，也即线程组ID（Thread Group ID）。它们二者的关系如下图所示。
 
-![图 3pid与tgid的关系](https://pic4.zhimg.com/v2-a3afface9b99a77f239189ef5f15713b_1440w.jpg)
+![图7 pid与tgid的关系](https://pic4.zhimg.com/v2-a3afface9b99a77f239189ef5f15713b_1440w.jpg)
 
 换句话说，可以直接使用`pid`字段和`tgid`字段判断当前`task_struct`结构体表示的是一个线程还是一个进程：
 

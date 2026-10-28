@@ -10,7 +10,9 @@
     - [缺页中断](#缺页中断)
     - [存储层级 Storage Hierarchy](#存储层级-storage-hierarchy)
     - [交换空间](#交换空间)
-  - [Linux中的虚拟内存](#linux中的虚拟内存)
+  - [Linux中的内存管理](#linux中的内存管理)
+    - [虚拟内存的分配和管理](#虚拟内存的分配和管理)
+    - [物理内存的分配和管理](#物理内存的分配和管理)
   - [参考](#参考)
 
 在进程的笔记中，我们提到了操作系统为进程提供了地址空间（Address Space）这个易用的物理内存抽象。通过这一机制，每个程序都会认为它将被加载到特定地址的内存中，并且具有非常大的空间。而地址空间背后的技术正是我们这次笔记的主要内容——虚拟内存。
@@ -195,10 +197,140 @@ $$\text{PPN} = \text{PageTable}(\text{VPN})$$
 - 再次访问与缺页中断触发 Swap-in：过了很久，该进程突然又需要读取这块内存的数据了。CPU 执行到该地址时，MMU 去查页表，发现 Valid 位是 0。MMU 无法完成翻译，立即触发缺页中断（Page Fault），CPU 陷入内核态。内核的缺页异常处理程序接管 CPU，检查这个 PTE，发现里面存的不是普通的未加载标志，而是一个 Swap Entry。内核根据 Swap Entry 里的磁盘地址，指挥磁盘控制器把这 $4\,\text{KB}$ 的数据从硬盘重新读入到一个空闲的物理页帧中。
 - 恢复正常映射：内核将新分配的物理页帧号（PPN）写回页表项，把有效位重新设为 1，并清除原先的 Swap Entry。操作系统恢复被中断的进程，进程毫无感知地继续执行。
 
-## Linux中的虚拟内存
+## Linux中的内存管理
+
+### 虚拟内存的分配和管理
+
+在 Linux 系统中，虚拟内存与进程紧密绑定，其核心目的在于为多进程系统提供隔离保障。由于进程和线程在内核中均通过 task_struct 结构体表示，每个 task_struct 内部都包含一个指向 mm_struct 结构体的指针，用于管理进程的虚拟地址空间。对于多线程场景，同一进程下的多个线程会共享同一个 mm_struct 结构体，从而实现了线程间对进程虚拟地址空间的共享。
+
+mm_struct 定义如下所示。其中，start_xxx 和 end_xxx 字段分别表示该段内存的起始虚拟地址和结束虚拟地址，对应着前文介绍的分段机制段表。而紧随其后的 pgd（Page Global Directory，页全局目录）字段，则直接指向了硬件分页机制的顶层入口。它保存着当前进程顶级页表在物理内存中的基地址（最终会被加载到 CPU 的 CR3 寄存器中），是硬件 MMU 进行虚拟地址到物理地址多级查表转换的起点。
+
+```c++
+struct mm_struct {
+  // 1. 进程地址空间的核心标识
+  unsigned long start_code, end_code;    // text段：起始/结束虚拟地址
+  unsigned long start_data, end_data;    // data段：起始/结束虚拟地址
+  unsigned long start_brk, brk;          // 堆区：起始/当前堆顶虚拟地址
+  unsigned long start_stack;             // 主线程栈：起始虚拟地址（高地址）
+  unsigned long start_bss, end_bss;      // bss段：起始/结束虚拟地址（部分内核版本合并到data相关字段）
+  
+  // 2. 内存区域链表（最核心！记录所有内存段的详细映射）
+  struct vm_area_struct *mmap;           // 指向所有内存区域的链表头
+  struct rb_root mm_rb;                  // 内存区域的红黑树（加速查找）
+  
+  // 3. 页表相关（虚拟地址→物理地址的映射表）
+  pgd_t *pgd;                            // 页全局目录（页表的顶级指针）
+  
+  // 4. 权限与大小限制
+  unsigned long total_vm;                // 进程使用的总虚拟内存大小
+  unsigned long locked_vm;               // 锁定的内存页（不被换出）
+  unsigned long flags;                   // 内存标志（如MM_WRITEABLE、MM_EXECUTABLE）
+  
+  // 5. 共享与计数
+  atomic_t mm_users;                     // 使用该mm_struct的线程数（多线程共享时计数）
+  atomic_t mm_count;                     // 引用计数（销毁时判断）
+  struct task_struct *owner;             // 所属进程（主线程）
+
+  // ...
+};
+```
+
+不过，mm_struct 的真正核心还是在于 mmap 链表和 mm_rb 红黑树组织起来的 vm_area_struct 对象。如下图所示，每一个 vm_area_struct 都对应着进程虚拟地址空间中的一个独立段落，记录了该段内存的起止边界、访问权限以及各类属性标志。
+
+![进程空间中的 VMA 分布](../img/operating_system_process_address_vma.png)
+
+依据内部的 vm_file 指针是否为 NULL，vm_area_struct 对象可分为两大类：
+
+- 文件映射（File-backed Mapping，vm_file $\neq$ NULL）：该内存区域与磁盘文件或设备直接关联（如代码段、动态库 .so 或显式 mmap 映射的文件）。触发缺页中断时，内核会通过 vm_file 和偏移量从 Page Cache 或磁盘中读取真实的文件数据。
+- 匿名映射（Anonymous Mapping，vm_file = NULL）：该内存区域不对应任何磁盘文件（如堆区、栈区、BSS 段及匿名 mmap 内存）。触发缺页中断时，内核无需进行磁盘 I/O，只需向伙伴系统申请干净的物理页并将其全部清零（Zero-fill）即可。
+
+```c++
+struct vm_area_struct {
+  // 1. 虚拟内存区域的起止边界
+  unsigned long vm_start;     // 这段虚拟内存区域的起始地址（包含）
+  unsigned long vm_end;       // 这段虚拟内存区域的结束地址（不包含）
+
+  // 2. 组织结构与所属进程内存描述符指针
+  struct vm_area_struct *vm_next, *vm_prev; // 双向链表节点，用于顺序遍历所有 VMA
+  struct rb_node vm_rb;                     // 红黑树节点，用于加速虚拟地址查找
+  struct mm_struct *vm_mm;                  // 指向所属进程的 mm_struct 内存描述符
+
+  // 3. 访问权限与属性标志位
+  pgprot_t vm_page_prot;      // 硬件页表会用到的访问权限（读/写/执行）
+  unsigned long vm_flags;     // 各种属性标志（如 VM_READ, VM_WRITE, VM_SHARED）
+
+  // 4. 文件映射相关字段（若是文件映射则生效）
+  unsigned long vm_pgoff;     // 文件内的偏移量（以 Page 为单位）
+  struct file *vm_file;       // 指向被映射的文件的 file 结构体（若为纯匿名内存则为 NULL）
+  const struct vm_operations_struct *vm_ops; // 专属的操作函数指针（如缺页时的 readpage）
+
+  // 5. 匿名内存管理与私有数据
+  struct anon_vma *anon_vma;  // 关联的匿名内存管理结构（用于匿名映射/写时复制）
+  void *vm_private_data;      // 驱动或子系统的私有数据指针
+};
+```
+
+### 物理内存的分配和管理
+
+**非一致性内存访问**：
+
+为解决多 CPU 系统中共享总线带来的性能瓶颈，现代 Linux 引入了非一致性内存访问（Non-Uniform Memory Access，NUMA）架构。其核心设计思想在于为每个 CPU 节点配备专属的本地内存，从而使得不同 CPU 访问不同物理内存区域的延迟产生差异：访问本地节点内存速度更快，而访问远程节点内存则相对较慢。
+
+对于普通的单 CPU 电脑，现代 Linux 内核为了统一代码逻辑，也会将整块物理内存抽象为一个 NUMA 节点来统一管理。其顶层数据结构为 pg_data_t，定义如下：
+
+```c++
+typedef struct pglist_data {
+  // 1. 本节点内的内存域数组，例如 ZONE_DMA、ZONE_NORMAL
+  struct zone node_zones[MAX_NR_ZONES];
+
+  // 2. 本节点实际存在的内存域数量
+  int nr_zones;
+
+  // 3. 非稀疏内存模型下，指向本节点所有物理页描述符数组
+  struct page *node_mem_map;
+
+  // 4. 本节点起始页帧号、实际可用的物理页数、覆盖的总页数，包含内存空洞
+  unsigned long node_start_pfn;
+  unsigned long node_present_pages;
+  unsigned long node_spanned_pages;
+
+  // ...
+} pg_data_t;
+```
+
+其中，为了隔离老旧外设的硬件寻址限制（如 DMA）、降低多 CPU 并发申请内存时的锁竞争并有效抑制内存碎片，NUMA 节点一般会将其管理的物理内存划分为多个 zone，也即 node_zones 数组字段。每个 zone 都有自己的属性，例如内存类型、水位线、自旋锁等。其核心定义如下：
+
+```c++
+struct zone {
+  // 1. 伙伴系统的核心资产：各阶空闲链表数组
+  struct free_area free_area[MAX_ORDER];
+
+  // 2. 内存水位线（Watermarks，用于触发 kswapd 后台内存回收）
+  unsigned long watermark[NR_WMARK];
+
+  // 3. 统计与并发控制
+  atomic_long_t vm_stat[NR_VM_ZONE_STAT]; // 区域页面状态统计
+  spinlock_t lock;                        // 保护伙伴系统分配与回收的自旋锁
+
+  // 4. 空间界定与归属
+  unsigned long zone_start_pfn;           // 该 zone 在全局中的起始页帧号 (PFN)
+  unsigned long spanned_pages;            // 该 zone 跨越的总页数（包含可能的物理内存空洞）
+  unsigned long managed_pages;            // 实际交由伙伴系统管理的有效物理页数
+  struct pglist_data *zone_pgdat;         // 指向所属的父 NUMA 节点
+  char *name;                             // 区域名称（如 "DMA", "Normal" 等）
+};
+```
+
+简而言之，node_zones 表示该 NUMA 节点下的各个内存功能区（负责具体的分配策略、锁与伙伴系统管理），而 node_mem_map 则指向该节点下所有物理页的元数据描述符数组（struct page 数组）起始地址。二者协同构成了 NUMA 物理内存管理的核心基石。
+
+**伙伴系统**：
+
+**SLAB分配器**：
 
 ## 参考
 
 - [深入理解计算机系统-第9章 虚拟内存](https://hansimov.gitbook.io/csapp/)
 - [深入剖析虚拟内存工作原理](https://cloud.tencent.com/developer/article/1821336)
 - [geeks - Differences between paging and segment](https://www.geeksforgeeks.org/difference-between-paging-and-segmentation/)
+- [4.6 深入理解 Linux 虚拟内存管理](https://www.xiaolincoding.com/os/3_memory/linux_mem.html)
+- [4.7 深入理解 Linux 物理内存管理](https://www.xiaolincoding.com/os/3_memory/linux_mem2.html)
