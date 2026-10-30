@@ -155,62 +155,9 @@ waitpid函数让父进程进入阻塞状态，等待指定子进程结束，然�
 
 一个进程的虚拟地址空间承载了程序运行所需的全部状态。在32位架构下，受限于寻址位数，进程的理论地址空间上限为4GB（即$2^{32}$字节），如图3所示。而64位进程的理论寻址空间则呈爆炸式增长，达到 $2^{64}$ 字节（约16EB），远超当前任何物理内存的硬件极限。不过，考虑到现代CPU硬件、操作系统设计以及成本的限制，目前的x86_64处理器通常只实现了48位的虚拟地址寻址，也即对应着256TB的进程空间。
 
-![图4 进程地址空间](../img/operating_system_process_address.png)
+![图4 细分进程地址空间](../img/operating_system_process_address_detail.png)
 
-如图4所示，进程空间大体上可以分成两大部分，即用户空间和内核空间。其中，前者也就是实现进程隔离性的核心。而后者虽然是共享的（映射了同一段物理内存），但仅仅只有当进程需要执行系统调用，并切换到内核态之后才会真正访问。（有关内核空间这部分的相关知识会在进程调度章节中更详细说明。）
-
-对于用户空间部分，它一般由以下几个部分组成：
-
-- 代码区(存储程序代码)
-- 全局数据区(存储全局变量和静态变量)
-- 栈区(存储函数调用时创建的局部变量和参数)
-- 堆区(存储动态分配的内存)
-
-而对于内核空间，它则一般包含：
-
-- 内核代码和数据
-- 系统调用表
-- 设备驱动
-- 中断处理程序
-- 进程描述符
-- 缓冲区
-- 设备寄存器虚拟映射表
-
-进一步，可以将用户空间和内核空间进一步细分为：
-
-![图5 细分进程地址空间](../img/operating_system_process_address_detail.png)
-
-**地址映射实现**：
-
-在Linux系统中，进程虚拟地址空间的所有地址信息均存储在进程的`mm_struct`结构体中。其中，`start_xxx`和`end_xxx`字段分别表示该段内存的起始虚拟地址和结束虚拟地址。`vm_area_struct`结构体则用于记录进程地址空间中的每个内存区域（如代码段、数据段、栈段等）的详细信息，包括起始虚拟地址、结束虚拟地址、权限标志（如可读、可写、可执行等）等，进而帮助操作系统快速判断“某虚拟地址是否合法”“该地址有什么权限”。
-
-```c++
-struct mm_struct {
-  // 1. 进程地址空间的核心标识
-  unsigned long start_code, end_code;    // text段：起始/结束虚拟地址
-  unsigned long start_data, end_data;    // data段：起始/结束虚拟地址
-  unsigned long start_brk, brk;          // 堆区：起始/当前堆顶虚拟地址
-  unsigned long start_stack;             // 主线程栈：起始虚拟地址（高地址）
-  unsigned long start_bss, end_bss;      // bss段：起始/结束虚拟地址（部分内核版本合并到data相关字段）
-  
-  // 2. 内存区域链表（最核心！记录所有内存段的详细映射）
-  struct vm_area_struct *mmap;           // 指向所有内存区域的链表头
-  struct rb_root mm_rb;                  // 内存区域的红黑树（加速查找）
-  
-  // 3. 页表相关（虚拟地址→物理地址的映射表）
-  pgd_t *pgd;                            // 页全局目录（页表的顶级指针）
-  
-  // 4. 权限与大小限制
-  unsigned long total_vm;                // 进程使用的总虚拟内存大小
-  unsigned long locked_vm;               // 锁定的内存页（不被换出）
-  unsigned long flags;                   // 内存标志（如MM_WRITEABLE、MM_EXECUTABLE）
-  
-  // 5. 共享与计数
-  atomic_t mm_users;                     // 使用该mm_struct的线程数（多线程共享时计数）
-  atomic_t mm_count;                     // 引用计数（销毁时判断）
-  struct task_struct *owner;             // 所属进程（主线程）
-};
-```
+如图所示，进程空间大体上可以分成两大部分，即用户空间和内核空间。其中，前者也就是实现进程隔离性的核心。而后者虽然是共享的（映射了同一段物理内存），但仅仅只有当进程需要执行系统调用，并切换到内核态之后才会真正访问。（有关内核空间这部分的相关知识会在进程调度章节中更详细说明。）
 
 ### 进程间通信
 
@@ -438,7 +385,7 @@ void consumer() {
 
 本文想讨论的主要是终端会话（Terminal Session）。它往往由多个进程组（Process Group）构成，并且一定由一个控制终端（Controlling Terminal）连接着（或者说，会话就是由这个终端开启的），具体如下图。
 
-![图6 session & terminal & process group](https://jyywiki.cn/pages/OS/img/tty-session.png)
+![图5 session & terminal & process group](https://jyywiki.cn/pages/OS/img/tty-session.png)
 
 除此之外，要补充的是所有fork出的进程都会继承进程组号。这也就能回答本章开头的问题了——如果我fork了一份计算任务，使用Ctrl+C会杀死哪个任务呢？答案是，所有fork出的进程都中止。
 
@@ -571,7 +518,7 @@ struct thread_struct {
 
 和进程类似，线程也有属于自己的ID（Thread ID），但线程ID在系统范围内可以不是唯一的，它只在所属的进程范围内唯一。不过，由于Linux管理线程时仍使用`task_struct`结构体，因而`pid`字段此时则表示线程ID，而`tgid`字段，也即线程组ID（Thread Group ID）。它们二者的关系如下图所示。
 
-![图7 pid与tgid的关系](https://pic4.zhimg.com/v2-a3afface9b99a77f239189ef5f15713b_1440w.jpg)
+![图6 pid与tgid的关系](https://pic4.zhimg.com/v2-a3afface9b99a77f239189ef5f15713b_1440w.jpg)
 
 换句话说，可以直接使用`pid`字段和`tgid`字段判断当前`task_struct`结构体表示的是一个线程还是一个进程：
 
