@@ -2,25 +2,31 @@
 
 - [Linux中的内存管理](#linux中的内存管理)
   - [进程地址空间](#进程地址空间)
-    - [mm\_struct 结构体](#mm_struct-结构体)
-    - [vm\_area\_struct 结构体](#vm_area_struct-结构体)
+    - [用户空间](#用户空间)
+    - [内核空间](#内核空间)
   - [用户态内存管理](#用户态内存管理)
     - [关键字new](#关键字new)
     - [glibc中的malloc](#glibc中的malloc)
     - [系统调用brk与mmap](#系统调用brk与mmap)
+    - [内存分配器ptmalloc](#内存分配器ptmalloc)
   - [内核态内存管理](#内核态内存管理)
     - [非一致性内存访问](#非一致性内存访问)
     - [伙伴系统](#伙伴系统)
     - [SLAB分配器](#slab分配器)
+    - [高位地址映射](#高位地址映射)
   - [参考](#参考)
 
 ## 进程地址空间
 
+![进程地址空间](../../img/operating_system_process_address_detail.png)
+
+### 用户空间
+
 在 Linux 系统中，虚拟内存与进程紧密绑定，其核心目的在于为多进程系统提供隔离保障。由于进程和线程在内核中均通过 task_struct 结构体表示，每个 task_struct 内部都包含一个指向 mm_struct 结构体的指针，用于管理进程的虚拟地址空间。对于多线程场景，同一进程下的多个线程会共享同一个 mm_struct 结构体，从而实现了线程间对进程虚拟地址空间的共享。
 
-### mm_struct 结构体
+**用户空间描述符**：
 
-mm_struct 定义如下所示。其中，start_xxx 和 end_xxx 字段分别表示该段内存的起始虚拟地址和结束虚拟地址，对应着前文介绍的分段机制段表。而紧随其后的 pgd（Page Global Directory，页全局目录）字段，则直接指向了硬件分页机制的顶层入口。它保存着当前进程顶级页表在物理内存中的基地址（最终会被加载到 CPU 的 CR3 寄存器中），是硬件 MMU 进行虚拟地址到物理地址多级查表转换的起点。
+mm_struct 结构体是整个进程虚拟地址空间的顶层描述符，其核心定义与关键字段如下所示：
 
 ```c++
 struct mm_struct {
@@ -52,7 +58,9 @@ struct mm_struct {
 };
 ```
 
-### vm_area_struct 结构体
+其中，start_xxx 和 end_xxx 字段分别表示该段内存的起始虚拟地址和结束虚拟地址，对应着前文介绍的分段机制段表。而紧随其后的 pgd（Page Global Directory，页全局目录）字段，则直接指向了硬件分页机制的顶层入口。它保存着当前进程顶级页表在物理内存中的基地址（最终会被加载到 CPU 的 CR3 寄存器中），是硬件 MMU 进行虚拟地址到物理地址多级查表转换的起点。
+
+**虚拟内存区域**：
 
 不过，mm_struct 的真正核心还是在于 mmap 链表和 mm_rb 红黑树组织起来的 vm_area_struct 对象。如下图所示，每一个 vm_area_struct 都对应着进程虚拟地址空间中的一个独立段落，记录了该段内存的起止边界、访问权限以及各类属性标志。
 
@@ -90,6 +98,8 @@ struct vm_area_struct {
 ```
 
 其中，vm_file 字段指向的 file 结构体，是 VFS 中提供的文件对象，内部包含 file_operations 函数指针表，提供了对该文件进行读、写、mmap 等操作的底层能力，具体见[文件系统](./persistence/file%20system.md)中的说明。也就是说，vm_file 决定了这段 VMA 映射的数据来源：当内核需要把文件内容加载到物理页时，最终会通过 vm_file 关联的 address_space 和 file_operations 完成数据读取。
+
+**内存映射行为表**：
 
 而 vm_operations_struct 并不是文件操作表，它是 VMA 自身的内存映射行为表。它描述的是这段虚拟内存区域在生命周期变化、缺页、写保护等场景下，内核应该如何处理。其核心操作包括：
 
@@ -131,6 +141,43 @@ struct vm_operations_struct {
 - 磁盘文件映射：由对应的文件系统（如 Ext4 / XFS）提供。当用户态对普通文件发起 mmap 时，文件系统的 mmap 函数会将专属的 vm_ops（如内核通用的文件内存操作集）绑定到 VMA 上，其内部的 fault 回调负责通过 vm_file 将文件内容从磁盘或 Page Cache 中加载到物理内存中。
 - 硬件设备与显存映射：由对应的设备驱动（如 DRM 显卡驱动）定制提供。当用户态通过 mmap 映射显卡设备文件时，驱动的 file_operations->mmap 会充当“配置工厂”，为主键 VMA 挂载驱动专属的 vm_ops。这样，当程序访问显存触发缺页时，驱动就能直接接管并控制硬件或分配显存物理页。
 - 纯匿名映射：由于 vm_file 为 NULL，该 VMA 通常不需要外部文件系统或驱动介入，其 vm_ops 往往为 NULL，一切生命周期与缺页逻辑完全由操作系统内核底层的通用内存管理机制托管。
+
+### 内核空间
+
+与用户空间每个进程都拥有一套独立 mm_struct 和私有虚拟地址空间不同，内核空间在宏观上是所有进程共享的。在传统的 32 位 Linux 系统中，高 1GB 的虚拟地址空间对于所有进程而言都是相同的。当进程陷入内核态时，CPU 切换执行内核代码，共用的也是同一套内核页表。
+
+**内核空间分区**：
+
+如图所示，内核虚拟内存空间从低到高主要划分为以下几个关键区域：
+
+- **直接映射区（线性映射区）**：物理地址和虚拟地址之间存在固定偏移映射关系，无需复杂页表动态维护，依靠数学公式完成地址转换；该区域的物理页由伙伴系统管理，通过 `struct page` 描述页帧。
+- **vmalloc 区**：用于分配不连续的物理页、连续的内核虚拟地址，使用 `vm_struct` 链表管理每一块分配区域；`vmalloc`、`vmap` 均在此区域分配。
+- **固定映射区（Fixmap）**：一组编译期预先预留的固定虚拟地址槽位，运行时按需映射到指定物理页，用于一些特殊硬件、临时映射场景。
+- **持久映射区（KMAP）**：主要在 32 位系统供高端内存（HighMem）使用，把高端物理页临时映射到内核虚拟地址，现已在 64 位系统中基本废弃。
+- **内核镜像区**：存放内核代码段、数据段、BSS 段，内核启动时就完成映射。
+
+**内核空间描述符**：
+
+内核空间的管理直接复用了 mm_struct 结构体。作为系统初始化后的第一个 mm_struct 实例，它被称为 init_mm。在 init_mm 内部，其 VMA 链表及红黑树完全为空——这是因为内核空间的整体布局在系统启动时已完成静态规划且分割固定，无需像用户空间那样依赖 VMA 动态切分。它主要借用了页全局目录 pgd 字段来统筹整个内核空间的页表基地址。
+
+唯有动态的 vmalloc 映射区需要进行独立追踪。内核为此设计了专用的 struct vm_struct 结构体，用来管理虚拟地址连续但物理内存不连续的内核内存区：
+
+```c++
+struct vm_struct {
+  struct vm_struct *next;           // 链表指针，用于将所有 vm_struct 串联起来
+  void             *addr;           // 分配的虚拟内存起始地址
+  unsigned long     size;           // 虚拟内存的大小（包含隔离字节）
+  unsigned long     flags;          // 内存标志（如 VM_ALLOC 等）
+  struct page     **pages;          // 指向底层真实的物理页指针数组
+  unsigned int      nr_pages;       // 物理页的数量
+  phys_addr_t       phys_addr;      // 物理地址（仅在IO映射等少数场景下使用）
+  const void       *caller;         // 调用者的返回地址（用于调试与统计）
+};
+```
+
+**内核空间隔离**：
+
+由于用户空间与内核空间处于不同的特权级和地址隔离域，内核不能直接对用户空间地址进行指针解引用来读写数据。为了确保内核空间的隔离性并防止非法内存访问，内核必须通过 copy_from_user 和 copy_to_user 等专用函数，在执行严格的地址检查与异常处理后，安全地实现用户态与内核态之间的数据搬运。
 
 ## 用户态内存管理
 
@@ -187,26 +234,40 @@ brk 是内核提供用于直接修改堆区 VMA 的系统调用。它能够根�
 - 对于文件映射或特定自定义 VMA，内核通常会通过其关联的 vm_operations_struct 中的 fault 回调函数来处理物理页的加载；
 - 而常规的匿名堆内存则由内核专用的匿名缺页处理逻辑来完成。
 
-**优化后的内存分配器ptmalloc**：
+### 内存分配器ptmalloc
 
 ptmalloc 是 glibc 中的默认内存分配器，也即 malloc / free 的实际实现者。与它定位相似的高性能内存分配器还包括 Google 开源的 tcmalloc 和 Meta 开源的 jemalloc。
 
-对于 ptmalloc 而言，其核心概念包括：
+**内存池 arena**：
 
-1. 内存池 arena
-  ptmalloc 将进程管理的大片内存划分为若干个 arena。每个 arena 管理着自己的内存块、空闲队列以及锁。
-  
-  其中，进程启动时创建的第一个 arena 称为 main arena，其他的则称为 thread arena。对于 main arena 而言，它管理着进程唯一的堆空间 brk 段，因此主要通过 brk/sbrk 扩容，但也可以对大内存使用 mmap。相比之下，thread arena 则只能通过 mmap 申请内存。
+ptmalloc 将进程管理的大片内存划分为若干个 arena。每个 arena 独立管理着内存块、空闲队列以及锁。其中，进程启动时创建的第一个 arena 称为 main arena，其他的则称为 thread arena。
 
-  线程并不永久独占某个 arena，当 arena 数量达到上限后，多个线程会通过arena recycling 机制共享同一个 arena 并竞争其锁。
-2. 内存块 chunk
-  chunk 是 ptmalloc 管理内存的基本单位，它由头部元数据和用户数据区组成。其中，头部元数据记录 prev_size、size 和标志位，空闲时通过 fd/bk 等指针挂入空闲链表。
-  
-  借助头部记录的尺寸和状态信息，ptmalloc 能够以 $O(1)$ 的复杂度快速寻找到物理相邻的前后 Chunk，从而实现高效的相邻块合并，有效抑制内存碎片。
-3. 空闲链表 bin
-  空闲 Chunk 按大小分类放入不同 Bin。Fast Bin 是单向链表，采用 LIFO 策略，释放时不立即合并；Unsorted Bin 是释放后的中转缓冲区；Small Bin 管理较小固定大小的块，采用双向链表；Large Bin 按大小范围组织较大块；Top Chunk 是分配区顶部的剩余连续空间，所有 Bin 都不足时从这里切分。
-4. 线程本地缓存 Tcache
-  TCache 是 glibc 2.26 引入的线程私有缓存，包含 64 条单向链表，每条链表最多缓存 7 个 Chunk，覆盖 64 位系统上约 32 到 1032 字节的小对象。 小对象 free 时优先放回 TCache，下次同尺寸 malloc 时直接取出，全程无锁，无需进入 Arena。
+- 对于 main arena 而言，它管理着进程唯一的堆空间 brk 段，因此主要通过 brk/sbrk 扩容，但也可以对大内存使用 mmap。
+- 相比之下，thread arena 则只能通过 mmap 申请内存。
+
+线程并不永久独占某个 arena，当 arena 数量达到上限后，多个线程会通过arena recycling 机制共享同一个 arena 并竞争其锁。
+
+**内存块 chunk**：
+
+chunk 是 ptmalloc 管理内存的基本单位，它由头部元数据和用户数据区组成。其中，头部元数据记录 prev_size、size 和标志位，空闲时通过 fd/bk 等指针挂入空闲链表。
+
+借助头部记录的尺寸和状态信息，ptmalloc 能够以 $O(1)$ 的复杂度快速寻找到物理相邻的前后 Chunk，从而实现高效的相邻块合并，有效抑制内存碎片。
+
+**空闲链表 bin**:
+
+空闲 chunk 按照尺寸归类，挂载到不同类型 bin 中：
+
+- Fast Bin：单向链表，LIFO 复用策略，释放时不执行相邻合并；
+- Unsorted Bin：free 之后的中转缓冲区，是合并、重新分类前的暂存位置；
+- Small Bin：管理固定尺寸的小块内存，双向链表；
+- Large Bin：按区间组织大块内存；
+- Top Chunk：arena 顶部剩余的连续空闲区域，各个 bin 都无法满足分配时，从 Top Chunk 切分内存。
+
+**线程本地缓存 tcache**:
+
+tcache 是 glibc 2.26 引入的线程私有缓存，包含 64 条单向链表，每条链表最多缓存 7 个 chunk，覆盖 64 位系统上约 32 到 1032 字节的小对象。 小对象 free 时优先放回 tcache，下次同尺寸 malloc 时直接取出，全程无锁，无需进入 Arena。
+
+**分配主流程**：
 
 一次 malloc 的调用流程通常包括：
 
@@ -216,7 +277,7 @@ ptmalloc 是 glibc 中的默认内存分配器，也即 malloc / free 的实际�
 - Top Chunk 不足时，小内存通过 brk/sbrk 扩展堆，大内存通过 mmap 映射匿名内存；
 - 超过 mmap 阈值（默认约 128KB）的请求会直接走 mmap，释放时通过 munmap 还给内核。
 
-ptmalloc 的优化主要围绕三件事展开：减少系统调用、降低锁竞争、控制碎片。
+**ptmalloc 的优化**：
 
 - tcache 线程本地缓存是 glibc 2.26 后最重要的加速机制。每个线程有自己的 tcache，小对象 free 时先放回 tcache，下次 malloc 同尺寸时直接取出，不需要加锁，也不需要进入 Arena。
 - arena 分配区解决多线程竞争。主线程使用 Main Arena，子线程使用 Thread Arena，每个 arena 有独立锁，数量通常与 CPU 核数相关。这样多个线程可以并行分配，而不是全部串行争抢一把全局锁。
@@ -283,7 +344,11 @@ struct zone {
 
 ### 伙伴系统
 
-伙伴系统是 Linux 内核用于管理各个 zone 物理页帧的核心算法。其核心就是 zone 结构体中的 free_area 数组字段。其定义如下：
+伙伴系统是 Linux 内核用于管理各个 zone 中物理页帧的核心算法。其核心特点在于，以 2 的幂次为单位分配、释放连续物理页，并且能够自动合并相邻的空闲页，用来解决外部碎片问题。
+
+**空闲链表**：
+
+每个 zone 内部依靠 `free_area` 数组维护不同阶的空闲块，这是伙伴系统最核心的数据结构。其定义如下：
 
 ```c++
 struct free_area {
@@ -296,42 +361,97 @@ struct free_area {
 
 ```c++
 struct page {
-    // 1. 页面标志位（如是否为脏页、是否锁定、是否为复合页等）
-    unsigned long flags;
+  // 1. 页面标志位（如是否为脏页、是否锁定、是否为复合页等）
+  unsigned long flags;
 
-    /* 2. 联合体：根据页面的身份复用内存空间 */
-    union {
-        struct {
-            // 指向所属的 struct address_space（如果是文件页缓存）
-            struct address_space *mapping;
-            pgoff_t index;          // 在文件中的偏移量
-            unsigned long private;  // 私有数据（在伙伴系统中，领头羊 page 会在这里记录 order 阶数！）
-        };
-        
-        // 【关键】当该页作为空闲块加入伙伴系统时，复用此处的联合体：
-        struct {
-            struct list_head lru;   // 嵌入式双向链表节点（用于挂入 free_area）
-            /* ... 其它伙伴系统辅助字段 ... */
-        };
-
-        struct {
-            // 如果是复合页（Compound Page，如巨页或多页组合），指向首页（Head Page）
-            struct page *compound_head;
-            unsigned int compound_order; // 记录阶数
-        };
+  /* 2. 联合体：根据页面的身份复用内存空间 */
+  union {
+    struct {
+      // 指向所属的 struct address_space（如果是文件页缓存）
+      struct address_space *mapping;
+      pgoff_t index;          // 在文件中的偏移量
+      unsigned long private;  // 私有数据（在伙伴系统中，领头羊 page 会在这里记录 order 阶数！）
+    };
+    
+    // 【关键】当该页作为空闲块加入伙伴系统时，复用此处的联合体：
+    struct {
+      struct list_head lru;   // 嵌入式双向链表节点（用于挂入 free_area）
+      /* ... 其它伙伴系统辅助字段 ... */
     };
 
-    // 3. 引用计数与映射计数
-    atomic_t _refcount;     // 引用计数（为 0 时表示该页彻底空闲）
-    atomic_t _mapcount;     // 被用户态页表映射的次数
+    struct {
+      // 如果是复合页（Compound Page，如巨页或多页组合），指向首页（Head Page）
+      struct page *compound_head;
+      unsigned int compound_order; // 记录阶数
+    };
+  };
+
+  // 3. 引用计数与映射计数
+  atomic_t _refcount;     // 引用计数（为 0 时表示该页彻底空闲）
+  atomic_t _mapcount;     // 被用户态页表映射的次数
 };
 ```
 
 具体而言，这个链表节点可由 struct page 中的内嵌成员变量 lru 提供。当物理页处于空闲状态并加入伙伴系统时，内核通过 list_entry，根据该 lru 节点的内存地址减去其在 struct page 结构体中的偏移量，瞬间反向推算出所属的 struct page * 完整首地址，从而实现了从链表节点到物理页元数据的精准映射。
 
+**分配与回收**：
+
+`zone->free_area[]` 数组下标对应 order 阶：`free_area[order]` 存放大小为 \(2^{order}\) 个连续页的空闲块。
+
+- 分配：申请 \(2^k\) 页时，优先检查 `free_area[k]`。如果当前阶没有空闲块，向上查找更高阶；找到后对高阶块进行 split 对半切分，一半交付分配，另一半作为伙伴块放入低阶空闲链表。
+- 释放：释放一块 \(2^k\) 页的块时，通过地址对齐公式算出它的伙伴块地址。如果伙伴同样空闲，则二者合并，晋升为 \(2^{k+1}\) 阶的块，继续向上检查、递归合并。
+
+这种即时合并机制，保证系统尽可能保留大块连续物理内存，抑制外部碎片。
+
 ### SLAB分配器
 
-**高位内核空间的修改vmalloc/kmalloc/kmap**：
+SLAB 分配器是 Linux 内核在伙伴系统之上建立的一层对象级缓存分配器。其核心目的在于，通过预分配与缓存复用包括`task_struct`、`inode`、`dentry`、`struct page`等内核小对象，来避免频繁向伙伴系统申请内存的开销，并最大程度地减少内外部碎片。
+
+**分配槽**：
+
+在 SLAB 体系中，每个特定类型的对象池都由一个 kmem_cache 结构体统筹管理。它内部维护了三个核心的 slab 链表，分别用于追踪全满、部分空闲和全空的内存块：
+
+```c++
+struct kmem_cache {
+  struct slab *slabs_full;      // 对象全部被占用的slab链表
+  struct slab *slabs_partial;   // 部分对象空闲的slab链表
+  struct slab *slabs_free;      // 所有对象都空闲的slab链表
+
+  unsigned int object_size;     // 单个对象大小
+  unsigned int size;            // 包含对齐、元数据后的实际槽大小
+  unsigned int num;             // 一个slab里面可以存放多少个object
+
+  void (*ctor)(void *obj);      // 对象构造回调（初始化）
+  // ... 缓存名称、节点、迁移类型、CPU本地缓存等字段
+};
+
+struct slab {
+  struct list_head list;
+  unsigned long free;           // 下一个空闲对象索引
+  void *s_mem;                  // slab内对象数组起始地址
+  unsigned int inuse;           // 当前已分配对象数量
+  // ...
+};
+```
+
+**通用小内存对象分配kmalloc**：
+
+除了针对特定内核数据结构的高速缓存外，SLAB 体系还衍生出了通用的 kmalloc 机制。内核在初始化时会预先建立一系列标准尺码的通用缓存池（如 kmalloc-32、kmalloc-64、kmalloc-128 等）。
+
+当代码调用 kmalloc() 申请任意大小的内存时，内核会向上对齐并匹配最合适的标准槽位，直接从对应的 slab 缓存池中切出一个现成的槽位返回，从而实现了极高效的通用小内存动态分配。
+
+一般来说，kmalloc() 所申请到的内存无论是物理地址还是虚拟地址均为连续的。且考虑到小内存的高频快速访问需求，它通常位于直接映射区（Lowmem），从而避免了多级页表转换的额外开销。
+
+### 高位地址映射
+
+在 32 位 Linux 系统架构中，内核的虚拟地址空间总共只有 1GB。其中，前 896MB 被划分为直接映射区（Lowmem），与物理内存的低端 896MB 呈线性一一对应。
+
+然而，当系统的物理内存超过 896MB 时，剩下的物理内存无法被直接且永久地映射到内核的地址空间中。这部分超出直接映射范围的物理内存被称为高端内存（Highmem）。
+
+为了让内核能够访问高端内存中的数据，内核必须采用动态的临时或永久映射机制。根据上下文场景的不同，主要分为以下两种核心映射方式：
+
+- **永久映射 kmmap**：
+- **临时映射 kmap_atomic**：
 
 ## 参考
 
