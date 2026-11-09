@@ -1,8 +1,7 @@
 # C++函数式编程
 
 - [C++函数式编程](#c函数式编程)
-  - [简介](#简介)
-    - [编程范式](#编程范式)
+  - [编程范式](#编程范式)
     - [函数式编程](#函数式编程)
   - [可调用对象](#可调用对象)
     - [仿函数类](#仿函数类)
@@ -11,10 +10,9 @@
     - [可调用对象包装器](#可调用对象包装器)
     - [绑定器](#绑定器)
     - [引用包装器](#引用包装器)
+    - [调用包装器](#调用包装器)
 
-## 简介
-
-### 编程范式
+## 编程范式
 
 编程范式(Programming Paradigm)是一种编程风格或方法论，用于描述这类程序共有的结构或行为方式。常见的编程范式包括：指令式编程、面向对象编程、声明式编程、元编程和函数式编程等等。
 
@@ -253,4 +251,30 @@ int main() {
   std::thread th(f, n1, std::ref(n2), std::cref(n3));
   th.join();
 }
+```
+
+### 调用包装器
+
+std::invoke是标准库提供的一个统一调用分发器。它的核心作用是：用完全相同的语法，去调用任意类型的可调用对象。
+
+在没有 std::invoke 之前，如果你在写模板代码，想调用一个传入的回调，代码会写得极其丑陋：
+
+- 如果传的是普通函数或 Lambda，直接用 cb(args...)。
+- 如果传的是类的成员函数指针，语法必须变成 `(obj.*mem_func)(args...) 或 (ptr->*mem_func)(args...)`。
+
+```c++
+// 普通函数
+void print_sum(int a, int b) { std::cout << a + b << "\n"; }
+std::invoke(print_sum, 10, 20);
+
+// 类成员函数
+struct Widget {
+  void show_id(int id) const { std::cout << "Widget ID: " << id << "\n"; }
+};
+
+// 既可以直接传入对象实例或对象引用，也支持传入裸指针或智能指针
+Widget w;
+std::invoke(&Widget::show_id, w, 99); 
+auto w_ptr = std::make_shared<Widget>();
+std::invoke(&Widget::show_id, w_ptr, 100);
 ```
