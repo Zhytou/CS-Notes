@@ -457,3 +457,5 @@ struct slab {
 
 - [4.6 深入理解 Linux 虚拟内存管理](https://www.xiaolincoding.com/os/3_memory/linux_mem.html)
 - [4.7 深入理解 Linux 物理内存管理](https://www.xiaolincoding.com/os/3_memory/linux_mem2.html)
+- [认真分析mmap：是什么 为什么 怎么用](https://www.cnblogs.com/huxiao-tee/p/4660352.html)
+- [malloc-mmap-brk](https://www.cnblogs.com/beilou310/p/17037066.html)
