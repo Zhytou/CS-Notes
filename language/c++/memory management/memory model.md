@@ -3,18 +3,12 @@
 - [内存管理](#内存管理)
   - [动态内存申请](#动态内存申请)
     - [关键字new](#关键字new)
-    - [标准库std::allocator](#标准库stdallocator)
-  - [类型擦除](#类型擦除)
+    - [标准库分配器std::allocator](#标准库分配器stdallocator)
   - [智能指针](#智能指针)
-    - [std::unique\_ptr](#stdunique_ptr)
-    - [std::shared\_ptr](#stdshared_ptr)
-    - [make\_shared](#make_shared)
-    - [shared\_ptr实现](#shared_ptr实现)
-    - [enable\_shared\_from\_this](#enable_shared_from_this)
-    - [shared\_ptr线程安全性](#shared_ptr线程安全性)
-  - [weak\_ptr](#weak_ptr)
-    - [weak\_ptr的使用：lock函数](#weak_ptr的使用lock函数)
-    - [weak\_ptr的实现](#weak_ptr的实现)
+    - [共享式std::shared\_ptr](#共享式stdshared_ptr)
+    - [观察式std::weak\_ptr](#观察式stdweak_ptr)
+    - [独占式std::unique\_ptr](#独占式stdunique_ptr)
+  - [类型擦除](#类型擦除)
   - [参考](#参考)
 
 ## 动态内存申请
@@ -93,7 +87,7 @@ p->y = 200;
 
 总而言之，placement new 的真正价值在于：它不会在堆上重新申请内存，而是直接指挥编译器在程序员指定的已有内存地址 ptr 上调用类型 T 的构造函数，从而确保所有复杂的对象初始化逻辑、虚表绑定以及不变式（Invariant）得以正确建立。
 
-### 标准库std::allocator
+### 标准库分配器std::allocator
 
 std::allocator 是 C++ 标准库提供的标准内存分配器模板类，其核心设计哲学在于将“内存的申请/释放（Allocation/Deallocation）”与“对象的构造/析构（Construction/Destruction）”彻底解耦。
 
@@ -147,58 +141,63 @@ return static_cast<T*>(::operator new(n * sizeof(T)));
 
 **自定义Allocator的实现**：
 
-## 类型擦除
-
 ## 智能指针
 
-在C++11标准中规定了四个智能指针std::auto_ptr，std::unique_ptr，std::shared_ptr以及std::weak_ptr。它们都用来设计辅助管理动态分配对象的生命周期，即，确保这些对象在正确的时间(包括发生异常时)用正确的方式进行回收，以确保不会产生内存泄露。其中，auto_ptr是C++98提出的，C++11已将其摒弃，并提出了unique_ptr替代auto_ptr。而shared_ptr和weak_ptr则是C+11从准标准库Boost中引入的两种智能指针。
+智能指针是 C++ 标准库中基于 RAII 机制设计的类模板，它把动态分配的资源封装到栈对象中，在构造时接管资源、在析构时自动释放，从而确保对象在正常退出或异常抛出时都能被正确回收，避免内存泄漏与重复释放。常见的智能指针包括三类：
 
-总体来说，C++的智能指针能够像原生指针一样工作，因为它重载了解引用运算符和箭头运算符，即`*`和`->`运算符。此外，它还提供了get、release和reset三个函数丰富其功能。
+- 共享式智能指针 std::shared_ptr
+- 独占式智能指针 std::unique_ptr
+- 配合共享智能指针使用的辅助智能指针 std::weak_ptr
 
-其中，**get**函数用于获取托管资源地址，它会返回一个原生指针。由于智能指针重载了引用运算符和箭头运算符，所以一般情况下都很少使用该函数。而**release**函数则用于取消托管资源，即智能指针不再对该资源进行管理，改由管理员进行管理。
+**智能指针的区别**：
 
-至于**reset**函数则用于重置智能指针托管的内存地址。当为传入地址时，它直接释放掉托管资源；而当传入地址不一致时，它则会先释放掉旧资源，再更新为传入地址。
+对于 std::shared_ptr 和 std::unique_ptr 而言，它们在所有权语义上存在本质区别：
 
-### std::unique_ptr
+- std::shared_ptr 允许多个智能指针指向同一块内存，只有当最后一个智能指针析构时才会释放资源；
+- 而 std::unique_ptr 则严格独占所有权，每个指针独立管理一块内存，离开作用域时自动释放。
 
-unique_ptr 是 C++11 引入的新的独占式智能指针。相比auto_ptr，它改进了以下几点：
+此外，二者在底层实现上，也存在明显差异：
 
-- 禁止了拷贝构造和拷贝赋值，避免了所有权转移的问题。
-- 支持移动构造和移动赋值，即仍保留了auto_ptr抢夺资源所有权的特性，只不过需要程序员显式注明`std::move`，否则编译无法通过。
-- 支持管理数组对象。
+- std::unique_ptr 将删除器作为模板参数，得益于 EBO（空基类优化），当删除器无状态时不占用任何额外空间，大小依然等同于一个裸指针；
+- 相比之下，std::shared_ptr 的删除器则采用类型擦除，存放在堆上的控制块中，不影响智能指针自身的类型，但指针本身占用双指针大小，且控制块需要额外的堆内存分配。
 
-unique_ptr 提供了多种赋值方法，总体包括：
+**通用访问接口**：
+
+通过对 * 和 -> 运算符的重载，智能指针完美模拟了原生指针的访问语义。除此之外，它们还提供了以下核心管理接口：
+
+- get()：返回托管资源的裸指针。由于智能指针已重载了 * 和 ->，日常使用中很少需要它；它主要用于将裸指针传递给只接受原始指针的旧接口。
+- reset()：重置托管的内存地址。无参调用时直接释放当前托管资源并置空；传入新地址时，若与当前地址不同，则先释放旧资源，再接管新地址。
+
+**隐式转换**：
+
+为了实现类似于 `std::shared_ptr<Base> p = std::shared_ptr<Derived>();` 的向上转型，智能指针需要支持接收其他兼容类型模板参数的构造函数。
+
+为了防止类型不匹配导致模板实例化失败并报出晦涩的错误，现代 C++ 通常会利用 std::enable_if 结合 std::is_convertible 进行严格的 SFINAE 约束，确保只有当 U 可以隐式转换为 T 时，该转换构造函数才有效：
 
 ```c++
-int* p = new int(42);
-// 使用原生指针赋值
-// 声明时赋值
-unique_ptr<int> sp1(p);
-// reset函数为声明为空的unique_ptr赋值
-unique_ptr<int> sp2;
-sp2.reset(new int(43));
 
-// 使用移动语义赋值
-// 声明时赋值
-unique_ptr<int> sp3(move(sp1));
-// 移动赋值运算符
-unique_ptr<int> sp4;
-sp4 = move(sp2);
-
-// make_unique函数赋值
-unique_ptr<int> sp5 = make_unique<int>(100);
-
-// 值得一提的是，对于同一个原生指针，若赋值给多个unique_ptr则会出错
-// 此外，被抢夺资源后的旧指针不应该在使用，否则就会报错。
+template <typename T>
+class MySmartPtr {
+// ...
+template <typename U, 
+              typename = std::enable_if_t<std::is_convertible_v<U*, T*>>>
+    MySmartPtr(const MySmartPtr<U>& other) : _ptr(other._ptr) {
+};
 ```
 
-- 二者都不支持隐式初始化（explicit）。
-- unique_ptr因为限定管理对象所有权，所以不支持拷贝构造和拷贝赋值之外。
-- shared_ptr在管理动态数组的时候，需要指定删除器删除器。（删除器不是shared_ptr类型的组成部分）
+**动态数组与非内存资源管理**：
 
-### std::shared_ptr
+智能指针不仅能管理常规的单对象内存，还能完美适配动态数组与非内存系统资源。
 
-shared_ptr 是 C++11 引入的另一种智能指针。它和unique_ptr相比实现了共享所有权的概念。多个shared_ptr实例可以指向同一个对象，内部通过引用计数来控制对象的生命周期。当最后一个引用被销毁时，对象的内存也会被自动释放。它的初始化方式和unique_ptr以及auto_ptr类似，比如：
+其中，std::unique_ptr<T[]> 从 C++11 起就原生支持数组特化，会自动调用 delete[] 释放内存，并重载了 operator[] 以下标访问元素；std::shared_ptr<T[]> 则从 C++17 起正式支持数组特化，同样提供下标访问能力，并保证在析构时执行正确的数组销毁逻辑。
+
+至于非内存资源（如文件句柄、数据库连接等），std::unique_ptr 是通过模板参数传入自定义删除器，std::shared_ptr 则是通过构造函数基于类型擦除机制传入自定义删除器。
+
+### 共享式std::shared_ptr
+
+shared_ptr 是 C++11 引入的共享智能指针。它允许多个实例同时指向同一对象，内部通过引用计数管理生命周期——当最后一个持有该对象的 shared_ptr 被销毁时，对象内存才会被自动释放。
+
+**初始化std::shared_ptr**：
 
 ```c++
 // 使用原生指针初始化
@@ -212,15 +211,12 @@ shared_ptr<int> sp3;
 sp3.reset(new int(456));
 ```
 
-除了支持get、release和reset三个函数之外，shared_ptr还提供了一个use_count函数用于查看当前管理对象的引用计数。
+**使用std::make_shared初始化**：
 
-### make_shared
-
-shared_ptr还提供了一个名为make_shared的函数用于初始化，它的使用方法如下：
+除了上述初始化方式外，标准库还提供了一个名为 std::make_shared 的全局模板函数用于初始化，它的使用方法如下：
 
 ```c++
-// 使用make_shared
-// 注意是直接传参数，而非raw指针，比如make_share<int>(10)就创建了一个指向10的智能指针。
+// 使用make_shared时，需要传入对象的类型和构造函数的参数，而非raw指针，比如make_share<int>(10)就创建了一个指向10的智能指针。
 auto p = make_shared<type>(args); 
 
 // 等价于以下两步操作
@@ -228,7 +224,7 @@ type *raw = new type(args);
 shared_ptr<type> p(raw); 
 ```
 
-和其他初始化方式相比，std::make_shared最大的优势就是能够避免一块内存由多个引用计数无联系的shared_ptr指向，比如：
+和其他初始化方式相比，std::make_shared 最大的优势就是能够避免一块内存由多个引用计数无联系的 shared_ptr 指向，进而在析构时导致内存重复释放，比如：
 
 ```c++
 int p = new int(5);
@@ -238,114 +234,143 @@ shared_ptr<int> sp1(p), sp2(p);
 // free(): double free detected in tcache 2
 ```
 
-### shared_ptr实现
+此外，从性能的角度分析，std::make_shared 将对象本身和管理它的控制块（存放引用计数等信息）在内存中合并为一次分配，也即
+
+
+而直接用 new 创建再交给 shared_ptr 通常需要两次独立分配。
+
+**自定义共享智能指针的实现——引用计数**：
 
 ``` c++
 template <typename T>
 class SharedPtr {
 public:
-    SharedPtr () : _pdata(nullptr), _refCount(nullptr) {}
+    // 1. 默认构造函数
+    SharedPtr() : data(nullptr), refCount(nullptr) {}
 
-    SharedPtr (T data) {
-        _pData = new T(data);
-        _refCount = new int(1);
-    }
-    
-    SharedPtr (SharedPtr& other) {
-        this->_pData = other._pData;
-        this->_refCount = other._refCount;
-        *(this->_refCount) += 1;
-    }
-    
-    ~SharedPtr () {
-        *(_refCount) -= 1;
-        if (_pData && *(_refCount) == 0) {
-          delete _pData;
-          delete _refCount;
+    // 2. 接收原生指针的构造函数
+    explicit SharedPtr(T* p) : data(p) {
+        if (data) {
+            refCount = new int(1);
+        } else {
+            refCount = nullptr;
         }
     }
     
-    SharedPtr &operator=(SharedPtr& other) {
-        if (this == &other)
-            return *this;
-
-        // 如果原资源引用为0，则释放
-        *_refCount -= 1;
-        if (*_refCount == 0) {
-            delete _pData;
-            delete _refCount;
+    // 3. 拷贝构造函数
+    SharedPtr(const SharedPtr& other) {
+        data = other.data;
+        refCount = other.refCount;
+        if (refCount) {
+            (*refCount)++;
         }
-
-        *(other._refCount) += 1;
-        
-        _pData = other._pData;
-        _refCount = other._refCount;
     }
-private:    
-    T* _pData;
-    int* _refCount;
+    
+    // 4. 析构函数
+    ~SharedPtr() {
+        release();
+    }
+    
+    // 5. 赋值运算符重载
+    SharedPtr& operator=(const SharedPtr& other) {
+        if (this != &other) {
+            // 先让新资源的引用计数自增（安全处理自赋值及同资源赋值）
+            if (other.refCount) {
+                (*(other.refCount))++;
+            }
+            
+            // 释放当前对象的旧资源
+            release();
+            
+            // 接管新资源
+            data = other.data;
+            refCount = other.refCount;
+        }
+        return *this; // 不要漏掉返回值
+    }
+
+    // 辅助函数：获取引用计数（方便测试）
+    int use_count() const {
+        return refCount ? *refCount : 0;
+    }
+
+    T* get() const noexcept { return data; }
+    T& operator*() const noexcept { return *data; }
+    T* operator->() const noexcept { return data; }
+
+private: 
+    void release() {
+        if (refCount) {
+            (*refCount)--;
+            if (*refCount == 0) {
+                delete data;
+                delete refCount;
+            }
+            data = nullptr;
+            refCount = nullptr;
+        }
+    }
+
+    T* data;
+    int* refCount; // 必须是指针，确保多个对象共享同一个计数器堆内存
 };
 ```
 
-- _refCount应该使用int*而不是int或static int，因为使用int修改会很复杂，而使用static int则会出现这种情况：
-  - 多个不同的对象使用SharedPtr引用，只要不全部析构，则所有对象都不会析构，即：所有类共享了一个_refCount。
-- 构造函数有两种：参数为普通指针的和参数为智能指针的。
-- 赋值运算符重载主要分两个步骤实现：
-  - （*this）指针不再指向之前内存区域，所以赋值前_refCount要自减；
-  - （*this）指针指向other指针，所以other指针的_refCount要自增。
-- 析构函数只有在_refCount == 0时，才执行。
+可见，自定义 SharedPtr 的核心在于引用计数的实现。为了让多个对象安全地共享同一份资源，_refCount 必须使用 int* 指针类型：
 
-### enable_shared_from_this
+- 若直接使用普通的 int，各个实例的计数无法关联；
+- 若使用 static int，则会导致所有不同的对象共享同一个全局计数器，只要程序中还有一个对象未被析构，所有资源就都无法释放。
 
-有些时候我们可能希望实现一个类函数直接返回调用对象的shared_ptr。常见的做法是：直接用该对象的this指针去初始化一个shared_ptr对象。不过，这样会返回多个独立的shared_ptr，即引用计数无关的指针指向同一块内存，从而引起析构时重复释放内存的错误。
+**标准库共享智能指针的实现——控制块**：
 
-**例子**：
+与自定义 SharedPtr 类似，标准库 std::shared_ptr 也采用了“对象指针 + 引用计数指针（控制块）”的结构实现。不同的是，为了实现弱引用观测、自定义删除器等更丰富的特性，标准库引入了设计更复杂的控制块（。具体而言，控制块由以下四项内容组成：
 
-比如，下面这个例子就展示了直接使用this指针初始化shared_ptr的错误做法。
+- 强引用计数（Strong Reference Count / use_count）：记录当前有多少个 shared_ptr 共同拥有该资源，归零时销毁托管对象。
+- 弱引用计数（Weak Reference Count / weak_count）：记录当前有多少个 weak_ptr 正在观察该资源。只有当强弱引用计数同时归零时，控制块本身的内存才会被释放。
+- 删除器（Deleter）：类型擦除的函数对象，用于记录如何正确销毁对象（默认是 delete）。
+- 分配器（Allocator）：用于控制块自身的内存分配与释放。
+
+**自定义删除器**：
+
+**自定义分配器与std::allocate_shared**：
+
+**std::shared_ptr 的线程安全性**：
+
+std::shared_ptr 的线程安全隐患主要涉及以下几个方面：
+
+- 引用计数的加减操作是否线程安全。
+- 修改 shared_ptr 指向的对象是否线程安全。
+- shared_ptr 管理对象的并发操作的安全性，也应该被讨论。
+
+具体而言：
+
+- 多个线程同时读取（拷贝/复制）同一个 shared_ptr 对象是线程安全的。虽然拷贝操作会使引用计数加一，但控制块中的引用计数修改是原子操作（Atomic），因此多个线程同时去复制或销毁不同的 shared_ptr 副本（它们指向同一资源）是完全安全的。
+- 多个线程同时写入（修改）同一个 shared_ptr 对象是不安全的。如果多个线程同时去改变同一个 shared_ptr 变量本身（例如多个线程同时对同一个 shared_ptr 进行赋值操作，使其指向不同的对象），由于“底层数据指针”和“引用计数”的更新无法作为一个整体打包成原子操作，会导致数据竞争（Data Race）。例如下面这种并发修改场景：
+
+![shared_ptr线程安全性例子](https://i-blog.csdnimg.cn/blog_migrate/f5c4b53e3d22d0023f7bed058b7156cb.png)
+
+关于这一点更多的讨论，可以[查看这里](https://blog.csdn.net/weixin_42142630/article/details/121165649)。
+
+**使用enable_shared_from_this**：
+
+在某些场景下，我们希望实现一个类成员函数，能够直接返回调用对象自身的 std::shared_ptr。直觉上，可能会直接用该对象的 this 指针去初始化一个 std::shared_ptr 对象。比如：
 
 ```c++
-#include <iostream>
-#include <memory>
-
-using namespace std;
-
-class A{
-public:
-  string name;
+struct A{
   shared_ptr<A> getPtr() {
     return make_shared<A>(*this);
   }
-
-  A() = default;
-
-  A(const A& a) {
-    name = a.name;
-  }
 };
 
-int main() {
-  A a;
-  a.name = "a";
-  auto ptr1 = a.getPtr();
-  auto ptr2 = a.getPtr();
-
-  cout << ptr1->name << ' ' << ptr2->name << endl;
-  cout << ptr1.use_count() << ' ' << ptr2.use_count() << endl;
-}
+auto ptr1 = a.getPtr(), ptr2 = a.getPtr();
+// 输出 1 1，也即ptr1和ptr2的use计数都是1，说明它们是独立的shared_ptr
+cout << ptr1.use_count() << ' ' << ptr2.use_count() << endl;
+// 析构报错，因为会double free
 ```
 
-输出结果为：
+可见，即使 ptr1 和 ptr2 都由 this 初始化，但二者的 use_count 无法建立关系，最终会导致重复释放托管对象。
 
-``` txt
-a a
-1 1
-```
-
-可见，即使ptr1和ptr2都由this初始化，但二者的use_count确无法建立关系，因此会在后续释放时发生错误。
-
-**使用**：
-
-正确的做法是让该类继承std::enable_shared_from_this模板，通过CRTP的方式达成目的。比如：
+为了让对象能够安全地获取自身的共享指针，标准库提供了 std::enable_shared_from_this 模板，通过奇异递归模板模式（CRTP）来实现：
 
 ```c++
 class A : public enable_shared_from_this<A> {
@@ -356,7 +381,9 @@ public:
 };
 ```
 
-值得注意的是，仅当A类对象被一个shared_ptr管理时，才能调用该getPtr()函数，否则就会报错。比如：
+其中，这里使用 CRTP 模板，不是为了实现静态多态，而是为了让基类能够精准获取派生类的类型信息，从而让 shared_from_this() 成员函数能够正确地返回指向派生类的 shared_ptr。
+
+值得注意的是，仅当 A 类对象被一个 shared_ptr 管理时，才能调用该 getPtr() 函数，否则就会报错。比如：
 
 ```c++
 A* a1 = new A();
@@ -366,11 +393,9 @@ shared_ptr<A> a2 = make_shared<A>();
 shared_ptr<A> p2 = a2->getPtr(); // correct
 ```
 
-**原理**：
+至于为什么要求 A 类对象被一个 std::shared_ptr 管理时才能调用该 getPtr() 函数就涉及到 std::enable_shared_from_this 的实现原理了。
 
-至于，为什么要求A类对象被一个shared_ptr管理时才能调用该getPtr()函数就涉及到std::enable_shared_from_this的实现原理了。
-
-简单来说，enable_shared_from_this的内部保存着一个对this的弱引用，通过该弱引用就可以获得指向this的shared_ptr了，即实现了shared_from_this函数。比如：
+简单来说，std::enable_shared_from_this 内部维护了一个指向自身的 std::weak_ptr。shared_from_this() 正是通过这个弱引用来安全地生成并返回 std::shared_ptr 的：
 
 ```c++
 template<class _Tp>
@@ -389,37 +414,18 @@ public:
 }
 ```
 
-也正因为enable_shared_from_this包含着一个weak_ptr，所以该对象必须被shared_ptr管理，否则就无法正确初始化enable_shared_from_this中的weak_ptr。换句话说，构造shared_ptr指针时，判断管理类继承自enable_shared_from_this模板时就会初始化其中的weak_ptr。
+正因为基类内部依赖这个 weak_ptr，对象必须首先由 shared_ptr 接管，才能完成该 weak_ptr 的初始化。也就是说，当使用 shared_ptr 构造对象时，标准库会检测该类是否继承自 std::enable_shared_from_this，并自动为其内部的 weak_ptr 赋值。若对象直接在栈上创建或通过裸指针分配而未交由智能指针托管，其内部的 weak_ptr 就会保持空置状态，此时调用 shared_from_this() 就会抛出异常。
 
-另外，使用`class A : public enable_shared_from_this<A>`这样的方式则是涉及到奇异递归模板模式（Curiously Recurring Template Pattern，CRTP）的编程思想。不过，这里并没有用于获取静态多态的能力，而只是共享其成员函数shared_from_this罢了。
+### 观察式std::weak_ptr
 
-### shared_ptr线程安全性
+std::weak_ptr 是 C++11 引入的一种辅助型智能指针，通常与 std::shared_ptr 配合使用。它的主要作用有两个：
 
-shared_ptr的线程安全隐患主要涉及以下几个方面：
+- 解决循环引用问题：当多个 std::shared_ptr 互相引用时会导致引用计数无法归零，从而引发内存泄漏。将其中一方替换为 std::weak_ptr 即可打破循环，因为它不参与控制块中强引用计数的管理。
+- 非拥有性安全访问：适用于所有“只希望观察、访问对象，但不拥有对象所有权”的场景。
 
-- 引用计数的加减操作是否线程安全。
-- 修改shared_ptr指向是否线程安全。
-- shared_ptr管理对象的并发操作的安全性，也应该被讨论。
+**lock函数**：
 
-以下是shared_ptr的线程安全性的结论。注意，不涉及它管理的对象的线程安全性。
-
-- 一个shared_ptr对象可以被多个线程同时读取。因为读取操作只涉及到引用计数的增加和减少，而shared_ptr的引用计数又是原子操作，所以保证了在多线程环境下对引用计数的读取操作是线程安全的。
-- 一个shared_ptr对象不可以被多个线程同时写入。因为写操作涉及到引用计数和实际数据指针的修改，这个两个操作是无法做到线程安全的。比如：下面这个例子。
-
-![shared_ptr线程安全性例子](https://i-blog.csdnimg.cn/blog_migrate/f5c4b53e3d22d0023f7bed058b7156cb.png)
-
-关于这一点更多的讨论，可以查看[帖子](https://blog.csdn.net/weixin_42142630/article/details/121165649)。
-
-## weak_ptr
-
-std::weak_ptr是C++11引入的一种智能指针，主要与std::shared_ptr配合使用。它最主要的两个作用是：
-
-- 解决循环引用问题：当两个或多个std::shared_ptr对象互相引用时，会导致循环引用。这种情况下，这些对象的引用计数永远不会变为0，从而导致内存泄漏。std::weak_ptr可以打破这种循环引用，因为它不会增加引用计数。只需要将其中一个对象的std::shared_ptr替换为std::weak_ptr，即可解决循环引用问题。
-- 一切应该不具有对象所有权，又想安全访问对象的情况都应该使用std::weak_ptr进行访问。
-
-### weak_ptr的使用：lock函数
-
-当我们创建一个weak_ptr时，需要用一个shared_ptr实例来初始化weak_ptr。但由于是弱共享，weak_ptr的创建并不会影响shared_ptr的引用计数值。因此，就可能存在weak_ptr指向的对象被释放掉这种情况。为此，C++标准库给weak_ptr提供了lock和expire函数用于帮助其访问。比如：
+当我们创建一个 weak_ptr 时，需要用一个 shared_ptr 实例来初始化 weak_ptr。但由于是弱共享，weak_ptr 的创建并不会影响 shared_ptr 的引用计数值。因此，就可能存在 weak_ptr 指向的对象被释放掉这种情况。为此，C++标准库给weak_ptr提供了 lock 函数用于帮助其访问。比如：
 
 ```c++
 // lock函数返回一个shared_ptr
@@ -434,7 +440,11 @@ else {
 }
 ```
 
-值得注意的是，如果lock函数返回一个非空shared_ptr，则其引用计数也会加1。除此之外，weak_ptr还提供了expired()函数来判断所指对象是否已经被销毁。比如：
+值得注意的是，如果 lock 函数返回一个非空 shared_ptr，则其引用计数也会加1。
+
+**expired函数**：
+
+除此之外，weak_ptr还提供了 expired() 函数来判断所指对象是否已经被销毁。比如：
 
 ```c++
 shared_ptr<A> sp(new A());
@@ -443,7 +453,7 @@ sp.reset(); // 此时sp被销毁
 cout << wp.expired() << endl;  // true表示已被销毁，否则为false
 ```
 
-### weak_ptr的实现
+**自定义辅助智能指针的实现**：
 
 ```c++
 // 实现的前提包括：
@@ -472,9 +482,161 @@ private:
 };
 ```
 
+### 独占式std::unique_ptr
+
+std::unique_ptr 是 C++11 引入的独占式智能指针。它通过禁止拷贝构造与拷贝赋值，保证同一时刻只能有一个实例指向该对象——当持有该对象的 unique_ptr 离开作用域或被重置时，所管理的内存便会自动释放。
+
+此外，它支持资源的“抢夺”语义，允许通过移动构造与移动赋值进行所有权交接，但必须由程序员显式调用 std::move 才能完成。
+
+**初始化std::unique_ptr**：
+
+```c++
+// 1. 使用原生指针直接初始化（构造函数为 explicit，不支持隐式转换）
+int* p = new int(42);
+unique_ptr<int> sp1(p);
+
+// 2. 使用 reset 函数为预先声明为空的 unique_ptr 赋值
+unique_ptr<int> sp2;
+sp2.reset(new int(43));
+
+// 3. 使用移动语义实现所有权转移
+unique_ptr<int> sp3(move(sp1)); // 移动构造：sp1 变为空指针
+unique_ptr<int> sp4;
+sp4 = move(sp2);                // 移动赋值：sp2 变为空指针
+
+// 4. 使用 make_unique 函数（C++14 引入，推荐做法，异常安全且简洁）
+unique_ptr<int> sp5 = make_unique<int>(100);
+
+// 【避坑指南】
+// - 绝对不能将同一个原生指针赋给多个 unique_ptr，否则会导致多次析构。
+// - 资源被 move 转移后，旧的 unique_ptr 会失效置空，切勿再对其进行解引用或访问。
+```
+
+**自定义独占式智能指针的实现**：
+
+```c++
+template <typename T>
+class UniquePtr {
+public:
+    explicit UniquePtr(T* p = nullptr) noexcept : data(p) {}
+    UniquePtr (UniquePtr& other) = delete;
+    UniquePtr& operator=(UniquePtr& other) = delete;
+    UniquePtr (UniquePtr&& other): data(other.data) {
+        other.data = nullptr;
+    }
+    UniquePtr& operator=(UniquePtr&& other) {
+        if (this != &other) {
+            if (data) {
+                delete data;
+            }
+            data = other.data;
+            other.data = nullptr;
+        }
+        return *this;
+    }
+    ~UniquePtr () { if (data) delete data; }
+
+    T* get() const noexcept { return data; }
+    T& operator*() const noexcept { return *data; }
+    T* operator->() const noexcept { return data; }
+private:
+    T* data;
+};
+```
+
+由上可见，自定义的 UniquePtr 实际上就是带有 RAII 资源自动释放与移动语义的裸指针包装器。其对象大小和普通指针相同，均为 sizeof(T*)。具体而言，其核心特点包括：
+
+- 通过禁用拷贝构造与拷贝赋值，确保独占性；
+- 通过正确的移动构造与移动赋值，支持所有权转移；
+- 通过析构时自动销毁资源，保证 RAII；
+- 通过重载解引用运算符与箭头运算符，提供与裸指针相同的语法。
+
+**标准库独占式智能指针的实现**：
+
+相较于基础的自定义版本，标准库的 std::unique_ptr 支持自定义删除器，进而允许其管理非内存资源，比如文件句柄、数据库连接等。
+
+由于 std::unique_ptr 不需要引用计数，它没有控制块，因而其自定义删除器是直接作为模板参数存在的，其完整签名形式通常为 `std::unique_ptr<T, Deleter>`。它默认传入的是 `std::default_delete<T>`，也即标准库中对 delete 进行封装的默认删除器。
+
+```c++
+template <typename T>
+struct default_delete {
+  constexpr default_delete() noexcept = default;
+  
+  template <typename U, typename = std::enable_if_t<std::is_convertible_v<U*, T*>>>
+  default_delete(const default_delete<U>&) noexcept {}
+
+  void operator()(T* ptr) const {
+    static_assert(sizeof(T) > 0, "Can't delete pointer to incomplete type");
+    delete ptr;
+  }
+};
+```
+
+值得注意的是，动态数组特化的 std::unique_ptr<T[]>，则默认使用内部为 delete[] 的删除器。
+
+**自定义删除器**：
+
+```c++
+// 使用lambda表达式作为删除器
+auto fileDeleter = [](FILE* fp) {
+  if (fp) fclose(fp);
+};
+std::unique_ptr<FILE, decltype(fileDeleter)> filePtr(fopen("test.txt", "r"), fileDeleter);
+
+// 使用函数指针作为删除器
+void my_fclose(FILE* fp) { if (fp) fclose(fp); }
+std::unique_ptr<FILE, decltype(&my_fclose)> filePtr(fopen("test.txt", "r"), my_fclose);
+```
+
+**EBO优化**：
+
+由于删除器类型属于模板参数的一部分，std::unique_ptr 能够针对不同的删除器进行底层优化。当传入无捕获的 Lambda、无状态函数对象，标准库会启用 EBO（Empty Base Optimization，空基类优化），通过继承机制避免类内额外存储状态。这使得 sizeof(std::unique_ptr) 完美保持为 sizeof(T*)（即单个裸指针的大小，无任何额外开销）。
+
+具体而言，std::unique_ptr 内部只需要包含辅助类对象即可：
+
+```c++
+template <typename T, typename Deleter = std::default_delete<T>>
+class unique_ptr {
+private:
+  // 唯一的成员变量，内部封装了指针和删除器
+  __compressed_pair<T*, Deleter> m_packet; 
+};
+```
+
+标准库在实现 __compressed_pair 时，通常会利用 C++ 的类型萃取（如 std::is_empty 和 std::is_final）结合模板偏特化（或 if constexpr），在编译期自动选择最优的存储策略：
+
+- 无状态（空类）：触发 EBO，将删除器作为基类继承。
+- 有状态（非空类）：无法使用 EBO，将其作为普通成员变量直接存储在内部。
+
+```c++
+// 简化的标准库内部实现逻辑
+
+// 1. 偏特化版本一：当 Deleter 是空类且不是 final 时 -> 走继承路线（触发 EBO）
+template <typename T, typename Deleter, bool = std::is_empty_v<Deleter> && !std::is_final_v<Deleter>>
+class __compressed_pair : private Deleter {
+private:
+    T* ptr_; // 指针
+public:
+    // 通过继承拿到 Deleter 的实例来执行删除
+    Deleter& get_deleter() { return *this; }
+    T*& get_pointer() { return ptr_; }
+};
+
+// 2. 偏特化版本二：当 Deleter 是有状态（非空）时 -> 走组合路线（直接作为成员变量）
+template <typename T, typename Deleter>
+class __compressed_pair<T, Deleter, false> {
+private:
+  T* ptr_;         // 裸指针
+  Deleter deleter_; // 有状态的删除器直接作为成员变量存储！
+public:
+  Deleter& get_deleter() { return deleter_; }
+  T*& get_pointer() { return ptr_; }
+};
+```
+
+## 类型擦除
 
 ## 参考
 
-**new 与 malloc 的区别**:
-
 - [stackoverflow](https://stackoverflow.com/questions/240212/what-is-the-difference-between-new-delete-and-malloc-free)
+- [C++ 模板编程](https://github.com/Walton1128/CPP-Templates-2nd--/tree/master)
