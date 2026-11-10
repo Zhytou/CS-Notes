@@ -1,11 +1,11 @@
-# C++习惯用法
+# C++ Idioms
 
-- [C++习惯用法](#c习惯用法)
+- [C++ Idioms](#c-idioms)
   - [RAII](#raii)
   - [SIFNAE](#sifnae)
   - [PIMPL](#pimpl)
   - [CRTP](#crtp)
-  - [References](#references)
+  - [RTTI](#rtti)
 
 ## RAII
 
@@ -233,9 +233,21 @@ std::enable_shared_from_this 是 C++ 标准库中运用 CRTP 的经典实战范�
 
 它允许一个类安全地在其成员函数内部，通过 shared_from_this() 生成并返回一个指向自身的 std::shared_ptr，而不会引发由于直接用裸指针 this 构造多个独立控制块所导致的内存双重释放（Double Free）崩溃。
 
-## References
+## RTTI
 
-**RAII**:
+运行时类型信息（Run-Time Type Information, RTTI）是 C++ 提供的一种机制，允许程序在运行时查询对象的实际类型。它主要通过以下两种方式实现：
 
-- [wiki](https://zh.wikipedia.org/wiki/RAII)
-- [cppreference](https://en.cppreference.com/w/cpp/language/raii)
+- **dynamic_cast运算符**：用于将基类指针或引用转换为派生类指针或引用。如果转换合法，则返回转换后的指针或引用，否则返回 nullptr。
+- **typeid运算符**：用于获取对象的类型信息。它返回一个 type_info 对象，其中记录了类型的名称等信息。
+
+**编译期静态确定（零运行时开销）**：
+
+RTTI 的实现方式取决于对象是否属于多态类型，即是否含有虚函数。对于非多态类型，typeid 在编译期就能静态确定，不产生任何运行时开销；而 dynamic_cast 不能用于非多态类型的向下转型。
+
+**多态类型：运行期通过虚表动态查找**：
+
+对于多态类型，RTTI 与虚表（vtable）紧密耦合，其信息在运行期动态获取。
+
+以 typeid 为例，它会通过对象的虚表指针 vptr 访问该类型存放在 .rodata 段的虚表 vtable。而根据主流的 C++ ABI 设计，虚表内存布局的负偏移量处（例如 vtable[-1] 的位置）往往预埋了一个指向该类 type_info 结构体的指针，typeid 由此获得对象的真实类型。
+
+dynamic_cast 的流程类似，它同样通过 vptr 定位到对象的实际类型信息，然后借助 ABI 中记录的类型层次结构描述符（Type Hierarchy Descriptor）在运行时遍历继承树，判断目标类型是否为实际类型或其某个基类，以此决定转型是否成功。
